@@ -66,7 +66,7 @@ namespace EXIFGeotaggerv0._1
             OleDbConnection connection = new OleDbConnection(connectionString);
             string connectionStr = connection.ConnectionString;
 
-            string strSQL = "SELECT * FROM Photolist;";
+            string strSQL = "SELECT * FROM PhotoList;";
 
             OleDbCommand command = new OleDbCommand(strSQL, connection);
             // Open the connection and execute the select command.  
@@ -84,6 +84,7 @@ namespace EXIFGeotaggerv0._1
                         Object[] row = new Object[reader.FieldCount];
                         reader.GetValues(row);
                         String photo = (string)row[1];
+                        txtConsole.AppendText(photo + Environment.NewLine);
                         buildDictionary(i, photo, row);
                         i++;
                     }
@@ -126,19 +127,42 @@ namespace EXIFGeotaggerv0._1
         {
             foreach (string filePath in mFiles)
             {
-                Image theImage = new Bitmap(filePath);
-                int height = theImage.Height;
-                int width = theImage.Width;
-                PropertyItem[] propItems = theImage.PropertyItems;
-                foreach (PropertyItem propItem in propItems)
+                Image image = new Bitmap(filePath);
+                //int height = theImage.Height;
+                //int width = theImage.Width;
+                //PropertyItem[] propItems = theImage.PropertyItems;
+                PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+                PropertyItem propItemLatRef = image.GetPropertyItem(0x0003);
+                Record r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
+                double latitude = r.Latitude;
+
+                //if (latitude < 0)
+                //{
+                //    propItemLatRef.Value = 
+                //}
+                int[] values = r.setEXIFCoordinate("latitude");
+
+                txtConsole.AppendText("Deg: " + values[0] + " Min: " + values[2] + " Sec: " + (double)values[4] / values[5] + Environment.NewLine);
+                byte[] byteArray = new byte[24];
+                int offset = 0;
+                foreach (var value in values)
                 {
-                    if (propItem.Id == 0x0002)
-                    {
-                        Record r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
-                        double latitude = r.Latitude;
-                        //int values[] = getEXIFCoordinate(latitude)
-                    }
+                    BitConverter.GetBytes(value).CopyTo(byteArray, offset);
+                    offset += 4;
                 }
+                //propItemLat.Len = byteArray.Length;
+                propItemLat.Type = 5; //write bytes
+                propItemLat.Value = byteArray; //write bytes
+                image.SetPropertyItem(propItemLat);
+                image.Save(filePath);
+  
+                //double longitude = r.Longitude;
+                //values = r.setEXIFCoordinate("longitude");
+                int degrees = BitConverter.ToInt32(propItemLat.Value, 0);
+                txtConsole.AppendText(degrees + Environment.NewLine);
+
+
+
 
             }
         }

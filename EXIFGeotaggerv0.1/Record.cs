@@ -33,10 +33,25 @@ namespace EXIFGeotaggerv0._1
             this.photo = photo;
         }
 
-        public void setEXIFCoordinate(String type)
+        public int[] setEXIFCoordinate(String coordinate)
         {
-            double lat = this.latitude;
-            double lon = this.longitude;
+            double coord = 0;
+            int multiplier = 10000;
+            if (coordinate.Equals("latitude"))
+            {
+                coord = Math.Abs(this.latitude);
+            }
+
+            int d = (int)coord;
+            coord -= d;
+            coord *= 60;
+            int m = (int)coord;
+            coord -= m;
+            coord *= 60;
+            int s = (int)Math.Round(coord * multiplier);
+
+            int[] values = { d, 1, m, 1, s, multiplier };
+            return values;
         }
 
         public double Latitude
