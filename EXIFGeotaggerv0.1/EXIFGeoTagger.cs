@@ -161,9 +161,6 @@ namespace EXIFGeotaggerv0._1
                 int degrees = BitConverter.ToInt32(propItemLat.Value, 0);
                 txtConsole.AppendText(degrees + Environment.NewLine);
 
-
-
-
             }
         }
     }
