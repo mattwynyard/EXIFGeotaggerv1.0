@@ -127,7 +127,7 @@ namespace EXIFGeotaggerv0._1
         {
             foreach (string filePath in mFiles)
             {
-                Image image = new Bitmap(filePath);
+                Image image = Image.FromFile(filePath);
                 //int height = theImage.Height;
                 //int width = theImage.Width;
                 //PropertyItem[] propItems = theImage.PropertyItems;
@@ -151,7 +151,7 @@ namespace EXIFGeotaggerv0._1
                     offset += 4;
                 }
                 //propItemLat.Len = byteArray.Length;
-                propItemLat.Type = 5; //write bytes
+                propItemLat.Type = 5;
                 propItemLat.Value = byteArray; //write bytes
                 image.SetPropertyItem(propItemLat);
                 image.Save(filePath);
