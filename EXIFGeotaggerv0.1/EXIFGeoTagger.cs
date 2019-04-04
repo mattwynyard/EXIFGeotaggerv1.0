@@ -23,6 +23,7 @@ namespace EXIFGeotaggerv0._1
         string[] mFiles; //array containing absolute paths of photos.
 
         string folderPath = "C:\\androidapp\\Thumbnails";
+        string geoRefPath = "C:\\androidapp\\GeoRef";
 
         public EXIFGeoTagger()
         {
@@ -47,18 +48,17 @@ namespace EXIFGeotaggerv0._1
 
             
             mFiles = Directory.GetFiles(folderPath);
-            txtConsole.AppendText("Building file dictionary..." + Environment.NewLine);
             foreach (string file in mFiles)
             {
                 string path = Path.GetFileNameWithoutExtension(file); //filename without extension of photo
                 Record r = new Record(path);
                 mRecordDict.Add(path, r);
-                txtConsole.AppendText(mRecordDict.Count + " added" + Environment.NewLine);
+                txtConsole.AppendText(mRecordDict.Count + " added to dictonary");
                 txtConsole.Clear();
             }
-            txtConsole.AppendText("Exctracted " + mFiles.Length + " files" + Environment.NewLine);
-            txtConsole.AppendText("Built dictionary..." + Environment.NewLine);
-            txtConsole.AppendText(mRecordDict.Count + " keys added");
+            //txtConsole.AppendText("Exctracted " + mFiles.Length + " files" + Environment.NewLine);
+            //txtConsole.AppendText("Built dictionary..." + Environment.NewLine);
+            //txtConsole.AppendText(mRecordDict.Count + " keys added" + Environment.NewLine);
 
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                                 "Microsoft.Jet.OLEDB.4.0", mDBPath, 5);
@@ -70,12 +70,13 @@ namespace EXIFGeotaggerv0._1
 
             OleDbCommand command = new OleDbCommand(strSQL, connection);
             // Open the connection and execute the select command.  
+            int recordCount = 0;
             try
             {
                 // Open connecton  
                 connection.Open();
                 String[] photoPath = new String[mFiles.Length];
-   
+                
                 using (OleDbDataReader reader = command.ExecuteReader())
                 {
                     int i = 0;
@@ -84,21 +85,24 @@ namespace EXIFGeotaggerv0._1
                         Object[] row = new Object[reader.FieldCount];
                         reader.GetValues(row);
                         String photo = (string)row[1];
-                        txtConsole.AppendText(photo + Environment.NewLine);
+                        txtConsole.AppendText("Reading... " + photo + " from database" + Environment.NewLine);
+                        txtConsole.Clear();
                         buildDictionary(i, photo, row);
                         i++;
                     }
-                    //foreach (KeyValuePair<String, Record> kvp in mRecordDict)
-                    //{
-                    //    //textBox3.Text += ("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
-                    //    txtConsole.AppendText("Key: " + kvp.Key + " Value: " + kvp.Value + Environment.NewLine);
-                    //}
+                    recordCount = i;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+
+            txtConsole.AppendText("Exctracted " + mFiles.Length + " photos" + Environment.NewLine);
+            txtConsole.AppendText("Built dictionary..." + Environment.NewLine);
+            txtConsole.AppendText(mRecordDict.Count + " keys added" + Environment.NewLine);
+            txtConsole.AppendText(recordCount + " keys populated" + Environment.NewLine);
+         
 
         }
 
@@ -125,43 +129,65 @@ namespace EXIFGeotaggerv0._1
 
         private void btnGeotag_Click(object sender, EventArgs e)
         {
+            txtConsole.Clear();
+            txtConsole.AppendText(Environment.NewLine);
+            txtConsole.Clear();
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             foreach (string filePath in mFiles)
             {
-                Image image = Image.FromFile(filePath);
-                //int height = theImage.Height;
-                //int width = theImage.Width;
-                //PropertyItem[] propItems = theImage.PropertyItems;
+                
+                Image image = new Bitmap(filePath);
+                PropertyItem[] propItems = image.PropertyItems;
+                PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
                 PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                PropertyItem propItemLatRef = image.GetPropertyItem(0x0003);
+                PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+                PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+                PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+                PropertyItem propItemSat = image.GetPropertyItem(0x0008);
+                PropertyItem propItemDir = image.GetPropertyItem(0x0011);
+                PropertyItem propItemVel = image.GetPropertyItem(0x000D);
+                PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
+                PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+
                 Record r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
-                double latitude = r.Latitude;
 
-                //if (latitude < 0)
-                //{
-                //    propItemLatRef.Value = 
-                //}
-                int[] values = r.setEXIFCoordinate("latitude");
+                propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
+                propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
+                propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
+                propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
+                propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
+                propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
 
-                txtConsole.AppendText("Deg: " + values[0] + " Min: " + values[2] + " Sec: " + (double)values[4] / values[5] + Environment.NewLine);
-                byte[] byteArray = new byte[24];
-                int offset = 0;
-                foreach (var value in values)
-                {
-                    BitConverter.GetBytes(value).CopyTo(byteArray, offset);
-                    offset += 4;
-                }
-                //propItemLat.Len = byteArray.Length;
-                propItemLat.Type = 5;
-                propItemLat.Value = byteArray; //write bytes
+                propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
+                propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
+                propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
+                propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
+
+                propItemDateTime = r.getEXIFDateTime(propItemDateTime);
+
                 image.SetPropertyItem(propItemLat);
-                image.Save(filePath);
-  
-                //double longitude = r.Longitude;
-                //values = r.setEXIFCoordinate("longitude");
-                int degrees = BitConverter.ToInt32(propItemLat.Value, 0);
-                txtConsole.AppendText(degrees + Environment.NewLine);
+                image.SetPropertyItem(propItemLon);
+                image.SetPropertyItem(propItemLatRef);
+                image.SetPropertyItem(propItemLonRef);
+                image.SetPropertyItem(propItemAlt);
+                image.SetPropertyItem(propItemAltRef);
+                image.SetPropertyItem(propItemDir);
+                image.SetPropertyItem(propItemVel);
+                image.SetPropertyItem(propItemPDop);
+                image.SetPropertyItem(propItemSat);
+                image.SetPropertyItem(propItemDateTime);
+
+                image.Save("C:\\androidapp\\GeoRef" + "\\"+ Path.GetFileName(filePath));
+                image.Dispose();
+                txtConsole.AppendText("Geotagged: " + Path.GetFileName(filePath));
+                txtConsole.Clear();
 
             }
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            txtConsole.AppendText("Geotag Finished in: " + elapsedMs + " ms" + Environment.NewLine);
         }
     }
 }
