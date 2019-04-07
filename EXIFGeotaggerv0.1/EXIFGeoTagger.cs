@@ -11,8 +11,10 @@ using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.ComponentModel;
 using System.Data;
+using GMap.NET;
 
 using System.Windows.Forms;
+using GMap.NET.MapProviders;
 
 namespace EXIFGeotaggerv0._1
 {
@@ -22,13 +24,19 @@ namespace EXIFGeotaggerv0._1
         Dictionary<string, Record> mRecordDict;
         string[] mFiles; //array containing absolute paths of photos.
 
-        string folderPath = "C:\\androidapp\\Thumbnails";
-        string geoRefPath = "C:\\androidapp\\GeoRef";
+        string folderPath = "C:\\Road Inspection\\androidapp\\Thumbnails";
+        string geoRefPath = "C:\\Road Inspection\\androidapp\\GeoRef";
 
         public EXIFGeoTagger()
         {
             InitializeComponent();
             mRecordDict = new Dictionary<string, Record>();
+            gMap.MapProvider = GMapProviders.GoogleMap;
+            gMap.Position = new PointLatLng(-45, 175);
+            gMap.MouseWheelZoomEnabled = true;
+            gMap.Zoom = 10;
+            gMap.DragButton = MouseButtons.Left;
+        
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)

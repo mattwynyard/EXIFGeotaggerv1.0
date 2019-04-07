@@ -32,6 +32,7 @@
             this.txtFilePath = new System.Windows.Forms.TextBox();
             this.btnGeotag = new System.Windows.Forms.Button();
             this.txtConsole = new System.Windows.Forms.TextBox();
+            this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.SuspendLayout();
             // 
             // btnBrowse
@@ -69,11 +70,38 @@
             this.txtConsole.Size = new System.Drawing.Size(372, 184);
             this.txtConsole.TabIndex = 4;
             // 
+            // gMap
+            // 
+            this.gMap.Bearing = 0F;
+            this.gMap.CanDragMap = true;
+            this.gMap.EmptyTileColor = System.Drawing.Color.Navy;
+            this.gMap.GrayScaleMode = false;
+            this.gMap.HelperLineOption = GMap.NET.WindowsForms.HelperLineOptions.DontShow;
+            this.gMap.LevelsKeepInMemmory = 5;
+            this.gMap.Location = new System.Drawing.Point(548, 12);
+            this.gMap.MarkersEnabled = true;
+            this.gMap.MaxZoom = 100;
+            this.gMap.MinZoom = 2;
+            this.gMap.MouseWheelZoomEnabled = true;
+            this.gMap.MouseWheelZoomType = GMap.NET.MouseWheelZoomType.MousePositionWithoutCenter;
+            this.gMap.Name = "gMap";
+            this.gMap.NegativeMode = false;
+            this.gMap.PolygonsEnabled = true;
+            this.gMap.RetryLoadTile = 0;
+            this.gMap.RoutesEnabled = true;
+            this.gMap.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
+            this.gMap.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
+            this.gMap.ShowTileGridLines = false;
+            this.gMap.Size = new System.Drawing.Size(650, 540);
+            this.gMap.TabIndex = 5;
+            this.gMap.Zoom = 10D;
+            // 
             // EXIFGeoTagger
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1210, 564);
+            this.Controls.Add(this.gMap);
             this.Controls.Add(this.txtConsole);
             this.Controls.Add(this.btnGeotag);
             this.Controls.Add(this.txtFilePath);
@@ -92,6 +120,7 @@
         private System.Windows.Forms.TextBox txtFilePath;
         private System.Windows.Forms.Button btnGeotag;
         private System.Windows.Forms.TextBox txtConsole;
+        private GMap.NET.WindowsForms.GMapControl gMap;
     }
 }
 
