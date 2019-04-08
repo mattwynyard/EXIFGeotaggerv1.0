@@ -110,6 +110,16 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="OpenCamera12px.png" />
+    <EmbeddedResource Include="OpenCamera16px.png" />
+    <EmbeddedResource Include="OpenCamera20px.png" />
+    <EmbeddedResource Include="OpenCamera24px.png" />
+    <EmbeddedResource Include="OpenCamera8px.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="OpenCamera4px.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.110.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.110.0\build\net45\System.Data.SQLite.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

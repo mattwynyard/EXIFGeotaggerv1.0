@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,8 @@ using GMap.NET;
 
 using System.Windows.Forms;
 using GMap.NET.MapProviders;
+using GMap.NET.WindowsForms;
+using GMap.NET.WindowsForms.Markers;
 
 namespace EXIFGeotaggerv0._1
 {
@@ -24,20 +27,59 @@ namespace EXIFGeotaggerv0._1
         Dictionary<string, Record> mRecordDict;
         string[] mFiles; //array containing absolute paths of photos.
 
-        string folderPath = "C:\\Road Inspection\\androidapp\\Thumbnails";
-        string geoRefPath = "C:\\Road Inspection\\androidapp\\GeoRef";
+        string folderPath = "C:\\Road Inspection\\Thumbnails";
+        string geoRefPath = "C:\\Road Inspection\\GeoRef";
+
+        Assembly myAssembly;
+        Stream myStream;
+        Bitmap bmpMarker;
+        GMapOverlay markers;
 
         public EXIFGeoTagger()
         {
             InitializeComponent();
             mRecordDict = new Dictionary<string, Record>();
-            gMap.MapProvider = GMapProviders.GoogleMap;
-            gMap.Position = new PointLatLng(-45, 175);
-            gMap.MouseWheelZoomEnabled = true;
-            gMap.Zoom = 10;
-            gMap.DragButton = MouseButtons.Left;
-        
+         
         }
+
+        private void btnMarkers_Click (object sender, EventArgs e)
+        {
+           
+            markers = new GMapOverlay("markers");
+          
+            markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera8px.png");
+           
+            gMap.Overlays.Add(markers);
+            txtConsole.Clear();
+            txtConsole.AppendText("Built markers...");
+
+        }
+
+        private GMapOverlay buildMarker(String icon)
+        {
+            markers = new GMapOverlay("markers");
+            myAssembly = Assembly.GetExecutingAssembly();
+            myStream = myAssembly.GetManifestResourceStream(icon);
+            bmpMarker = (Bitmap)Image.FromStream(myStream);
+            if (mRecordDict != null)
+            {
+                foreach (KeyValuePair<string, Record> record in mRecordDict)
+                {
+                    Double lat = record.Value.Latitude;
+                    Double lon = record.Value.Longitude;
+                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bmpMarker);
+                    marker.Tag = record.Value.PhotoName + "\n" + record.Value.TimeStamp;
+                    //marker = new GMarkerGoogle(new PointLatLng(lat, lon), GMarkerCross.DefaultPen);
+                    markers.Markers.Add(marker);
+                }
+            }
+            return markers;
+        }
+
+        //private void gMap_Scroll((object sender, EventArgs e) {
+
+        //}
+
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
@@ -196,6 +238,64 @@ namespace EXIFGeotaggerv0._1
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
             txtConsole.AppendText("Geotag Finished in: " + elapsedMs + " ms" + Environment.NewLine);
+        }
+
+        private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
+        {
+            var point = gMap.FromLocalToLatLng(e.X, e.Y);
+
+            lbPosition.Text = "latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6);
+            //gMap.MouseHover += gMap_OnMouseHoverChanged;
+        }
+
+        private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
+        {
+            String id = marker.Tag.ToString();
+            //marker.Position.ToString
+            MessageBox.Show(id);
+        }
+
+        private void gMap_OnMapZoomChanged()
+        {
+            txtConsole.Clear();
+            txtConsole.AppendText(gMap.Zoom.ToString());
+            if((int)gMap.Zoom < 12)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera4px.png");
+          
+            } else if ((int)gMap.Zoom < 16 && (int)gMap.Zoom >= 12)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera8px.png");
+
+            } else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 16)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera12px.png");
+
+            } else if ((int) gMap.Zoom < 20 && (int) gMap.Zoom >= 18)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera16px.png");
+            } else
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera24px.png");
+            }
+            gMap.Overlays.Clear();
+            gMap.Overlays.Add(markers);
+
+        }
+
+        private void gMap_Load(object sender, EventArgs e)
+        {
+            gMap.MapProvider = GMapProviders.OpenStreetMap;
+            gMap.Position = new PointLatLng(-36.939318, 174.892701);
+            gMap.MouseWheelZoomEnabled = true;
+            gMap.ShowCenter = false;
+            gMap.MaxZoom = 23;
+            gMap.MinZoom = 5;
+            gMap.Zoom = 10;
+            gMap.DragButton = MouseButtons.Left;
+            gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
+            //gMap.MouseMove += gMap_OnMouseMoved;
+
         }
     }
 }

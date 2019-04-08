@@ -159,6 +159,14 @@ namespace EXIFGeotaggerv0._1
             return item;
         }
 
+        public String PhotoName
+        {
+            get
+            {
+                return photo;
+            }
+        }
+
         public double Latitude
         {
             get
