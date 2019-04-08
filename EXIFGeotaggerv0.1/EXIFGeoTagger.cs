@@ -258,7 +258,10 @@ namespace EXIFGeotaggerv0._1
         private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
         {
             String id = marker.Tag.ToString();
-            //marker.Position.ToString
+            myAssembly = Assembly.GetExecutingAssembly();
+            //myStream = myAssembly.GetManifestResourceStream(icon);
+            //bmpMarker = (Bitmap)Image.FromStream(myStream);
+            //marker.
             MessageBox.Show(id);
         }
 
