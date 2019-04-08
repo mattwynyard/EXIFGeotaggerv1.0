@@ -42,6 +42,13 @@ namespace EXIFGeotaggerv0._1
          
         }
 
+        private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
+        {
+            btnBrowse_Click(sender, e);
+        }
+
+
+
         private void btnMarkers_Click (object sender, EventArgs e)
         {
            
