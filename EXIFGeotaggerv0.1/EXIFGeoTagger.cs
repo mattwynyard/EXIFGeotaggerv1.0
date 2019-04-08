@@ -27,13 +27,16 @@ namespace EXIFGeotaggerv0._1
         Dictionary<string, Record> mRecordDict;
         string[] mFiles; //array containing absolute paths of photos.
 
-        string folderPath = "C:\\Road Inspection\\Thumbnails";
-        string geoRefPath = "C:\\Road Inspection\\GeoRef";
+        string folderPath = "C:\\androidapp\\Thumbnails";
+        string geoRefPath = "C:\\androidapp\\GeoRef";
 
-        Assembly myAssembly;
-        Stream myStream;
-        Bitmap bmpMarker;
-        GMapOverlay markers;
+        private int geoTagCount;
+
+        private Assembly myAssembly;
+        private Stream myStream;
+        private Bitmap bmpMarker;
+        private GMapOverlay markers;
+        private ProgressForm progress;
 
         public EXIFGeoTagger()
         {
@@ -184,68 +187,7 @@ namespace EXIFGeotaggerv0._1
             }
         }
 
-        private void btnGeotag_Click(object sender, EventArgs e)
-        {
-            txtConsole.Clear();
-            txtConsole.AppendText(Environment.NewLine);
-            txtConsole.Clear();
-
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            foreach (string filePath in mFiles)
-            {
-                
-                Image image = new Bitmap(filePath);
-                PropertyItem[] propItems = image.PropertyItems;
-                PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
-                PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-                PropertyItem propItemSat = image.GetPropertyItem(0x0008);
-                PropertyItem propItemDir = image.GetPropertyItem(0x0011);
-                PropertyItem propItemVel = image.GetPropertyItem(0x000D);
-                PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
-                PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
-
-                Record r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
-
-                propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
-                propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
-                propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
-                propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
-                propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
-                propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
-
-                propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
-                propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
-                propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
-                propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
-
-                propItemDateTime = r.getEXIFDateTime(propItemDateTime);
-
-                image.SetPropertyItem(propItemLat);
-                image.SetPropertyItem(propItemLon);
-                image.SetPropertyItem(propItemLatRef);
-                image.SetPropertyItem(propItemLonRef);
-                image.SetPropertyItem(propItemAlt);
-                image.SetPropertyItem(propItemAltRef);
-                image.SetPropertyItem(propItemDir);
-                image.SetPropertyItem(propItemVel);
-                image.SetPropertyItem(propItemPDop);
-                image.SetPropertyItem(propItemSat);
-                image.SetPropertyItem(propItemDateTime);
-
-                image.Save("C:\\androidapp\\GeoRef" + "\\"+ Path.GetFileName(filePath));
-                image.Dispose();
-                txtConsole.AppendText("Geotagged: " + Path.GetFileName(filePath));
-                txtConsole.Clear();
-
-            }
-            watch.Stop();
-            var elapsedMs = watch.ElapsedMilliseconds;
-            txtConsole.AppendText("Geotag Finished in: " + elapsedMs + " ms" + Environment.NewLine);
-        }
+        
 
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
         {
@@ -307,5 +249,163 @@ namespace EXIFGeotaggerv0._1
             //gMap.MouseMove += gMap_OnMouseMoved;
 
         }
-    }
-}
+
+        private void menuQuit_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Really Quit?", "Exit", MessageBoxButtons.OKCancel) == DialogResult.OK)
+            {
+                Application.Exit();
+            }
+        }
+
+        private void menuRunGeoTag_Click(object sender, EventArgs e)
+        {
+            if (bgWorker1.IsBusy != true)
+            {
+                // create a new instance of the alert form
+                progress = new ProgressForm();
+                // event handler for the Cancel button in AlertForm
+               progress.Canceled += new EventHandler<EventArgs>(buttonCancel_Click);
+                progress.Show();
+                // Start the asynchronous operation.
+                bgWorker1.RunWorkerAsync();
+            }
+        }
+
+        public void setProgressBarValue(int value)
+        {
+            progressBar1.Value = value;
+        }
+
+        private void bgWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+            int length = mFiles.Length;
+            geoTagCount = 0;
+            double percent;
+            foreach (string filePath in mFiles)
+            {
+                if (worker.CancellationPending == true)
+                {
+                    e.Cancel = true;
+                    break;
+                }
+                else
+                {
+                    Image image = new Bitmap(filePath);
+                    PropertyItem[] propItems = image.PropertyItems;
+                    PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+                    PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+                    PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+                    PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                    PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+                    PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+                    PropertyItem propItemSat = image.GetPropertyItem(0x0008);
+                    PropertyItem propItemDir = image.GetPropertyItem(0x0011);
+                    PropertyItem propItemVel = image.GetPropertyItem(0x000D);
+                    PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
+                    PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+
+                    Record r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
+
+                    propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
+                    propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
+                    propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
+                    propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
+                    propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
+                    propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
+
+                    propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
+                    propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
+                    propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
+                    propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
+
+                    propItemDateTime = r.getEXIFDateTime(propItemDateTime);
+
+                    image.SetPropertyItem(propItemLat);
+                    image.SetPropertyItem(propItemLon);
+                    image.SetPropertyItem(propItemLatRef);
+                    image.SetPropertyItem(propItemLonRef);
+                    image.SetPropertyItem(propItemAlt);
+                    image.SetPropertyItem(propItemAltRef);
+                    image.SetPropertyItem(propItemDir);
+                    image.SetPropertyItem(propItemVel);
+                    image.SetPropertyItem(propItemPDop);
+                    image.SetPropertyItem(propItemSat);
+                    image.SetPropertyItem(propItemDateTime);
+
+                    image.Save("C:\\androidapp\\GeoRef" + "\\" + Path.GetFileName(filePath));
+                    image.Dispose();
+                    //txtConsole.AppendText("Geotagged: " + Path.GetFileName(filePath));
+                    // txtConsole.Clear();
+                    
+                }
+                geoTagCount++;
+                percent = ((double)geoTagCount / length) * 100;
+                worker.ReportProgress((int)percent);
+            }
+        }
+
+        // This event handler cancels the backgroundworker, fired from Cancel button in AlertForm.
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+            if (bgWorker1.WorkerSupportsCancellation == true)
+            {
+                // Cancel the asynchronous operation.
+                bgWorker1.CancelAsync();
+                // Close the AlertForm
+                progress.Close();
+            }
+        }
+
+        private void bgWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+
+            progress.Message = "Geotagging in n progress, please wait... " + e.ProgressPercentage.ToString() + "% completed";
+            progress.ProgressValue = e.ProgressPercentage;
+        }
+
+        private void bgWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled == true)
+            {
+                string title = "Cancelled";
+                string message = "Geotagging cancelled";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                DialogResult result = MessageBox.Show(message, title, buttons);
+                if (result == DialogResult.Yes)
+                {
+                    this.Close();
+                }
+            }
+            else
+            {
+                if (e.Error != null)
+                {
+
+                    string title = "Error";
+                    string message = e.Error.ToString();
+                    MessageBoxButtons buttons = MessageBoxButtons.OK;
+                    DialogResult result = MessageBox.Show(message, title, buttons);
+                    if (result == DialogResult.Yes)
+                    {
+                        this.Close();
+                    }
+                }
+                else
+                {
+                    string title = "Finished";
+                    string message = "Geotagging complete\n" + geoTagCount + " of " + mFiles.Length + " photos geotagged";
+                    MessageBoxButtons buttons = MessageBoxButtons.OK;
+                    DialogResult result = MessageBox.Show(message, title, buttons);
+                    if (result == DialogResult.Yes)
+                    {
+                        this.Close();
+                    }
+                }
+            }
+            progress.Close();
+            
+        }
+    } //end class   
+} //end namespace

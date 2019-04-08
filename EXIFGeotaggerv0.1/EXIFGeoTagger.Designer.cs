@@ -32,16 +32,20 @@
             this.txtFilePath = new System.Windows.Forms.TextBox();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.txtConsole = new System.Windows.Forms.TextBox();
-            this.btnGeotag = new System.Windows.Forms.Button();
             this.btnMarkers = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.lbPosition = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuNew = new System.Windows.Forms.ToolStripMenuItem();
+            this.projectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuOpen = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuSave = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuQuit = new System.Windows.Forms.ToolStripMenuItem();
             this.geotagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.runToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
+            this.bgWorker1 = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -107,16 +111,6 @@
             this.txtConsole.Size = new System.Drawing.Size(370, 184);
             this.txtConsole.TabIndex = 4;
             // 
-            // btnGeotag
-            // 
-            this.btnGeotag.Location = new System.Drawing.Point(392, 86);
-            this.btnGeotag.Name = "btnGeotag";
-            this.btnGeotag.Size = new System.Drawing.Size(75, 56);
-            this.btnGeotag.TabIndex = 2;
-            this.btnGeotag.Text = "GeoTag";
-            this.btnGeotag.UseVisualStyleBackColor = true;
-            this.btnGeotag.Click += new System.EventHandler(this.btnGeotag_Click);
-            // 
             // btnMarkers
             // 
             this.btnMarkers.Location = new System.Drawing.Point(377, 160);
@@ -139,7 +133,6 @@
             // 
             this.splitContainer1.Panel1.Controls.Add(this.progressBar1);
             this.splitContainer1.Panel1.Controls.Add(this.btnMarkers);
-            this.splitContainer1.Panel1.Controls.Add(this.btnGeotag);
             this.splitContainer1.Panel1.Controls.Add(this.txtConsole);
             this.splitContainer1.Panel1.Controls.Add(this.btnBrowse);
             this.splitContainer1.Panel1.Controls.Add(this.txtFilePath);
@@ -154,7 +147,7 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(3, 242);
+            this.progressBar1.Location = new System.Drawing.Point(0, 271);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(368, 30);
             this.progressBar1.TabIndex = 6;
@@ -183,31 +176,73 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openToolStripMenuItem});
+            this.menuNew,
+            this.menuOpen,
+            this.menuSave,
+            this.menuQuit});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
+            // menuNew
+            // 
+            this.menuNew.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.projectToolStripMenuItem});
+            this.menuNew.Name = "menuNew";
+            this.menuNew.Size = new System.Drawing.Size(146, 22);
+            this.menuNew.Text = "New ";
+            // 
+            // projectToolStripMenuItem
+            // 
+            this.projectToolStripMenuItem.Name = "projectToolStripMenuItem";
+            this.projectToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
+            this.projectToolStripMenuItem.Text = "Project";
+            // 
+            // menuOpen
+            // 
+            this.menuOpen.Name = "menuOpen";
+            this.menuOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+            this.menuOpen.Size = new System.Drawing.Size(146, 22);
+            this.menuOpen.Text = "&Open";
+            this.menuOpen.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.fileMenuOpen_Click);
+            // 
+            // menuSave
+            // 
+            this.menuSave.Name = "menuSave";
+            this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.menuSave.Size = new System.Drawing.Size(146, 22);
+            this.menuSave.Text = "&Save";
+            // 
+            // menuQuit
+            // 
+            this.menuQuit.Name = "menuQuit";
+            this.menuQuit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
+            this.menuQuit.Size = new System.Drawing.Size(146, 22);
+            this.menuQuit.Text = "&Quit";
+            this.menuQuit.Click += new System.EventHandler(this.menuQuit_Click);
+            // 
             // geotagToolStripMenuItem
             // 
             this.geotagToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.runToolStripMenuItem1});
+            this.menuRunGeoTag});
             this.geotagToolStripMenuItem.Name = "geotagToolStripMenuItem";
             this.geotagToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
             this.geotagToolStripMenuItem.Text = "Geotag";
             // 
-            // openToolStripMenuItem
+            // menuRunGeoTag
             // 
-            this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.openToolStripMenuItem.Text = "Open";
-            this.openToolStripMenuItem.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.fileMenuOpen_Click);
+            this.menuRunGeoTag.Name = "menuRunGeoTag";
+            this.menuRunGeoTag.Size = new System.Drawing.Size(95, 22);
+            this.menuRunGeoTag.Text = "Run";
+            this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
             // 
-            // runToolStripMenuItem1
+            // bgWorker1
             // 
-            this.runToolStripMenuItem1.Name = "runToolStripMenuItem1";
-            this.runToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
-            this.runToolStripMenuItem1.Text = "Run";
+            this.bgWorker1.WorkerReportsProgress = true;
+            this.bgWorker1.WorkerSupportsCancellation = true;
+            this.bgWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgWorker1_DoWork);
+            this.bgWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker1_ProgressChanged);
+            this.bgWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker1_RunWorkerCompleted);
             // 
             // EXIFGeoTagger
             // 
@@ -239,7 +274,6 @@
         private System.Windows.Forms.TextBox txtFilePath;
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.TextBox txtConsole;
-        private System.Windows.Forms.Button btnGeotag;
         private System.Windows.Forms.Button btnMarkers;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ProgressBar progressBar1;
@@ -247,8 +281,13 @@
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem geotagToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem runToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem menuOpen;
+        private System.Windows.Forms.ToolStripMenuItem menuRunGeoTag;
+        private System.Windows.Forms.ToolStripMenuItem menuNew;
+        private System.Windows.Forms.ToolStripMenuItem projectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuSave;
+        private System.Windows.Forms.ToolStripMenuItem menuQuit;
+        private System.ComponentModel.BackgroundWorker bgWorker1;
     }
 }
 
