@@ -37,6 +37,7 @@ namespace EXIFGeotaggerv0._1
         private Stream myStream;
         private Bitmap bmpMarker;
         private GMapOverlay markers;
+        private GMapOverlay photoMarkers;
         private ProgressForm progress;
 
         private Boolean data = false;
@@ -54,47 +55,7 @@ namespace EXIFGeotaggerv0._1
             //connectAccess(sender, e);
         }
 
-
-
-        private void btnMarkers_Click (object sender, EventArgs e)
-        {
-           
-            markers = new GMapOverlay("markers");
-          
-            markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera8px.png");
-           
-            gMap.Overlays.Add(markers);
-            txtConsole.Clear();
-            txtConsole.AppendText("Built markers...");
-
-        }
-
-        private GMapOverlay buildMarker(String icon)
-        {
-            markers = new GMapOverlay("markers");
-            myAssembly = Assembly.GetExecutingAssembly();
-            myStream = myAssembly.GetManifestResourceStream(icon);
-            bmpMarker = (Bitmap)Image.FromStream(myStream);
-            if (mRecordDict != null)
-            {
-                foreach (KeyValuePair<string, Record> record in mRecordDict)
-                {
-                    Double lat = record.Value.Latitude;
-                    Double lon = record.Value.Longitude;
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bmpMarker);
-                    marker.Tag = record.Value.PhotoName + "\n" + record.Value.TimeStamp;
-                    //marker = new GMarkerGoogle(new PointLatLng(lat, lon), GMarkerCross.DefaultPen);
-                    markers.Markers.Add(marker);
-                }
-            }
-            return markers;
-        }
-
-        private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            connectAccess(sender, e);
-        }
-
+        #region DatabaseConnect
         private void connectAccess(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -150,7 +111,6 @@ namespace EXIFGeotaggerv0._1
 
         }
 
-       
         private void buildDictionary(int i, Object[] row)
         {
             try
@@ -174,8 +134,121 @@ namespace EXIFGeotaggerv0._1
                 Console.WriteLine(e.StackTrace);
             }
         }
+        #endregion
 
-       
+
+        #region Markers
+        private void markersMenuItem_Click(object sender, EventArgs e)
+        {
+            photoMarkers = buildPhotoMarker("EXIFGeotaggerv0._1.OpenCameraOrange8px.png", "markers");
+            gMap.Overlays.Add(markers);
+        }
+
+        private void btnMarkers_Click (object sender, EventArgs e)
+        {
+           
+            //markers = new GMapOverlay("markers");
+          
+            markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera8px.png", "markers");
+           
+            gMap.Overlays.Add(markers);
+            txtConsole.Clear();
+            txtConsole.AppendText("Built markers...");
+
+        }
+
+        private Bitmap getIcon(String icon)
+        {
+            myAssembly = Assembly.GetExecutingAssembly();
+            myStream = myAssembly.GetManifestResourceStream(icon);
+            return (Bitmap)Image.FromStream(myStream);
+        }
+
+        private GMapOverlay buildPhotoMarker(String icon, String name)
+        {
+            bmpMarker = getIcon(name);
+            foreach (string filePath in mFiles)
+            {
+                Image image = new Bitmap(filePath);
+                PropertyItem[] propItems = image.PropertyItems;
+                PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+                PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+                PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+                PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                //Double lat;
+                //Double lon
+                //if (
+                //    Double lat = record.Value.Latitude;
+                //Double lon = record.Value.Longitude;
+                //GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bmpMarker);
+                photoMarkers.Markers.Add(marker);
+            }
+
+                return markers;
+        }
+
+        private GMapOverlay buildMarker(String icon, String name)
+        {
+
+            bmpMarker = getIcon(name);
+            if (mRecordDict != null)
+            {
+                foreach (KeyValuePair<string, Record> record in mRecordDict)
+                {
+                    Double lat = record.Value.Latitude;
+                    Double lon = record.Value.Longitude;
+                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bmpMarker);
+                    marker.Tag = record.Value.PhotoName + "\n" + record.Value.TimeStamp;
+                    markers.Markers.Add(marker);
+                }
+            }
+            return markers;
+        }
+        #endregion
+
+        private void gMap_OnMapZoomChanged()
+        {
+            txtConsole.Clear();
+            txtConsole.AppendText(gMap.Zoom.ToString());
+            if ((int)gMap.Zoom < 12)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera4px.png", "markers");
+                photoMarkers = buildMarker("EXIFGeotaggerv0._1.OpenCameraOrange4px.png", "markers");
+
+            }
+            else if ((int)gMap.Zoom < 16 && (int)gMap.Zoom >= 12)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera8px.png", "markers");
+                photoMarkers = buildMarker("EXIFGeotaggerv0._1.OpenCameraOrange8px.png", "markers");
+
+            }
+            else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 16)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera12px.png", "markers");
+                photoMarkers = buildMarker("EXIFGeotaggerv0._1.OpenCameraOrange12px.png", "markers");
+
+            }
+            else if ((int)gMap.Zoom < 20 && (int)gMap.Zoom >= 18)
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera16px.png", "markers");
+                photoMarkers = buildMarker("EXIFGeotaggerv0._1.OpenCameraOrange16px.png", "markers");
+            }
+            else
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera24px.png", "markers");
+                photoMarkers = buildMarker("EXIFGeotaggerv0._1.OpenCameraOrange24px.png", "markers");
+            }
+            gMap.Overlays.Clear();
+            gMap.Overlays.Add(markers);
+
+        }
+
+        #region Events
+        private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            connectAccess(sender, e);
+        }
+
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
         {
             var point = gMap.FromLocalToLatLng(e.X, e.Y);
@@ -192,34 +265,6 @@ namespace EXIFGeotaggerv0._1
             //bmpMarker = (Bitmap)Image.FromStream(myStream);
             //marker.
             MessageBox.Show(id);
-        }
-
-        private void gMap_OnMapZoomChanged()
-        {
-            txtConsole.Clear();
-            txtConsole.AppendText(gMap.Zoom.ToString());
-            if((int)gMap.Zoom < 12)
-            {
-                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera4px.png");
-          
-            } else if ((int)gMap.Zoom < 16 && (int)gMap.Zoom >= 12)
-            {
-                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera8px.png");
-
-            } else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 16)
-            {
-                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera12px.png");
-
-            } else if ((int) gMap.Zoom < 20 && (int) gMap.Zoom >= 18)
-            {
-                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera16px.png");
-            } else
-            {
-                markers = buildMarker("EXIFGeotaggerv0._1.OpenCamera24px.png");
-            }
-            gMap.Overlays.Clear();
-            gMap.Overlays.Add(markers);
-
         }
 
         private void gMap_Load(object sender, EventArgs e)
@@ -267,11 +312,6 @@ namespace EXIFGeotaggerv0._1
                 // Start the asynchronous operation.
                 bgWorker1.RunWorkerAsync();
             }
-        }
-
-        public void setProgressBarValue(int value)
-        {
-            progressBar1.Value = value;
         }
 
         private void bgWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -339,9 +379,7 @@ namespace EXIFGeotaggerv0._1
                     } catch (KeyNotFoundException ex)
                     {
                         errorCount++;
-                    }
-
-                    
+                    }      
                 }
                 geoTagCount++;
                 percent = ((double)geoTagCount / length) * 100;
@@ -408,8 +446,9 @@ namespace EXIFGeotaggerv0._1
                 }
             }
             progress.Close();
-            
+           
         }
+        #endregion
 
         
     } //end class   

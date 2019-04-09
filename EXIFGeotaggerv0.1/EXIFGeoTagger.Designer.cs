@@ -47,6 +47,7 @@
             this.accessmdbToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.plotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.photosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.markersMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.geotagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -196,7 +197,7 @@
             this.menuNew.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.projectToolStripMenuItem});
             this.menuNew.Name = "menuNew";
-            this.menuNew.Size = new System.Drawing.Size(180, 22);
+            this.menuNew.Size = new System.Drawing.Size(146, 22);
             this.menuNew.Text = "New ";
             // 
             // projectToolStripMenuItem
@@ -209,7 +210,7 @@
             // 
             this.menuOpen.Name = "menuOpen";
             this.menuOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuOpen.Size = new System.Drawing.Size(180, 22);
+            this.menuOpen.Size = new System.Drawing.Size(146, 22);
             this.menuOpen.Text = "&Open";
             this.menuOpen.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.fileMenuOpen_Click);
             // 
@@ -217,14 +218,14 @@
             // 
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(180, 22);
+            this.menuSave.Size = new System.Drawing.Size(146, 22);
             this.menuSave.Text = "&Save";
             // 
             // menuQuit
             // 
             this.menuQuit.Name = "menuQuit";
             this.menuQuit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.menuQuit.Size = new System.Drawing.Size(180, 22);
+            this.menuQuit.Size = new System.Drawing.Size(146, 22);
             this.menuQuit.Text = "&Quit";
             this.menuQuit.Click += new System.EventHandler(this.menuQuit_Click);
             // 
@@ -233,21 +234,22 @@
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.accessmdbToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.importToolStripMenuItem.Text = "Import";
             this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess);
             // 
             // accessmdbToolStripMenuItem
             // 
             this.accessmdbToolStripMenuItem.Name = "accessmdbToolStripMenuItem";
-            this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.accessmdbToolStripMenuItem.Text = "Access (.mdb)";
             this.accessmdbToolStripMenuItem.Click += new System.EventHandler(this.accessmdbToolStripMenuItem_Click);
             // 
             // plotToolStripMenuItem
             // 
             this.plotToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.photosToolStripMenuItem});
+            this.photosToolStripMenuItem,
+            this.markersMenuItem});
             this.plotToolStripMenuItem.Name = "plotToolStripMenuItem";
             this.plotToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
             this.plotToolStripMenuItem.Text = "Plot";
@@ -255,8 +257,15 @@
             // photosToolStripMenuItem
             // 
             this.photosToolStripMenuItem.Name = "photosToolStripMenuItem";
-            this.photosToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
+            this.photosToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.photosToolStripMenuItem.Text = "Photos";
+            // 
+            // markersMenuItem
+            // 
+            this.markersMenuItem.Name = "markersMenuItem";
+            this.markersMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.markersMenuItem.Text = "Markers";
+            this.markersMenuItem.Click += new System.EventHandler(this.markersMenuItem_Click);
             // 
             // geotagToolStripMenuItem
             // 
@@ -336,6 +345,7 @@
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem accessmdbToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem markersMenuItem;
     }
 }
 
