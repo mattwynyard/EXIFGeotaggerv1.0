@@ -47,7 +47,7 @@ namespace EXIFGeotaggerv0._1
 
         private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
         {
-            btnBrowse_Click(sender, e);
+            connectAccess(sender, e);
         }
 
 
@@ -86,12 +86,12 @@ namespace EXIFGeotaggerv0._1
             return markers;
         }
 
-        //private void gMap_Scroll((object sender, EventArgs e) {
+        private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            connectAccess(sender, e);
+        }
 
-        //}
-
-
-        private void btnBrowse_Click(object sender, EventArgs e)
+        private void connectAccess(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "mdb files|*.mdb";
@@ -101,24 +101,8 @@ namespace EXIFGeotaggerv0._1
             openFileDialog.DefaultExt = "mdb";
             openFileDialog.ShowDialog();
 
-            //mRecords = new ArrayList();
-
             this.txtFilePath.Text = openFileDialog.FileName;
             mDBPath = openFileDialog.FileName;
-
-            
-            mFiles = Directory.GetFiles(folderPath);
-            foreach (string file in mFiles)
-            {
-                string path = Path.GetFileNameWithoutExtension(file); //filename without extension of photo
-                Record r = new Record(path);
-                mRecordDict.Add(path, r);
-                txtConsole.AppendText(mRecordDict.Count + " added to dictonary");
-                txtConsole.Clear();
-            }
-            //txtConsole.AppendText("Exctracted " + mFiles.Length + " files" + Environment.NewLine);
-            //txtConsole.AppendText("Built dictionary..." + Environment.NewLine);
-            //txtConsole.AppendText(mRecordDict.Count + " keys added" + Environment.NewLine);
 
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                                 "Microsoft.Jet.OLEDB.4.0", mDBPath, 5);
@@ -126,7 +110,7 @@ namespace EXIFGeotaggerv0._1
             OleDbConnection connection = new OleDbConnection(connectionString);
             string connectionStr = connection.ConnectionString;
 
-            string strSQL = "SELECT * FROM PhotoList;";
+            string strSQL = "SELECT * FROM PhotoList;"; // WHERE PhotoList.GeoMark = true;";
 
             OleDbCommand command = new OleDbCommand(strSQL, connection);
             // Open the connection and execute the select command.  
@@ -135,8 +119,8 @@ namespace EXIFGeotaggerv0._1
             {
                 // Open connecton  
                 connection.Open();
-                String[] photoPath = new String[mFiles.Length];
-                
+                //String[] photoPath = new String[mFiles.Length];
+
                 using (OleDbDataReader reader = command.ExecuteReader())
                 {
                     int i = 0;
@@ -147,7 +131,7 @@ namespace EXIFGeotaggerv0._1
                         String photo = (string)row[1];
                         txtConsole.AppendText("Reading... " + photo + " from database" + Environment.NewLine);
                         txtConsole.Clear();
-                        buildDictionary(i, photo, row);
+                        buildDictionary(i, row);
                         i++;
                     }
                     recordCount = i;
@@ -157,20 +141,74 @@ namespace EXIFGeotaggerv0._1
             {
                 Console.WriteLine(ex.Message);
             }
-
-            txtConsole.AppendText("Exctracted " + mFiles.Length + " photos" + Environment.NewLine);
-            txtConsole.AppendText("Built dictionary..." + Environment.NewLine);
-            txtConsole.AppendText(mRecordDict.Count + " keys added" + Environment.NewLine);
-            txtConsole.AppendText(recordCount + " keys populated" + Environment.NewLine);
-         
-
         }
 
-        private void buildDictionary(int i, String photo, Object[] row)
+        //private void connectDataSource_TEMP(object sender, EventArgs e)
+        //{
+        //    mFiles = Directory.GetFiles(folderPath);
+        //    foreach (string file in mFiles)
+        //    {
+        //        string path = Path.GetFileNameWithoutExtension(file); //filename without extension of photo
+        //        Record r = new Record(path);
+        //        mRecordDict.Add(path, r);
+        //        txtConsole.AppendText(mRecordDict.Count + " added to dictonary");
+        //        txtConsole.Clear();
+        //    }
+
+        //    string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
+        //                        "Microsoft.Jet.OLEDB.4.0", mDBPath, 5);
+
+        //    OleDbConnection connection = new OleDbConnection(connectionString);
+        //    string connectionStr = connection.ConnectionString;
+
+        //    string strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
+
+        //    OleDbCommand command = new OleDbCommand(strSQL, connection);
+        //    // Open the connection and execute the select command.  
+        //    int recordCount = 0;
+        //    try
+        //    {
+        //        // Open connecton  
+        //        connection.Open();
+        //        String[] photoPath = new String[mFiles.Length];
+
+        //        using (OleDbDataReader reader = command.ExecuteReader())
+        //        {
+        //            int i = 0;
+        //            while (reader.Read())
+        //            {
+        //                Object[] row = new Object[reader.FieldCount];
+        //                reader.GetValues(row);
+        //                String photo = (string)row[1];
+        //                txtConsole.AppendText("Reading... " + photo + " from database" + Environment.NewLine);
+        //                txtConsole.Clear();
+        //                buildDictionary(i, photo, row);
+        //                i++;
+        //            }
+        //            recordCount = i;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine(ex.Message);
+        //    }
+
+        //    txtConsole.AppendText("Exctracted " + mFiles.Length + " photos" + Environment.NewLine);
+        //    txtConsole.AppendText("Built dictionary..." + Environment.NewLine);
+        //    txtConsole.AppendText(mRecordDict.Count + " keys added" + Environment.NewLine);
+        //    txtConsole.AppendText(recordCount + " keys populated" + Environment.NewLine);
+
+
+        //}
+
+        //private void buildDictionary(int i, String photo, Object[] row)
+
+        private void buildDictionary(int i, Object[] row)
         {
             try
             {
-                Record r = mRecordDict[photo];
+                //Record r = mRecordDict[photo];
+                Record r = new Record((string)row[1]);
                 r.Latitude = (double)row[2];
                 r.Longitude = (double)row[3];
                 r.Altitude = (double)row[4];
@@ -180,6 +218,8 @@ namespace EXIFGeotaggerv0._1
                 r.PDop = Convert.ToDouble(row[8]);
                 r.Inspector = Convert.ToString(row[9]);
                 r.TimeStamp = Convert.ToDateTime(row[11]);
+                mRecordDict.Add(r., r);
+
             }
             catch (Exception e)
             {
@@ -187,8 +227,7 @@ namespace EXIFGeotaggerv0._1
             }
         }
 
-        
-
+       
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
         {
             var point = gMap.FromLocalToLatLng(e.X, e.Y);
@@ -260,6 +299,16 @@ namespace EXIFGeotaggerv0._1
 
         private void menuRunGeoTag_Click(object sender, EventArgs e)
         {
+            using (var browseDialog = new FolderBrowserDialog())
+            {
+                DialogResult result = browseDialog.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(browseDialog.SelectedPath))
+                {
+                    mFiles = Directory.GetFiles(browseDialog.SelectedPath);
+                    MessageBox.Show("Files found: " + mFiles.Length.ToString(), "Message");
+                }
+            }
             if (bgWorker1.IsBusy != true)
             {
                 // create a new instance of the alert form
@@ -407,5 +456,7 @@ namespace EXIFGeotaggerv0._1
             progress.Close();
             
         }
+
+        
     } //end class   
 } //end namespace

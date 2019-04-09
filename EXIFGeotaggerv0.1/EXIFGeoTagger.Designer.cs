@@ -43,8 +43,13 @@
             this.menuOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.menuSave = new System.Windows.Forms.ToolStripMenuItem();
             this.menuQuit = new System.Windows.Forms.ToolStripMenuItem();
+            this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.accessmdbToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.plotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.photosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.geotagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bgWorker1 = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -101,7 +106,6 @@
             this.btnBrowse.TabIndex = 0;
             this.btnBrowse.Text = "Browse";
             this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // txtConsole
             // 
@@ -166,7 +170,9 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.geotagToolStripMenuItem});
+            this.plotToolStripMenuItem,
+            this.geotagToolStripMenuItem,
+            this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1210, 24);
@@ -179,7 +185,8 @@
             this.menuNew,
             this.menuOpen,
             this.menuSave,
-            this.menuQuit});
+            this.menuQuit,
+            this.importToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -189,7 +196,7 @@
             this.menuNew.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.projectToolStripMenuItem});
             this.menuNew.Name = "menuNew";
-            this.menuNew.Size = new System.Drawing.Size(146, 22);
+            this.menuNew.Size = new System.Drawing.Size(180, 22);
             this.menuNew.Text = "New ";
             // 
             // projectToolStripMenuItem
@@ -202,7 +209,7 @@
             // 
             this.menuOpen.Name = "menuOpen";
             this.menuOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuOpen.Size = new System.Drawing.Size(146, 22);
+            this.menuOpen.Size = new System.Drawing.Size(180, 22);
             this.menuOpen.Text = "&Open";
             this.menuOpen.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.fileMenuOpen_Click);
             // 
@@ -210,31 +217,67 @@
             // 
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(146, 22);
+            this.menuSave.Size = new System.Drawing.Size(180, 22);
             this.menuSave.Text = "&Save";
             // 
             // menuQuit
             // 
             this.menuQuit.Name = "menuQuit";
             this.menuQuit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.menuQuit.Size = new System.Drawing.Size(146, 22);
+            this.menuQuit.Size = new System.Drawing.Size(180, 22);
             this.menuQuit.Text = "&Quit";
             this.menuQuit.Click += new System.EventHandler(this.menuQuit_Click);
+            // 
+            // importToolStripMenuItem
+            // 
+            this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.accessmdbToolStripMenuItem});
+            this.importToolStripMenuItem.Name = "importToolStripMenuItem";
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importToolStripMenuItem.Text = "Import";
+            this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess);
+            // 
+            // accessmdbToolStripMenuItem
+            // 
+            this.accessmdbToolStripMenuItem.Name = "accessmdbToolStripMenuItem";
+            this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.accessmdbToolStripMenuItem.Text = "Access (.mdb)";
+            this.accessmdbToolStripMenuItem.Click += new System.EventHandler(this.accessmdbToolStripMenuItem_Click);
+            // 
+            // plotToolStripMenuItem
+            // 
+            this.plotToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.photosToolStripMenuItem});
+            this.plotToolStripMenuItem.Name = "plotToolStripMenuItem";
+            this.plotToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
+            this.plotToolStripMenuItem.Text = "Plot";
+            // 
+            // photosToolStripMenuItem
+            // 
+            this.photosToolStripMenuItem.Name = "photosToolStripMenuItem";
+            this.photosToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
+            this.photosToolStripMenuItem.Text = "Photos";
             // 
             // geotagToolStripMenuItem
             // 
             this.geotagToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuRunGeoTag});
             this.geotagToolStripMenuItem.Name = "geotagToolStripMenuItem";
-            this.geotagToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
-            this.geotagToolStripMenuItem.Text = "Geotag";
+            this.geotagToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.geotagToolStripMenuItem.Text = "Tools";
             // 
             // menuRunGeoTag
             // 
             this.menuRunGeoTag.Name = "menuRunGeoTag";
-            this.menuRunGeoTag.Size = new System.Drawing.Size(95, 22);
-            this.menuRunGeoTag.Text = "Run";
+            this.menuRunGeoTag.Size = new System.Drawing.Size(112, 22);
+            this.menuRunGeoTag.Text = "Geotag";
             this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
             // 
             // bgWorker1
             // 
@@ -288,6 +331,11 @@
         private System.Windows.Forms.ToolStripMenuItem menuSave;
         private System.Windows.Forms.ToolStripMenuItem menuQuit;
         private System.ComponentModel.BackgroundWorker bgWorker1;
+        private System.Windows.Forms.ToolStripMenuItem plotToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem photosToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem accessmdbToolStripMenuItem;
     }
 }
 
