@@ -31,6 +31,7 @@ namespace EXIFGeotaggerv0._1
         string geoRefPath = "C:\\androidapp\\GeoRef";
 
         private int geoTagCount;
+        private int errorCount;
 
         private Assembly myAssembly;
         private Stream myStream;
@@ -38,16 +39,19 @@ namespace EXIFGeotaggerv0._1
         private GMapOverlay markers;
         private ProgressForm progress;
 
+        private Boolean data = false;
+
         public EXIFGeoTagger()
         {
             InitializeComponent();
             mRecordDict = new Dictionary<string, Record>();
-         
+            this.menuRunGeoTag.Enabled = false;
+
         }
 
         private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
         {
-            connectAccess(sender, e);
+            //connectAccess(sender, e);
         }
 
 
@@ -140,69 +144,13 @@ namespace EXIFGeotaggerv0._1
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                this.menuRunGeoTag.Enabled = false;
             }
+            this.menuRunGeoTag.Enabled = true;
+
         }
 
-        //private void connectDataSource_TEMP(object sender, EventArgs e)
-        //{
-        //    mFiles = Directory.GetFiles(folderPath);
-        //    foreach (string file in mFiles)
-        //    {
-        //        string path = Path.GetFileNameWithoutExtension(file); //filename without extension of photo
-        //        Record r = new Record(path);
-        //        mRecordDict.Add(path, r);
-        //        txtConsole.AppendText(mRecordDict.Count + " added to dictonary");
-        //        txtConsole.Clear();
-        //    }
-
-        //    string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
-        //                        "Microsoft.Jet.OLEDB.4.0", mDBPath, 5);
-
-        //    OleDbConnection connection = new OleDbConnection(connectionString);
-        //    string connectionStr = connection.ConnectionString;
-
-        //    string strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
-
-        //    OleDbCommand command = new OleDbCommand(strSQL, connection);
-        //    // Open the connection and execute the select command.  
-        //    int recordCount = 0;
-        //    try
-        //    {
-        //        // Open connecton  
-        //        connection.Open();
-        //        String[] photoPath = new String[mFiles.Length];
-
-        //        using (OleDbDataReader reader = command.ExecuteReader())
-        //        {
-        //            int i = 0;
-        //            while (reader.Read())
-        //            {
-        //                Object[] row = new Object[reader.FieldCount];
-        //                reader.GetValues(row);
-        //                String photo = (string)row[1];
-        //                txtConsole.AppendText("Reading... " + photo + " from database" + Environment.NewLine);
-        //                txtConsole.Clear();
-        //                buildDictionary(i, photo, row);
-        //                i++;
-        //            }
-        //            recordCount = i;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex.Message);
-        //    }
-
-        //    txtConsole.AppendText("Exctracted " + mFiles.Length + " photos" + Environment.NewLine);
-        //    txtConsole.AppendText("Built dictionary..." + Environment.NewLine);
-        //    txtConsole.AppendText(mRecordDict.Count + " keys added" + Environment.NewLine);
-        //    txtConsole.AppendText(recordCount + " keys populated" + Environment.NewLine);
-
-
-        //}
-
-        //private void buildDictionary(int i, String photo, Object[] row)
-
+       
         private void buildDictionary(int i, Object[] row)
         {
             try
@@ -329,8 +277,10 @@ namespace EXIFGeotaggerv0._1
         private void bgWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
+            Record r;
             int length = mFiles.Length;
             geoTagCount = 0;
+           
             double percent;
             foreach (string filePath in mFiles)
             {
@@ -355,38 +305,42 @@ namespace EXIFGeotaggerv0._1
                     PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
                     PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
 
-                    Record r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
+                    try
+                    {
+                        r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
+                        propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
+                        propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
+                        propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
+                        propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
+                        propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
+                        propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
 
-                    propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
-                    propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
-                    propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
-                    propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
-                    propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
-                    propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
+                        propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
+                        propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
+                        propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
+                        propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
 
-                    propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
-                    propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
-                    propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
-                    propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
+                        propItemDateTime = r.getEXIFDateTime(propItemDateTime);
 
-                    propItemDateTime = r.getEXIFDateTime(propItemDateTime);
+                        image.SetPropertyItem(propItemLat);
+                        image.SetPropertyItem(propItemLon);
+                        image.SetPropertyItem(propItemLatRef);
+                        image.SetPropertyItem(propItemLonRef);
+                        image.SetPropertyItem(propItemAlt);
+                        image.SetPropertyItem(propItemAltRef);
+                        image.SetPropertyItem(propItemDir);
+                        image.SetPropertyItem(propItemVel);
+                        image.SetPropertyItem(propItemPDop);
+                        image.SetPropertyItem(propItemSat);
+                        image.SetPropertyItem(propItemDateTime);
 
-                    image.SetPropertyItem(propItemLat);
-                    image.SetPropertyItem(propItemLon);
-                    image.SetPropertyItem(propItemLatRef);
-                    image.SetPropertyItem(propItemLonRef);
-                    image.SetPropertyItem(propItemAlt);
-                    image.SetPropertyItem(propItemAltRef);
-                    image.SetPropertyItem(propItemDir);
-                    image.SetPropertyItem(propItemVel);
-                    image.SetPropertyItem(propItemPDop);
-                    image.SetPropertyItem(propItemSat);
-                    image.SetPropertyItem(propItemDateTime);
+                        image.Save("C:\\androidapp\\GeoRef" + "\\" + Path.GetFileName(filePath));
+                        image.Dispose();
+                    } catch (KeyNotFoundException ex)
+                    {
+                        errorCount++;
+                    }
 
-                    image.Save("C:\\androidapp\\GeoRef" + "\\" + Path.GetFileName(filePath));
-                    image.Dispose();
-                    //txtConsole.AppendText("Geotagged: " + Path.GetFileName(filePath));
-                    // txtConsole.Clear();
                     
                 }
                 geoTagCount++;
@@ -444,7 +398,7 @@ namespace EXIFGeotaggerv0._1
                 else
                 {
                     string title = "Finished";
-                    string message = "Geotagging complete\n" + geoTagCount + " of " + mFiles.Length + " photos geotagged";
+                    string message = "Geotagging complete\n" + (geoTagCount - errorCount) + " of " + mFiles.Length + " photos geotagged";
                     MessageBoxButtons buttons = MessageBoxButtons.OK;
                     DialogResult result = MessageBox.Show(message, title, buttons);
                     if (result == DialogResult.Yes)
