@@ -110,7 +110,7 @@ namespace EXIFGeotaggerv0._1
             OleDbConnection connection = new OleDbConnection(connectionString);
             string connectionStr = connection.ConnectionString;
 
-            string strSQL = "SELECT * FROM PhotoList;"; // WHERE PhotoList.GeoMark = true;";
+            string strSQL = "SELECT * FROM PhotoList;"; //WHERE PhotoList.GeoMark = true;";
 
             OleDbCommand command = new OleDbCommand(strSQL, connection);
             // Open the connection and execute the select command.  
@@ -218,7 +218,7 @@ namespace EXIFGeotaggerv0._1
                 r.PDop = Convert.ToDouble(row[8]);
                 r.Inspector = Convert.ToString(row[9]);
                 r.TimeStamp = Convert.ToDateTime(row[11]);
-                mRecordDict.Add(r., r);
+                mRecordDict.Add(r.PhotoName, r);
 
             }
             catch (Exception e)
