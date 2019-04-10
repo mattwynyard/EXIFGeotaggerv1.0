@@ -29,10 +29,7 @@
         private void InitializeComponent()
         {
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
-            this.txtFilePath = new System.Windows.Forms.TextBox();
-            this.btnBrowse = new System.Windows.Forms.Button();
             this.txtConsole = new System.Windows.Forms.TextBox();
-            this.btnMarkers = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.lbPosition = new System.Windows.Forms.Label();
@@ -92,22 +89,6 @@
             this.gMap.Load += new System.EventHandler(this.gMap_Load);
             this.gMap.MouseMove += new System.Windows.Forms.MouseEventHandler(this.gMap_OnMouseMoved);
             // 
-            // txtFilePath
-            // 
-            this.txtFilePath.Location = new System.Drawing.Point(0, 17);
-            this.txtFilePath.Name = "txtFilePath";
-            this.txtFilePath.Size = new System.Drawing.Size(370, 20);
-            this.txtFilePath.TabIndex = 1;
-            // 
-            // btnBrowse
-            // 
-            this.btnBrowse.Location = new System.Drawing.Point(376, 10);
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(110, 33);
-            this.btnBrowse.TabIndex = 0;
-            this.btnBrowse.Text = "Browse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            // 
             // txtConsole
             // 
             this.txtConsole.Location = new System.Drawing.Point(0, 43);
@@ -115,16 +96,6 @@
             this.txtConsole.Name = "txtConsole";
             this.txtConsole.Size = new System.Drawing.Size(370, 184);
             this.txtConsole.TabIndex = 4;
-            // 
-            // btnMarkers
-            // 
-            this.btnMarkers.Location = new System.Drawing.Point(377, 160);
-            this.btnMarkers.Name = "btnMarkers";
-            this.btnMarkers.Size = new System.Drawing.Size(109, 34);
-            this.btnMarkers.TabIndex = 5;
-            this.btnMarkers.Text = "Show markers";
-            this.btnMarkers.UseVisualStyleBackColor = true;
-            this.btnMarkers.Click += new System.EventHandler(this.btnMarkers_Click);
             // 
             // splitContainer1
             // 
@@ -137,10 +108,7 @@
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.progressBar1);
-            this.splitContainer1.Panel1.Controls.Add(this.btnMarkers);
             this.splitContainer1.Panel1.Controls.Add(this.txtConsole);
-            this.splitContainer1.Panel1.Controls.Add(this.btnBrowse);
-            this.splitContainer1.Panel1.Controls.Add(this.txtFilePath);
             // 
             // splitContainer1.Panel2
             // 
@@ -259,6 +227,7 @@
             this.photosToolStripMenuItem.Name = "photosToolStripMenuItem";
             this.photosToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.photosToolStripMenuItem.Text = "Photos";
+            this.photosToolStripMenuItem.Click += new System.EventHandler(this.photosToolStripMenuItem_Click);
             // 
             // markersMenuItem
             // 
@@ -323,10 +292,7 @@
         #endregion
 
         private GMap.NET.WindowsForms.GMapControl gMap;
-        private System.Windows.Forms.TextBox txtFilePath;
-        private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.TextBox txtConsole;
-        private System.Windows.Forms.Button btnMarkers;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label lbPosition;
