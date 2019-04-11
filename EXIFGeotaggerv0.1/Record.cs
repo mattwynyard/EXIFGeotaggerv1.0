@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 
 namespace EXIFGeotaggerv0._1
 {
-    class Record
+    class Record : EXIFMarker
     {
-        private String photo;
-        private double latitude;
-        private double longitude;
-        private double altitude;
-        private double bearing;
-        private double velocity;
-        private int satellites;
-        private double pdop;
-        private String inspector;
-        private DateTime timestamp;
+        //private String photo;
+        //private double latitude;
+        //private double longitude;
+        //private double altitude;
+        //private double bearing;
+        //private double velocity;
+        //private int satellites;
+        //private double pdop;
+        //private String inspector;
+        //private DateTime timestamp;
 
         int[] exifLatitude;
         int[] exifLongitude;
@@ -159,121 +159,121 @@ namespace EXIFGeotaggerv0._1
             return item;
         }
 
-        public String PhotoName
-        {
-            get
-            {
-                return photo;
-            }
-        }
+        //public String PhotoName
+        //{
+        //    get
+        //    {
+        //        return photo;
+        //    }
+        //}
 
-        public double Latitude
-        {
-            get
-            {
-                return latitude;
-            }
-            set
-            {
-                this.latitude = value;
-            }
-        }
+        //public double Latitude
+        //{
+        //    get
+        //    {
+        //        return latitude;
+        //    }
+        //    set
+        //    {
+        //        this.latitude = value;
+        //    }
+        //}
 
-        public double Longitude
-        {
-            get
-            {
-                return longitude;
-            }
-            set
-            {
-                this.longitude = value;
-            }
-        }
+        //public double Longitude
+        //{
+        //    get
+        //    {
+        //        return longitude;
+        //    }
+        //    set
+        //    {
+        //        this.longitude = value;
+        //    }
+        //}
 
-        public double Altitude
-        {
-            get
-            {
-                return altitude;
-            }
-            set
-            {
-                this.altitude = value;
-            }
-        }
+        //public double Altitude
+        //{
+        //    get
+        //    {
+        //        return altitude;
+        //    }
+        //    set
+        //    {
+        //        this.altitude = value;
+        //    }
+        //}
 
-        public double Bearing
-        {
-            get
-            {
-                return bearing;
-            }
-            set
-            {
-                this.bearing = value;
-            }
-        }
+        //public double Bearing
+        //{
+        //    get
+        //    {
+        //        return bearing;
+        //    }
+        //    set
+        //    {
+        //        this.bearing = value;
+        //    }
+        //}
 
-        public double Velocity
-        {
-            get
-            {
-                return velocity;
-            }
-            set
-            {
-                this.velocity = value;
-            }
-        }
+        //public double Velocity
+        //{
+        //    get
+        //    {
+        //        return velocity;
+        //    }
+        //    set
+        //    {
+        //        this.velocity = value;
+        //    }
+        //}
 
-        public int Satellites
-        {
-            get
-            {
-                return satellites;
-            }
-            set
-            {
-                this.satellites = value;
-            }
-        }
+        //public int Satellites
+        //{
+        //    get
+        //    {
+        //        return satellites;
+        //    }
+        //    set
+        //    {
+        //        this.satellites = value;
+        //    }
+        //}
 
-        public double PDop
-        {
-            get
-            {
-                return pdop;
-            }
-            set
-            {
-                this.pdop = value;
-            }
-        }
+        //public double PDop
+        //{
+        //    get
+        //    {
+        //        return pdop;
+        //    }
+        //    set
+        //    {
+        //        this.pdop = value;
+        //    }
+        //}
 
-        public String Inspector
-        {
-            get
-            {
-                return inspector;
-            }
-            set
-            {
-                this.inspector = value;
-            }
-        }
+        //public String Inspector
+        //{
+        //    get
+        //    {
+        //        return inspector;
+        //    }
+        //    set
+        //    {
+        //        this.inspector = value;
+        //    }
+        //}
 
-        public DateTime TimeStamp
-        {
-            get
-            {
-                return timestamp;
-            }
-            set
-            {
-                this.timestamp = value;
-            }
-        }
+        //public DateTime TimeStamp
+        //{
+        //    get
+        //    {
+        //        return timestamp;
+        //    }
+        //    set
+        //    {
+        //        this.timestamp = value;
+        //    }
+        //}
 
     }
 

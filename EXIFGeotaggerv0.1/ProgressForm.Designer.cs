@@ -71,6 +71,7 @@
             this.Controls.Add(this.lbMessage);
             this.Name = "ProgressForm";
             this.Text = "Geotagging";
+            this.Load += new System.EventHandler(this.ProgressForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

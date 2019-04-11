@@ -38,5 +38,10 @@ namespace EXIFGeotaggerv0._1
             if (ea != null)
                 ea(this, e);
         }
+
+        private void ProgressForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

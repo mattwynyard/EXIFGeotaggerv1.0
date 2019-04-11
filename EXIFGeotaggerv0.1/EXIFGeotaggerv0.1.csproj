@@ -75,7 +75,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Class1.cs" />
     <Compile Include="EXIFMarker.cs" />
+    <Compile Include="ImportDataForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ImportDataForm.Designer.cs">
+      <DependentUpon>ImportDataForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProgressForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -93,6 +100,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="EXIFGeoTagger.resx">
       <DependentUpon>EXIFGeoTagger.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ImportDataForm.resx">
+      <DependentUpon>ImportDataForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProgressForm.resx">
       <DependentUpon>ProgressForm.cs</DependentUpon>

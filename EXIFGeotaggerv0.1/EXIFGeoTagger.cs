@@ -22,9 +22,15 @@ namespace EXIFGeotaggerv0._1
 {
     public partial class EXIFGeoTagger : Form
     {
-        String mDBPath;
+        public String mDBPath;
+        public string mLayer;
+        public Color mlayerColour;
+
+        private string mSelectedOverlay;
         Dictionary<string, Record> mRecordDict;
         string[] mFiles; //array containing absolute paths of photos.
+
+        ImportDataForm importForm;
 
         private int geoTagCount;
         private int errorCount;
@@ -39,13 +45,15 @@ namespace EXIFGeotaggerv0._1
 
         private List<GMapMarker> photoMarkerArray;
         private List<GMapMarker> gpsMarkerArray;
+        private List<EXIFMarker> exifPhotoMarkerArray;
+        private List<GMapOverlay> gpsOverlayArray;
 
         private Boolean data = false;
 
         public EXIFGeoTagger()
         {
             InitializeComponent();
-            mRecordDict = new Dictionary<string, Record>();
+           
             this.menuRunGeoTag.Enabled = false;
 
         }
@@ -71,17 +79,30 @@ namespace EXIFGeotaggerv0._1
         }
 
         #region DatabaseConnect
-        private void connectAccess(object sender, EventArgs e)
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "mdb files|*.mdb";
-            openFileDialog.FilterIndex = 2;
-            openFileDialog.Title = "Browse Files";
-            openFileDialog.RestoreDirectory = true;
-            openFileDialog.DefaultExt = "mdb";
-            openFileDialog.ShowDialog();
 
-            mDBPath = openFileDialog.FileName;
+
+        private void connectAccess_Click(object sender, EventArgs e)
+        {
+            importForm = new ImportDataForm();
+            mRecordDict = new Dictionary<string, Record>();
+            importForm.mParent = this;
+            
+            importForm.Show();
+            
+        }
+        public void importAccessData(object sender, EventArgs e)
+        {
+            //OpenFileDialog openFileDialog = new OpenFileDialog();
+            //openFileDialog.Filter = "mdb files|*.mdb";
+            //openFileDialog.FilterIndex = 2;
+            //openFileDialog.Title = "Browse Files";
+            //openFileDialog.RestoreDirectory = true;
+            //openFileDialog.DefaultExt = "mdb";
+            //openFileDialog.ShowDialog();
+
+            //mDBPath = openFileDialog.FileName;
+
+            importForm.Close();
 
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                                 "Microsoft.Jet.OLEDB.4.0", mDBPath, 5);
@@ -120,7 +141,7 @@ namespace EXIFGeotaggerv0._1
                 Console.WriteLine(ex.Message);
                 this.menuRunGeoTag.Enabled = false;
             }
-            this.menuRunGeoTag.Enabled = true;
+            plotLayer();
 
         }
 
@@ -146,6 +167,7 @@ namespace EXIFGeotaggerv0._1
             {
                 Console.WriteLine(e.StackTrace);
             }
+            
         }
         #endregion
 
@@ -153,22 +175,99 @@ namespace EXIFGeotaggerv0._1
         #region Markers
         private void markersMenuItem_Click(object sender, EventArgs e)
         {
-            markers = new GMapOverlay("markers");
-            gpsMarkerArray = new List<GMapMarker>();
-            markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
-            gMap.Overlays.Add(markers);
+            //markers = new GMapOverlay("markers");
+            //gpsMarkerArray = new List<GMapMarker>();
+            //markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
+            //gMap.Overlays.Add(markers);
             txtConsole.Clear();
             txtConsole.AppendText("Built markers...");
+            //ckBoxLayers.Items.Add(markers.Id, true);
+           
+        }
 
+        private void ckBoxLayers_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            txtConsole.AppendText(ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem).ToString());
+            txtConsole.AppendText(ckBoxLayers.SelectedItem.ToString());
+            mSelectedOverlay = ckBoxLayers.SelectedItem.ToString();
+        }
+
+        private void ckBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            //if (gMap.Overlays.IndexOf()
+            //{
+            //    markers.IsVisibile = false;
+            //}
+            //else
+            //{
+            //    markers.IsVisibile = true;
+            //}
+            //if (markers.IsVisibile)
+            //{
+            //    markers.IsVisibile = false;
+            //}
+            //else
+            //{
+            //    markers.IsVisibile = true;
+            //}
+        }
+
+        private void plotLayer()
+        {
+            txtConsole.Clear();
+            txtConsole.AppendText("Colour: " + mlayerColour.ToString());
+            markers = new GMapOverlay(mLayer);
+            gpsMarkerArray = markers.Markers.ToList<GMapMarker>();
+
+            if (mlayerColour == Color.FromArgb(255, 0, 128, 192)) //mid-blue
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", mLayer);
+            } else if (mlayerColour == Color.FromArgb(255, 255, 128, 0))
+            {
+                markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_8px.png", mLayer);
+            }
+            gMap.Overlays.Add(markers);
+            //txtConsole.Clear();
+            txtConsole.AppendText("Built markers...");
+            ckBoxLayers.Items.Add(markers.Id, true);
+            markers.IsVisibile = true;
+           
+        }
+
+        private GMapOverlay buildMarker(String icon, String name)
+        {
+            bmpMarker = getIcon(icon);
+
+            if (mRecordDict != null)
+            {
+                foreach (KeyValuePair<string, Record> record in mRecordDict)
+                {
+                    Double lat = record.Value.Latitude;
+                    Double lon = record.Value.Longitude;
+                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bmpMarker);
+
+                    marker.Tag = record.Value.PhotoName;
+                    markers.Markers.Add(marker);
+                    gpsMarkerArray.Add(marker);
+                }
+            }
+            //bmpMarker.Dispose();
+            return markers;
         }
 
         private void photosToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            photoMarkers = new GMapOverlay("photos");
+            photoMarkers = new GMapOverlay(mLayer);
             photoMarkerArray = new List<GMapMarker>();
-            photoMarkers = buildPhotoMarker("EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_8px.png", "photos");
+            if (mlayerColour == Color.Orange)
+            {
+                photoMarkers = buildPhotoMarker("EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_8px.png", "photos");
+            }
             gMap.Overlays.Add(photoMarkers);
+            
         }
+
+        
 
         private Bitmap getIcon(String icon)
         {
@@ -231,26 +330,7 @@ namespace EXIFGeotaggerv0._1
 
 
 
-        private GMapOverlay buildMarker(String icon, String name)
-        {
-            bmpMarker = getIcon(icon);
-
-            if (mRecordDict != null)
-            {
-                foreach (KeyValuePair<string, Record> record in mRecordDict)
-                {
-                    Double lat = record.Value.Latitude;
-                    Double lon = record.Value.Longitude;
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bmpMarker);
-
-                    marker.Tag = record.Value.PhotoName;
-                    markers.Markers.Add(marker);
-                    gpsMarkerArray.Add(marker);
-                }
-            }
-            //bmpMarker.Dispose();
-            return markers;
-        }
+       
         #endregion
 
         private GMapOverlay rebuildMarkers(GMapOverlay overlay, List<GMapMarker> array, String icon)
@@ -348,7 +428,17 @@ namespace EXIFGeotaggerv0._1
         #region Events
         private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            connectAccess(sender, e);
+            connectAccess_Click(sender, e);
+            markers = new GMapOverlay("markers");
+
+            gpsMarkerArray = new List<GMapMarker>();
+            markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
+            gMap.Overlays.Add(markers);
+           
+            ckBoxLayers.Items.Add(markers.Id, false);
+            markers.IsVisibile = false;
+            this.menuRunGeoTag.Enabled = true;
+
         }
 
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
@@ -427,7 +517,9 @@ namespace EXIFGeotaggerv0._1
 
                     try
                     {
+                        
                         r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
+                        
                         propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
                         propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
                         propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
@@ -454,8 +546,22 @@ namespace EXIFGeotaggerv0._1
                         image.SetPropertyItem(propItemSat);
                         image.SetPropertyItem(propItemDateTime);
 
-                        image.Save("C:\\androidapp\\GeoRef" + "\\" + Path.GetFileName(filePath));
+                        EXIFMarker marker = new EXIFMarker(Path.GetFileNameWithoutExtension(filePath));
+                        marker.Latitude = r.Latitude;
+                        marker.Longitude = r.Longitude;
+                        marker.Altitude = r.Altitude;
+                        marker.Bearing = r.Bearing;
+                        marker.Velocity = r.Velocity;
+                        marker.Satellites = r.Satellites;
+                        marker.PDop = r.PDop;
+                        marker.Inspector = r.Inspector;
+                        marker.TimeStamp = r.TimeStamp;
+
+                        exifPhotoMarkerArray.Add(marker);
+
+                        image.Save("C:\\Onsite\\CWaikato\\GeoTag_190408" + "\\" + Path.GetFileName(filePath));
                         image.Dispose();
+
                     } catch (KeyNotFoundException ex)
                     {
                         errorCount++;
@@ -563,5 +669,16 @@ namespace EXIFGeotaggerv0._1
         }
         #endregion
 
+        private void menuSave_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        
+
+        private void EXIFGeoTagger_Load(object sender, EventArgs e)
+        {
+
+        }
     } //end class   
 } //end namespace

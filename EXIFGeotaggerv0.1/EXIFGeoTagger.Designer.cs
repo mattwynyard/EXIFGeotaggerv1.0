@@ -31,7 +31,7 @@
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.txtConsole = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.ckBoxLayers = new System.Windows.Forms.CheckedListBox();
             this.lbPosition = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,9 +42,14 @@
             this.menuQuit = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.accessmdbToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.layerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.plotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.photosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.markersMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.accesDataMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.excelDataMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.geotagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -91,10 +96,10 @@
             // 
             // txtConsole
             // 
-            this.txtConsole.Location = new System.Drawing.Point(0, 43);
+            this.txtConsole.Location = new System.Drawing.Point(203, 22);
             this.txtConsole.Multiline = true;
             this.txtConsole.Name = "txtConsole";
-            this.txtConsole.Size = new System.Drawing.Size(370, 184);
+            this.txtConsole.Size = new System.Drawing.Size(299, 138);
             this.txtConsole.TabIndex = 4;
             // 
             // splitContainer1
@@ -107,7 +112,7 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.progressBar1);
+            this.splitContainer1.Panel1.Controls.Add(this.ckBoxLayers);
             this.splitContainer1.Panel1.Controls.Add(this.txtConsole);
             // 
             // splitContainer1.Panel2
@@ -118,12 +123,15 @@
             this.splitContainer1.SplitterDistance = 517;
             this.splitContainer1.TabIndex = 6;
             // 
-            // progressBar1
+            // ckBoxLayers
             // 
-            this.progressBar1.Location = new System.Drawing.Point(0, 271);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(368, 30);
-            this.progressBar1.TabIndex = 6;
+            this.ckBoxLayers.FormattingEnabled = true;
+            this.ckBoxLayers.Location = new System.Drawing.Point(14, 190);
+            this.ckBoxLayers.Name = "ckBoxLayers";
+            this.ckBoxLayers.Size = new System.Drawing.Size(146, 139);
+            this.ckBoxLayers.TabIndex = 5;
+            this.ckBoxLayers.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.ckBox_ItemCheck);
+            this.ckBoxLayers.SelectedIndexChanged += new System.EventHandler(this.ckBoxLayers_SelectedIndexChanged);
             // 
             // lbPosition
             // 
@@ -139,7 +147,9 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
+            this.layerToolStripMenuItem,
             this.plotToolStripMenuItem,
+            this.dataToolStripMenuItem,
             this.geotagToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
@@ -188,6 +198,7 @@
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
             this.menuSave.Size = new System.Drawing.Size(146, 22);
             this.menuSave.Text = "&Save";
+            this.menuSave.Click += new System.EventHandler(this.menuSave_Click);
             // 
             // menuQuit
             // 
@@ -204,7 +215,7 @@
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
             this.importToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.importToolStripMenuItem.Text = "Import";
-            this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess);
+            this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess_Click);
             // 
             // accessmdbToolStripMenuItem
             // 
@@ -212,6 +223,20 @@
             this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.accessmdbToolStripMenuItem.Text = "Access (.mdb)";
             this.accessmdbToolStripMenuItem.Click += new System.EventHandler(this.accessmdbToolStripMenuItem_Click);
+            // 
+            // layerToolStripMenuItem
+            // 
+            this.layerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveToolStripMenuItem});
+            this.layerToolStripMenuItem.Name = "layerToolStripMenuItem";
+            this.layerToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
+            this.layerToolStripMenuItem.Text = "Layer";
+            // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.saveToolStripMenuItem.Text = "Save";
             // 
             // plotToolStripMenuItem
             // 
@@ -225,16 +250,38 @@
             // photosToolStripMenuItem
             // 
             this.photosToolStripMenuItem.Name = "photosToolStripMenuItem";
-            this.photosToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.photosToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.photosToolStripMenuItem.Text = "Photos";
             this.photosToolStripMenuItem.Click += new System.EventHandler(this.photosToolStripMenuItem_Click);
             // 
             // markersMenuItem
             // 
             this.markersMenuItem.Name = "markersMenuItem";
-            this.markersMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.markersMenuItem.Size = new System.Drawing.Size(116, 22);
             this.markersMenuItem.Text = "Markers";
             this.markersMenuItem.Click += new System.EventHandler(this.markersMenuItem_Click);
+            // 
+            // dataToolStripMenuItem
+            // 
+            this.dataToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.accesDataMenu,
+            this.excelDataMenu});
+            this.dataToolStripMenuItem.Name = "dataToolStripMenuItem";
+            this.dataToolStripMenuItem.Size = new System.Drawing.Size(43, 20);
+            this.dataToolStripMenuItem.Text = "Data";
+            // 
+            // accesDataMenu
+            // 
+            this.accesDataMenu.Name = "accesDataMenu";
+            this.accesDataMenu.Size = new System.Drawing.Size(220, 22);
+            this.accesDataMenu.Text = "MS Access (*.accdb | *mdb)";
+            this.accesDataMenu.Click += new System.EventHandler(this.connectAccess_Click);
+            // 
+            // excelDataMenu
+            // 
+            this.excelDataMenu.Name = "excelDataMenu";
+            this.excelDataMenu.Size = new System.Drawing.Size(220, 22);
+            this.excelDataMenu.Text = "MS Excel (*xlsx | *xls)";
             // 
             // geotagToolStripMenuItem
             // 
@@ -276,6 +323,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "EXIFGeoTagger";
             this.Text = "EXIFGeoTagger";
+            this.Load += new System.EventHandler(this.EXIFGeoTagger_Load);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
@@ -294,7 +342,6 @@
         private GMap.NET.WindowsForms.GMapControl gMap;
         private System.Windows.Forms.TextBox txtConsole;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label lbPosition;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
@@ -312,6 +359,12 @@
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem accessmdbToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem markersMenuItem;
+        private System.Windows.Forms.CheckedListBox ckBoxLayers;
+        private System.Windows.Forms.ToolStripMenuItem layerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem accesDataMenu;
+        private System.Windows.Forms.ToolStripMenuItem excelDataMenu;
     }
 }
 
