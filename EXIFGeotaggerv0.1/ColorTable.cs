@@ -19,7 +19,8 @@ namespace EXIFGeotaggerv0._1
             ColorTableDict = new Dictionary<string, string>()
             {
                 {"ffff8080", "EXIFGeotaggerv0._1.BitMap.OpenCameraPink"},
-                {"ffffff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraLemon"}
+                {"ffffff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraLemon"},
+                { "ffff8000", "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange"}
             };
         }
     }

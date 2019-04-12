@@ -13,7 +13,9 @@ namespace EXIFGeotaggerv0._1
     {
         private string icon;
         private int size; //size in pixels of icon
+        //private Bitmap bitmap;
 
+        Assembly assembly = Assembly.GetExecutingAssembly();
 
         public MarkerTag()
         {
@@ -39,6 +41,10 @@ namespace EXIFGeotaggerv0._1
             }
             set
             {
+                if (icon != null)
+                {
+                    icon = null;
+                }
                 this.size = value;
                 this.icon = ColorTable.ColorTableDict[this.Color] + "_" + size.ToString() + "px.png";
             }
@@ -50,10 +56,8 @@ namespace EXIFGeotaggerv0._1
         {
             get
             {
-                Assembly assembly = Assembly.GetExecutingAssembly();
                 Stream stream = assembly.GetManifestResourceStream(icon);
                 return (Bitmap)Image.FromStream(stream);
-
             }         
         }
     }

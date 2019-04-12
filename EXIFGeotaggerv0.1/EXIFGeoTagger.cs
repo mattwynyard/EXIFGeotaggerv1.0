@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
+using System.Threading;
 
 namespace EXIFGeotaggerv0._1
 {
@@ -235,10 +236,8 @@ namespace EXIFGeotaggerv0._1
                 {
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
-                    
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), tag.Bitmap);
 
-                    
+                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), tag.Bitmap); 
                     marker.Tag = tag;
                     overlay.Markers.Add(marker);
                     //markerArray.Add(marker);
@@ -251,12 +250,16 @@ namespace EXIFGeotaggerv0._1
         private void rebuildMarkers(GMapOverlay overlay, int size)
         {
             //bmpPhoto = getIcon(icon);
-            List<GMapMarker> markers = overlay.Markers.ToList<GMapMarker>();
-            for (int i = 0; i < overlay.Markers.Count - 1; i++)
+            //List<GMapMarker> markers = overlay.Markers.ToList<GMapMarker>();
+            GMapMarker[] markers = overlay.Markers.ToArray<GMapMarker>();
+            int count = overlay.Markers.Count;
+            //overlay.Markers.Clear();
+            for (int i = 0; i < count - 1; i++)
             {
                 GMapMarker marker = markers[i];
                 MarkerTag tag = (MarkerTag)marker.Tag;
                 tag.Size = size;
+
                 GMapMarker newMarker = new GMarkerGoogle(marker.Position, tag.Bitmap);
                 if (marker.Tag != null)
                 {
@@ -279,18 +282,8 @@ namespace EXIFGeotaggerv0._1
             
         }
 
-       
-        private Bitmap getIcon(String icon)
-        {
-            myAssembly = Assembly.GetExecutingAssembly();
-            myStream = myAssembly.GetManifestResourceStream(icon);
-            return (Bitmap)Image.FromStream(myStream);
-        }
-
         private GMapOverlay buildPhotoMarker(String icon, String name)
         {
-            
-            bmpPhoto = getIcon(icon);
             browseFolder();
             foreach (string filePath in mFiles)
             {
@@ -348,7 +341,6 @@ namespace EXIFGeotaggerv0._1
             txtConsole.Clear();
             txtConsole.AppendText(gMap.Zoom.ToString());
             GMapOverlay[] overlays = gMap.Overlays.ToArray<GMapOverlay>();
-            //List<GMapOverlay> overlays = gMap.Overlays.ToList<GMapOverlay>();
             if ((int)gMap.Zoom < 14)
             {
                 foreach (GMapOverlay overlay in overlays)
@@ -374,6 +366,7 @@ namespace EXIFGeotaggerv0._1
             {
                 foreach (GMapOverlay overlay in overlays)
                 {
+
                     rebuildMarkers(overlay, 16);
                 }
             }
@@ -414,9 +407,6 @@ namespace EXIFGeotaggerv0._1
                 private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
                 {
                     String id = marker.Tag.ToString();
-                    myAssembly = Assembly.GetExecutingAssembly();
-                    //myStream = myAssembly.GetManifestResourceStream(icon);
-                    //bmpMarker = (Bitmap)Image.FromStream(myStream);
 
                     MessageBox.Show(id);
                 }
@@ -642,5 +632,11 @@ namespace EXIFGeotaggerv0._1
                 {
 
                 }
-            } //end class   
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AboutBox1 AboutBox = new AboutBox1();
+            AboutBox.Show();
+        }
+    } //end class   
             } //end namespace
