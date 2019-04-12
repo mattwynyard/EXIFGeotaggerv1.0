@@ -222,7 +222,6 @@
             this.accessmdbToolStripMenuItem.Name = "accessmdbToolStripMenuItem";
             this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.accessmdbToolStripMenuItem.Text = "Access (.mdb)";
-            this.accessmdbToolStripMenuItem.Click += new System.EventHandler(this.accessmdbToolStripMenuItem_Click);
             // 
             // layerToolStripMenuItem
             // 

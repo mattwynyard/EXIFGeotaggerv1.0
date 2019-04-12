@@ -69,7 +69,8 @@ namespace EXIFGeotaggerv0._1
             if (colorDialog1.ShowDialog() == DialogResult.OK)
             {
                 btnColour.BackColor = colorDialog1.Color;
-                mParent.mlayerColour = colorDialog1.Color;
+                mParent.mlayerColourHex = colorDialog1.Color.Name;
+               
 
 
             }

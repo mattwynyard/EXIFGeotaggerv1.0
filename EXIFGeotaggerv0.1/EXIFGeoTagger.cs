@@ -22,29 +22,33 @@ namespace EXIFGeotaggerv0._1
 {
     public partial class EXIFGeoTagger : Form
     {
-        public String mDBPath;
+        public string mDBPath;
         public string mLayer;
         public Color mlayerColour;
+        public String mlayerColourHex;
 
-        private string mSelectedOverlay;
-        Dictionary<string, Record> mRecordDict;
+
+        GMapOverlay overlay;
+
+        private int mSelectedOverlay;
+        private Dictionary<string, Record> mRecordDict;
         string[] mFiles; //array containing absolute paths of photos.
 
-        ImportDataForm importForm;
+        private ImportDataForm importForm;
 
         private int geoTagCount;
         private int errorCount;
 
         private Assembly myAssembly;
         private Stream myStream;
-        private Bitmap bmpMarker;
+        
         private Bitmap bmpPhoto;
         private GMapOverlay markers;
         private GMapOverlay photoMarkers;
         private ProgressForm progress;
 
         private List<GMapMarker> photoMarkerArray;
-        private List<GMapMarker> gpsMarkerArray;
+        private List<GMapMarker> markerArray;
         private List<EXIFMarker> exifPhotoMarkerArray;
         private List<GMapOverlay> gpsOverlayArray;
 
@@ -54,7 +58,7 @@ namespace EXIFGeotaggerv0._1
         {
             InitializeComponent();
            
-            this.menuRunGeoTag.Enabled = false;
+            this.menuRunGeoTag.Enabled = true;
 
         }
 
@@ -70,6 +74,8 @@ namespace EXIFGeotaggerv0._1
             gMap.DragButton = MouseButtons.Left;
             gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
             //gMap.MouseMove += gMap_OnMouseMoved;
+
+        
 
         }
 
@@ -92,16 +98,6 @@ namespace EXIFGeotaggerv0._1
         }
         public void importAccessData(object sender, EventArgs e)
         {
-            //OpenFileDialog openFileDialog = new OpenFileDialog();
-            //openFileDialog.Filter = "mdb files|*.mdb";
-            //openFileDialog.FilterIndex = 2;
-            //openFileDialog.Title = "Browse Files";
-            //openFileDialog.RestoreDirectory = true;
-            //openFileDialog.DefaultExt = "mdb";
-            //openFileDialog.ShowDialog();
-
-            //mDBPath = openFileDialog.FileName;
-
             importForm.Close();
 
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
@@ -187,72 +183,88 @@ namespace EXIFGeotaggerv0._1
 
         private void ckBoxLayers_SelectedIndexChanged(object sender, EventArgs e)
         {
-            txtConsole.AppendText(ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem).ToString());
-            txtConsole.AppendText(ckBoxLayers.SelectedItem.ToString());
-            mSelectedOverlay = ckBoxLayers.SelectedItem.ToString();
+            //txtConsole.AppendText(ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem).ToString());
+            //txtConsole.AppendText(ckBoxLayers.SelectedItem.ToString());
+            mSelectedOverlay = ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem);
         }
 
         private void ckBox_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            //if (gMap.Overlays.IndexOf()
-            //{
-            //    markers.IsVisibile = false;
-            //}
-            //else
-            //{
-            //    markers.IsVisibile = true;
-            //}
-            //if (markers.IsVisibile)
-            //{
-            //    markers.IsVisibile = false;
-            //}
-            //else
-            //{
-            //    markers.IsVisibile = true;
-            //}
+            overlay = gMap.Overlays.ElementAt(mSelectedOverlay);
+            if (overlay.IsVisibile == false)
+            {
+                overlay.IsVisibile = true;
+            }
+            else
+            {
+                overlay.IsVisibile = false;
+            }
+            
         }
 
         private void plotLayer()
         {
             txtConsole.Clear();
             txtConsole.AppendText("Colour: " + mlayerColour.ToString());
-            markers = new GMapOverlay(mLayer);
-            gpsMarkerArray = markers.Markers.ToList<GMapMarker>();
+            txtConsole.AppendText("ColourName: " + mlayerColour.Name);
+            GMapOverlay newOverlay = new GMapOverlay(mLayer);
 
-            if (mlayerColour == Color.FromArgb(255, 0, 128, 192)) //mid-blue
-            {
-                markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", mLayer);
-            } else if (mlayerColour == Color.FromArgb(255, 255, 128, 0))
-            {
-                markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_8px.png", mLayer);
-            }
-            gMap.Overlays.Add(markers);
-            //txtConsole.Clear();
-            txtConsole.AppendText("Built markers...");
-            ckBoxLayers.Items.Add(markers.Id, true);
-            markers.IsVisibile = true;
-           
+            //string icon = ColorTable.ColorTableDict[mlayerColourHex];
+
+            MarkerTag tag = new MarkerTag(mlayerColourHex, 8);
+
+            newOverlay = buildMarker(newOverlay, tag, mLayer);
+ 
+            markerArray = newOverlay.Markers.ToList<GMapMarker>();
+            gMap.Overlays.Add(newOverlay);
+            overlay = newOverlay;
+            ckBoxLayers.Items.Add(newOverlay.Id, true);
+            
+            
+            newOverlay.IsVisibile = true;
+            overlay.IsVisibile = true;
+
+
         }
 
-        private GMapOverlay buildMarker(String icon, String name)
+        private GMapOverlay buildMarker(GMapOverlay overlay, MarkerTag tag, String name)
         {
-            bmpMarker = getIcon(icon);
-
             if (mRecordDict != null)
             {
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bmpMarker);
+                    
+                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), tag.Bitmap);
 
-                    marker.Tag = record.Value.PhotoName;
-                    markers.Markers.Add(marker);
-                    gpsMarkerArray.Add(marker);
+                    
+                    marker.Tag = tag;
+                    overlay.Markers.Add(marker);
+                    //markerArray.Add(marker);
                 }
             }
             //bmpMarker.Dispose();
-            return markers;
+            return overlay;
+        }
+
+        private void rebuildMarkers(GMapOverlay overlay, int size)
+        {
+            //bmpPhoto = getIcon(icon);
+            List<GMapMarker> markers = overlay.Markers.ToList<GMapMarker>();
+            for (int i = 0; i < overlay.Markers.Count - 1; i++)
+            {
+                GMapMarker marker = markers[i];
+                MarkerTag tag = (MarkerTag)marker.Tag;
+                tag.Size = size;
+                GMapMarker newMarker = new GMarkerGoogle(marker.Position, tag.Bitmap);
+                if (marker.Tag != null)
+                {
+                    newMarker.Tag = marker.Tag;
+                }
+                overlay.Markers.Remove(marker);
+                overlay.Markers.Add(newMarker);
+            }
         }
 
         private void photosToolStripMenuItem_Click(object sender, EventArgs e)
@@ -267,8 +279,7 @@ namespace EXIFGeotaggerv0._1
             
         }
 
-        
-
+       
         private Bitmap getIcon(String icon)
         {
             myAssembly = Assembly.GetExecutingAssembly();
@@ -328,357 +339,308 @@ namespace EXIFGeotaggerv0._1
             return photoMarkers;
         }
 
-
-
-       
         #endregion
 
-        private GMapOverlay rebuildMarkers(GMapOverlay overlay, List<GMapMarker> array, String icon)
-        {
-            //bmpPhoto.Dispose();
-            overlay.Markers.Clear();
-            bmpPhoto = getIcon(icon);
-            foreach (GMapMarker m in array)
-            {
-               
-                GMapMarker marker = new GMarkerGoogle(m.Position, bmpPhoto);
-                if (m.Tag != null)
-                {
-                    marker.Tag = m.Tag;
-                }
-                
-                overlay.Markers.Add(marker);
-            }
-            return overlay;
-        }
+        
 
         private void gMap_OnMapZoomChanged()
         {
             txtConsole.Clear();
             txtConsole.AppendText(gMap.Zoom.ToString());
-            if ((int)gMap.Zoom < 12)
+            GMapOverlay[] overlays = gMap.Overlays.ToArray<GMapOverlay>();
+            //List<GMapOverlay> overlays = gMap.Overlays.ToList<GMapOverlay>();
+            if ((int)gMap.Zoom < 14)
             {
-                if (markers != null)
+                foreach (GMapOverlay overlay in overlays)
                 {
-                    markers = rebuildMarkers(markers, gpsMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCamera4px.png");
+                    rebuildMarkers(overlay, 4);
                 }
-                if (photoMarkers != null)
-                {
-                    
-                    photoMarkers = rebuildMarkers(photoMarkers, photoMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_4px.png");
-                }
-
-                }
-            else if ((int)gMap.Zoom < 16 && (int)gMap.Zoom >= 12)
+            }
+            else if ((int)gMap.Zoom <= 16 && (int)gMap.Zoom >= 14)
             {
-                if (markers != null)
+                foreach (GMapOverlay overlay in overlays)
                 {
-                    markers = rebuildMarkers(markers, gpsMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png");
+                    rebuildMarkers(overlay, 8);
                 }
-                if (photoMarkers != null)
-                {
-                    photoMarkers = rebuildMarkers(photoMarkers, photoMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_8px.png");
-                }
-
-                }
-            else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 16)
+            }
+            else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom > 16)
             {
-                if (markers != null)
+                foreach (GMapOverlay overlay in overlays)
                 {
-                    markers = rebuildMarkers(markers, gpsMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCamera12px.png");
+                    rebuildMarkers(overlay, 12);
                 }
-                if (photoMarkers != null)
-                {
-                    photoMarkers = rebuildMarkers(photoMarkers, photoMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_12px.png");
-                }
-
-                }
+            }
             else if ((int)gMap.Zoom < 20 && (int)gMap.Zoom >= 18)
             {
-                if (markers != null)
+                foreach (GMapOverlay overlay in overlays)
                 {
-                    markers = rebuildMarkers(markers, gpsMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCamera16px.png");
-                }
-                if (photoMarkers != null)
-                {
-                    photoMarkers = rebuildMarkers(photoMarkers, photoMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_16px.png");
-                    txtConsole.AppendText("Map zoomed in");
-                }
-                }
-            else
-            {
-                if (markers != null)
-                {
-                    markers = rebuildMarkers(markers, gpsMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCamera24px.png");
-                }
-                if (photoMarkers != null)
-                {
-                    photoMarkers = rebuildMarkers(photoMarkers, photoMarkerArray, "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_24px.png");
-                }
-                }
-            if (markers != null) {
-                gMap.Overlays.Add(markers);
-            }
-            if (photoMarkers != null)
-            {
-                gMap.Overlays.Add(photoMarkers);
-            }
-        }
-
-        #region Events
-        private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            connectAccess_Click(sender, e);
-            markers = new GMapOverlay("markers");
-
-            gpsMarkerArray = new List<GMapMarker>();
-            markers = buildMarker("EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
-            gMap.Overlays.Add(markers);
-           
-            ckBoxLayers.Items.Add(markers.Id, false);
-            markers.IsVisibile = false;
-            this.menuRunGeoTag.Enabled = true;
-
-        }
-
-        private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
-        {
-            var point = gMap.FromLocalToLatLng(e.X, e.Y);
-
-            lbPosition.Text = "latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6);
-            //gMap.MouseHover += gMap_OnMouseHoverChanged;
-        }
-
-        private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
-        {
-            String id = marker.Tag.ToString();
-            myAssembly = Assembly.GetExecutingAssembly();
-            //myStream = myAssembly.GetManifestResourceStream(icon);
-            //bmpMarker = (Bitmap)Image.FromStream(myStream);
-      
-            MessageBox.Show(id);
-        }
-
-       
-
-        private void menuQuit_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("Really Quit?", "Exit", MessageBoxButtons.OKCancel) == DialogResult.OK)
-            {
-                Application.Exit();
-            }
-        }
-
-        private void menuRunGeoTag_Click(object sender, EventArgs e)
-        {
-            browseFolder();
-            if (bgWorker1.IsBusy != true)
-            {
-                // create a new instance of the alert form
-                progress = new ProgressForm();
-                // event handler for the Cancel button in AlertForm
-               progress.Canceled += new EventHandler<EventArgs>(buttonCancel_Click);
-                progress.Show();
-                // Start the asynchronous operation.
-                bgWorker1.RunWorkerAsync();
-            }
-        }
-
-        private void bgWorker1_DoWork(object sender, DoWorkEventArgs e)
-        {
-            BackgroundWorker worker = sender as BackgroundWorker;
-            Record r;
-            int length = mFiles.Length;
-            geoTagCount = 0;
-           
-            double percent;
-            foreach (string filePath in mFiles)
-            {
-                if (worker.CancellationPending == true)
-                {
-                    e.Cancel = true;
-                    break;
-                }
-                else
-                {
-                    Image image = new Bitmap(filePath);
-                    PropertyItem[] propItems = image.PropertyItems;
-                    PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                    PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                    PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                    PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                    PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
-                    PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-                    PropertyItem propItemSat = image.GetPropertyItem(0x0008);
-                    PropertyItem propItemDir = image.GetPropertyItem(0x0011);
-                    PropertyItem propItemVel = image.GetPropertyItem(0x000D);
-                    PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
-                    PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
-
-                    try
-                    {
-                        
-                        r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
-                        
-                        propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
-                        propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
-                        propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
-                        propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
-                        propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
-                        propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
-
-                        propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
-                        propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
-                        propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
-                        propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
-
-                        propItemDateTime = r.getEXIFDateTime(propItemDateTime);
-
-                        image.SetPropertyItem(propItemLat);
-                        image.SetPropertyItem(propItemLon);
-                        image.SetPropertyItem(propItemLatRef);
-                        image.SetPropertyItem(propItemLonRef);
-                        image.SetPropertyItem(propItemAlt);
-                        image.SetPropertyItem(propItemAltRef);
-                        image.SetPropertyItem(propItemDir);
-                        image.SetPropertyItem(propItemVel);
-                        image.SetPropertyItem(propItemPDop);
-                        image.SetPropertyItem(propItemSat);
-                        image.SetPropertyItem(propItemDateTime);
-
-                        EXIFMarker marker = new EXIFMarker(Path.GetFileNameWithoutExtension(filePath));
-                        marker.Latitude = r.Latitude;
-                        marker.Longitude = r.Longitude;
-                        marker.Altitude = r.Altitude;
-                        marker.Bearing = r.Bearing;
-                        marker.Velocity = r.Velocity;
-                        marker.Satellites = r.Satellites;
-                        marker.PDop = r.PDop;
-                        marker.Inspector = r.Inspector;
-                        marker.TimeStamp = r.TimeStamp;
-
-                        exifPhotoMarkerArray.Add(marker);
-
-                        image.Save("C:\\Onsite\\CWaikato\\GeoTag_190408" + "\\" + Path.GetFileName(filePath));
-                        image.Dispose();
-
-                    } catch (KeyNotFoundException ex)
-                    {
-                        errorCount++;
-                    }      
-                }
-                geoTagCount++;
-                percent = ((double)geoTagCount / length) * 100;
-                worker.ReportProgress((int)percent);
-            }
-        }
-
-        // This event handler cancels the backgroundworker, fired from Cancel button in AlertForm.
-        private void buttonCancel_Click(object sender, EventArgs e)
-        {
-            if (bgWorker1.WorkerSupportsCancellation == true)
-            {
-                // Cancel the asynchronous operation.
-                bgWorker1.CancelAsync();
-                // Close the AlertForm
-                progress.Close();
-            }
-        }
-
-        private void bgWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-
-            progress.Message = "Geotagging in n progress, please wait... " + e.ProgressPercentage.ToString() + "% completed";
-            progress.ProgressValue = e.ProgressPercentage;
-        }
-
-        private void bgWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled == true)
-            {
-                string title = "Cancelled";
-                string message = "Geotagging cancelled";
-                MessageBoxButtons buttons = MessageBoxButtons.OK;
-                DialogResult result = MessageBox.Show(message, title, buttons);
-                if (result == DialogResult.Yes)
-                {
-                    this.Close();
+                    rebuildMarkers(overlay, 16);
                 }
             }
             else
             {
-                if (e.Error != null)
+                foreach (GMapOverlay overlay in overlays)
                 {
-                    string title = "Error";
-                    string message = e.Error.ToString();
-                    MessageBoxButtons buttons = MessageBoxButtons.OK;
-                    DialogResult result = MessageBox.Show(message, title, buttons);
-                    if (result == DialogResult.Yes)
+                    rebuildMarkers(overlay, 24);
+                }
+
+            }
+        }
+
+                #region Events
+                //private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
+                //{
+                //    connectAccess_Click(sender, e);
+                //    GMapOverlay overlay = new GMapOverlay("markers");
+
+                //    //gpsMarkerArray = new List<GMapMarker>();
+                //    overlay = buildMarker(overlay, "EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
+                //    gMap.Overlays.Add(overlay);
+
+                //    ckBoxLayers.Items.Add(markers.Id, false);
+                //    overlay.IsVisibile = true;
+                //    this.menuRunGeoTag.Enabled = true;
+
+                //}
+
+                private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
+                {
+                    var point = gMap.FromLocalToLatLng(e.X, e.Y);
+
+                    lbPosition.Text = "latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6);
+                    //gMap.MouseHover += gMap_OnMouseHoverChanged;
+                }
+
+                private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
+                {
+                    String id = marker.Tag.ToString();
+                    myAssembly = Assembly.GetExecutingAssembly();
+                    //myStream = myAssembly.GetManifestResourceStream(icon);
+                    //bmpMarker = (Bitmap)Image.FromStream(myStream);
+
+                    MessageBox.Show(id);
+                }
+
+
+
+                private void menuQuit_Click(object sender, EventArgs e)
+                {
+                    if (MessageBox.Show("Really Quit?", "Exit", MessageBoxButtons.OKCancel) == DialogResult.OK)
                     {
-                        this.Close();
+                        Application.Exit();
                     }
                 }
-                else
+
+                private void menuRunGeoTag_Click(object sender, EventArgs e)
                 {
-                    string title = "Finished";
-                    string message = "Geotagging complete\n" + (geoTagCount - errorCount) + " of " + mFiles.Length + " photos geotagged";
-                    MessageBoxButtons buttons = MessageBoxButtons.OK;
-                    DialogResult result = MessageBox.Show(message, title, buttons);
-                    if (result == DialogResult.Yes)
+                    browseFolder();
+                    if (bgWorker1.IsBusy != true)
                     {
-                        this.Close();
+                        // create a new instance of the alert form
+                        progress = new ProgressForm();
+                        // event handler for the Cancel button in AlertForm
+                        progress.Canceled += new EventHandler<EventArgs>(buttonCancel_Click);
+                        progress.Show();
+                        // Start the asynchronous operation.
+                        bgWorker1.RunWorkerAsync();
                     }
                 }
-            }
-            progress.Close();
-           
-        }
 
-        #endregion
-
-        #region HELPERFUNCTIONS
-        private void browseFolder()
-        {
-            using (var browseDialog = new FolderBrowserDialog())
-            {
-                DialogResult result = browseDialog.ShowDialog();
-
-                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(browseDialog.SelectedPath))
+                private void bgWorker1_DoWork(object sender, DoWorkEventArgs e)
                 {
-                    mFiles = Directory.GetFiles(browseDialog.SelectedPath);
-                    MessageBox.Show("Files found: " + mFiles.Length.ToString(), "Message");
+                    BackgroundWorker worker = sender as BackgroundWorker;
+                    Record r;
+                    int length = mFiles.Length;
+                    geoTagCount = 0;
+
+                    double percent;
+                    foreach (string filePath in mFiles)
+                    {
+                        if (worker.CancellationPending == true)
+                        {
+                            e.Cancel = true;
+                            break;
+                        }
+                        else
+                        {
+                            Image image = new Bitmap(filePath);
+                            PropertyItem[] propItems = image.PropertyItems;
+                            PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+                            PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+                            PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+                            PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                            PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+                            PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+                            PropertyItem propItemSat = image.GetPropertyItem(0x0008);
+                            PropertyItem propItemDir = image.GetPropertyItem(0x0011);
+                            PropertyItem propItemVel = image.GetPropertyItem(0x000D);
+                            PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
+                            PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+
+                            try
+                            {
+
+                                r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
+
+                                propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
+                                propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
+                                propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
+                                propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
+                                propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
+                                propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
+
+                                propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
+                                propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
+                                propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
+                                propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
+
+                                propItemDateTime = r.getEXIFDateTime(propItemDateTime);
+
+                                image.SetPropertyItem(propItemLat);
+                                image.SetPropertyItem(propItemLon);
+                                image.SetPropertyItem(propItemLatRef);
+                                image.SetPropertyItem(propItemLonRef);
+                                image.SetPropertyItem(propItemAlt);
+                                image.SetPropertyItem(propItemAltRef);
+                                image.SetPropertyItem(propItemDir);
+                                image.SetPropertyItem(propItemVel);
+                                image.SetPropertyItem(propItemPDop);
+                                image.SetPropertyItem(propItemSat);
+                                image.SetPropertyItem(propItemDateTime);
+
+                                EXIFMarker marker = new EXIFMarker(Path.GetFileNameWithoutExtension(filePath));
+                                marker.Latitude = r.Latitude;
+                                marker.Longitude = r.Longitude;
+                                marker.Altitude = r.Altitude;
+                                marker.Bearing = r.Bearing;
+                                marker.Velocity = r.Velocity;
+                                marker.Satellites = r.Satellites;
+                                marker.PDop = r.PDop;
+                                marker.Inspector = r.Inspector;
+                                marker.TimeStamp = r.TimeStamp;
+
+                                //exifPhotoMarkerArray.Add(marker);
+
+                                image.Save("C:\\Onsite\\CWaikato\\GeoTag_190408" + "\\" + Path.GetFileName(filePath));
+                                image.Dispose();
+
+                            } catch (KeyNotFoundException ex)
+                            {
+                                errorCount++;
+                            }
+                        }
+                        geoTagCount++;
+                        percent = ((double)geoTagCount / length) * 100;
+                        worker.ReportProgress((int)percent);
+                    }
                 }
-            }
-        }
 
-        private double byteToDegrees(byte[] source)
-        {
-            double coordinate = 0;
-            int dms = 1; //degrees minute second divisor
-            for (int offset = 0; offset < source.Length; offset += 8)
-            {
-                byte[] b = new byte[4];
-                Array.Copy(source, offset, b, 0, 4);
-                int temp = BitConverter.ToInt32(b, 0);
-                Array.Copy(source, offset + 4, b, 0, 4);
-                int multiplier = BitConverter.ToInt32(b, 0) * dms;
-                dms *= 60;
-                coordinate += Convert.ToDouble(temp) / Convert.ToDouble(multiplier);
-            }
-            return coordinate;
-        }
-        #endregion
+                // This event handler cancels the backgroundworker, fired from Cancel button in AlertForm.
+                private void buttonCancel_Click(object sender, EventArgs e)
+                {
+                    if (bgWorker1.WorkerSupportsCancellation == true)
+                    {
+                        // Cancel the asynchronous operation.
+                        bgWorker1.CancelAsync();
+                        // Close the AlertForm
+                        progress.Close();
+                    }
+                }
 
-        private void menuSave_Click(object sender, EventArgs e)
-        {
+                private void bgWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+                {
 
-        }
+                    progress.Message = "Geotagging in n progress, please wait... " + e.ProgressPercentage.ToString() + "% completed";
+                    progress.ProgressValue = e.ProgressPercentage;
+                }
 
-        
+                private void bgWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+                {
+                    if (e.Cancelled == true)
+                    {
+                        string title = "Cancelled";
+                        string message = "Geotagging cancelled";
+                        MessageBoxButtons buttons = MessageBoxButtons.OK;
+                        DialogResult result = MessageBox.Show(message, title, buttons);
+                        if (result == DialogResult.Yes)
+                        {
+                            this.Close();
+                        }
+                    }
+                    else
+                    {
+                        if (e.Error != null)
+                        {
+                            string title = "Error";
+                            string message = e.Error.ToString();
+                            MessageBoxButtons buttons = MessageBoxButtons.OK;
+                            DialogResult result = MessageBox.Show(message, title, buttons);
+                            if (result == DialogResult.Yes)
+                            {
+                                this.Close();
+                            }
+                        }
+                        else
+                        {
+                            string title = "Finished";
+                            string message = "Geotagging complete\n" + (geoTagCount - errorCount) + " of " + mFiles.Length + " photos geotagged";
+                            MessageBoxButtons buttons = MessageBoxButtons.OK;
+                            DialogResult result = MessageBox.Show(message, title, buttons);
+                            if (result == DialogResult.Yes)
+                            {
+                                this.Close();
+                            }
+                        }
+                    }
+                    progress.Close();
 
-        private void EXIFGeoTagger_Load(object sender, EventArgs e)
-        {
+                }
 
-        }
-    } //end class   
-} //end namespace
+                #endregion
+
+                #region HELPERFUNCTIONS
+                private void browseFolder()
+                {
+                    using (var browseDialog = new FolderBrowserDialog())
+                    {
+                        DialogResult result = browseDialog.ShowDialog();
+
+                        if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(browseDialog.SelectedPath))
+                        {
+                            mFiles = Directory.GetFiles(browseDialog.SelectedPath);
+                            MessageBox.Show("Files found: " + mFiles.Length.ToString(), "Message");
+                        }
+                    }
+                }
+
+                private double byteToDegrees(byte[] source)
+                {
+                    double coordinate = 0;
+                    int dms = 1; //degrees minute second divisor
+                    for (int offset = 0; offset < source.Length; offset += 8)
+                    {
+                        byte[] b = new byte[4];
+                        Array.Copy(source, offset, b, 0, 4);
+                        int temp = BitConverter.ToInt32(b, 0);
+                        Array.Copy(source, offset + 4, b, 0, 4);
+                        int multiplier = BitConverter.ToInt32(b, 0) * dms;
+                        dms *= 60;
+                        coordinate += Convert.ToDouble(temp) / Convert.ToDouble(multiplier);
+                    }
+                    return coordinate;
+                }
+                #endregion
+
+                private void menuSave_Click(object sender, EventArgs e)
+                {
+
+                }
+
+
+
+                private void EXIFGeoTagger_Load(object sender, EventArgs e)
+                {
+
+                }
+            } //end class   
+            } //end namespace
