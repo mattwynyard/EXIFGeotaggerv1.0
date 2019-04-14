@@ -20,7 +20,8 @@ namespace EXIFGeotaggerv0._1
             {
                 {"ffff8080", "EXIFGeotaggerv0._1.BitMap.OpenCameraPink"},
                 {"ffffff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraLemon"},
-                { "ffff8000", "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange"}
+                { "ffff8000", "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange"},
+                { "80ff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraLightLime"}
             };
         }
     }
