@@ -44,7 +44,7 @@ namespace EXIFGeotaggerv0._1
 
         private Assembly myAssembly;
         private Stream myStream;
-        
+
         private Bitmap bmpPhoto;
         private GMapOverlay markers;
         private GMapOverlay photoMarkers;
@@ -59,10 +59,17 @@ namespace EXIFGeotaggerv0._1
 
         private Boolean data = false;
 
+        private Boolean mouseDown = false;
+        private PointLatLng topLeft;
+        private PointLatLng bottomRight;
+        private List<PointLatLng> zoomRect;
+        private GMapOverlay zoomOverlay;
+        private GMapPolygon rect;
+
         public EXIFGeoTagger()
         {
             InitializeComponent();
-           
+
             this.menuRunGeoTag.Enabled = true;
 
         }
@@ -78,11 +85,18 @@ namespace EXIFGeotaggerv0._1
             gMap.Zoom = 10;
             gMap.DragButton = MouseButtons.Left;
             gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
-            //gMap.MouseMove += gMap_OnMouseMoved;
+            gMap.MouseMove += gMap_OnMouseMoved;
+            gMap.DragButton = MouseButtons.Right;
+            gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
+            gMap.MouseDown += gMap_MouseDown;
+            gMap.MouseUp += gMap_MouseUp;
+            gMap.MouseMove += gMap_MouseMove;
+
             overlayDict = new Dictionary<string, GMapMarker[]>();
 
 
-        
+
+
 
         }
 
@@ -99,9 +113,9 @@ namespace EXIFGeotaggerv0._1
             importForm = new ImportDataForm();
             mRecordDict = new Dictionary<string, Record>();
             importForm.mParent = this;
-            
+
             importForm.Show();
-            
+
         }
         public void importAccessData(object sender, EventArgs e)
         {
@@ -170,7 +184,7 @@ namespace EXIFGeotaggerv0._1
             {
                 Console.WriteLine(e.StackTrace);
             }
-            
+
         }
         #endregion
 
@@ -185,7 +199,7 @@ namespace EXIFGeotaggerv0._1
             txtConsole.Clear();
             txtConsole.AppendText("Built markers...");
             //ckBoxLayers.Items.Add(markers.Id, true);
-           
+
         }
 
         private void ckBoxLayers_SelectedIndexChanged(object sender, EventArgs e)
@@ -206,7 +220,7 @@ namespace EXIFGeotaggerv0._1
             {
                 overlay.IsVisibile = false;
             }
-            
+
         }
 
         private void plotLayer()
@@ -221,14 +235,14 @@ namespace EXIFGeotaggerv0._1
             MarkerTag tag = new MarkerTag(mlayerColourHex, 4);
             tag.setBitmap();
             newOverlay = buildMarker(newOverlay, tag, mLayer);
-            
+
             gMap.Overlays.Add(newOverlay);
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
 
             overlayDict.Add(newOverlay.Id, markers);
             overlay = newOverlay;
             //overlayDict.Add(overlay.Id, overlay);
-            
+
             ckBoxLayers.Items.Add(overlay.Id, true);
             newOverlay.IsVisibile = true;
             overlay.IsVisibile = true;
@@ -244,7 +258,7 @@ namespace EXIFGeotaggerv0._1
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
 
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap); 
+                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
                     marker.Tag = tag;
                     overlay.Markers.Add(marker);
                     //markerArray.Add(marker);
@@ -273,7 +287,7 @@ namespace EXIFGeotaggerv0._1
             {
                 GMapMarker marker = markers[i];
                 GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
-                    if (marker.Tag != null)
+                if (marker.Tag != null)
                 {
                     newMarker.Tag = marker.Tag;
                 }
@@ -290,7 +304,7 @@ namespace EXIFGeotaggerv0._1
                 photoMarkers = buildPhotoMarker("EXIFGeotaggerv0._1.BitMap.OpenCameraOrange_4px.png", "photos");
             }
             gMap.Overlays.Add(photoMarkers);
-            
+
         }
 
         private GMapOverlay buildPhotoMarker(String icon, String name)
@@ -345,7 +359,7 @@ namespace EXIFGeotaggerv0._1
 
         #endregion
 
-        
+
 
         private void gMap_OnMapZoomChanged()
         {
@@ -357,14 +371,14 @@ namespace EXIFGeotaggerv0._1
                 foreach (GMapOverlay overlay in overlays)
                 {
                     rebuildMarkers(overlay, 4);
-                   
+
                 }
             }
             else if ((int)gMap.Zoom < 15 && (int)gMap.Zoom >= 11)
             {
                 foreach (GMapOverlay overlay in overlays)
                 {
-                    rebuildMarkers(overlay, 8);   
+                    rebuildMarkers(overlay, 8);
                 }
             }
             else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 15)
@@ -408,6 +422,72 @@ namespace EXIFGeotaggerv0._1
 
         //}
 
+        private void gMap_MouseDown(object sender, MouseEventArgs e)
+        {
+            zoomOverlay = new GMapOverlay("zoom");
+            mouseDown = true;
+            topLeft = gMap.FromLocalToLatLng(e.X, e.Y);
+            zoomRect = new List<PointLatLng>();
+            var point = gMap.FromLocalToLatLng(e.X, e.Y);
+            txtConsole.Clear();
+            txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
+        }
+
+        private void gMap_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (mouseDown == true)
+            {
+                zoomRect.Clear();
+
+                bottomRight = gMap.FromLocalToLatLng(e.X, e.Y);
+                zoomRect.Add(topLeft);
+
+                PointLatLng topRight = new PointLatLng(topLeft.Lat, bottomRight.Lng);
+                PointLatLng bottomLeft = new PointLatLng(bottomRight.Lat, topLeft.Lng);
+                zoomRect.Add(topRight);
+                zoomRect.Add(bottomRight);
+                zoomRect.Add(bottomLeft);
+
+                if (rect != null)
+                {
+                    gMap.Overlays.Remove(zoomOverlay);
+                    zoomOverlay.Polygons.Remove(rect);
+                }
+                rect = new GMapPolygon(zoomRect, "zoom");
+                rect.Fill = new SolidBrush(Color.FromArgb(20, Color.Black));
+                rect.Stroke = new Pen(Color.DarkGray, 1);
+                zoomOverlay.Polygons.Add(rect);
+                gMap.Overlays.Add(zoomOverlay);
+            }
+            var point = gMap.FromLocalToLatLng(e.X, e.Y);
+            //txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
+        }
+
+        private void gMap_MouseUp(object sender, MouseEventArgs e)
+        {
+            zoomOverlay.Polygons.Remove(rect);
+
+            gMap.Overlays.Remove(zoomOverlay);
+            mouseDown = false;
+            bottomRight = gMap.FromLocalToLatLng(e.X, e.Y);
+            var point = gMap.FromLocalToLatLng(e.X, e.Y);
+            txtConsole.Clear();
+            txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
+            gMap.SetZoomToFitRect(polygonToRect(zoomRect));
+            zoomRect.Clear();
+        }
+
+        private RectLatLng polygonToRect(List<PointLatLng> points)
+        {
+            double lat = (points[0].Lat + points[3].Lat) / 2;
+            double lon = (points[0].Lng + points[3].Lng) / 2;
+
+            double width = Math.Abs(points[1].Lng) - Math.Abs(points[0].Lng);
+            double height = Math.Abs(points[3].Lat) - Math.Abs(points[0].Lat);
+            RectLatLng rect = new RectLatLng(lat, lon, width, height);
+            return rect;
+        }
+
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
         {
             var point = gMap.FromLocalToLatLng(e.X, e.Y);
@@ -440,7 +520,7 @@ namespace EXIFGeotaggerv0._1
             geotagForm.Show();
 
             //startWorker(sender, e);
-            
+
         }
 
         public void startWorker(object sender, EventArgs e)
@@ -664,9 +744,9 @@ namespace EXIFGeotaggerv0._1
         #endregion
 
         private void menuSave_Click(object sender, EventArgs e)
-                {
+        {
 
-                }
+        }
 
 
 
