@@ -91,6 +91,7 @@ namespace EXIFGeotaggerv0._1
             gMap.MouseDown += gMap_MouseDown;
             gMap.MouseUp += gMap_MouseUp;
             gMap.MouseMove += gMap_MouseMove;
+            //gMap.MouseClick += gMap_MouseClick;
 
             overlayDict = new Dictionary<string, GMapMarker[]>();
 
@@ -477,7 +478,21 @@ namespace EXIFGeotaggerv0._1
             zoomRect.Clear();
         }
 
-        private RectLatLng polygonToRect(List<PointLatLng> points)
+        //private void gMap_MouseClick(object sender, MouseEventArgs e)
+        //{
+        //    if (mouseDown == true)
+        //    {
+        //        if (rect != null)
+        //        {
+        //            zoomRect.Clear();
+        //            gMap.Overlays.Remove(zoomOverlay);
+        //            zoomOverlay.Polygons.Remove(rect);
+        //        }
+                           
+        //    }
+        //}
+
+            private RectLatLng polygonToRect(List<PointLatLng> points)
         {
             double lat = (points[0].Lat + points[3].Lat) / 2;
             double lon = (points[0].Lng + points[3].Lng) / 2;
