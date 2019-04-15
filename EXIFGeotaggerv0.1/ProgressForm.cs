@@ -41,7 +41,8 @@ namespace EXIFGeotaggerv0._1
 
         private void ProgressForm_Load(object sender, EventArgs e)
         {
-
+            this.BringToFront();
+            this.TopMost = true;
         }
     }
 }

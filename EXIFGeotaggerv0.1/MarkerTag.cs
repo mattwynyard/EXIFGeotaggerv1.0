@@ -13,7 +13,7 @@ namespace EXIFGeotaggerv0._1
     {
         private string icon;
         private int size; //size in pixels of icon
-        //private Bitmap bitmap;
+        private static Bitmap bitmap;
 
         Assembly assembly = Assembly.GetExecutingAssembly();
 
@@ -52,13 +52,15 @@ namespace EXIFGeotaggerv0._1
 
         //public string Bitmap { get; set; } 
 
-        public Bitmap Bitmap
+        public Bitmap getBitmap()
         {
-            get
-            {
-                Stream stream = assembly.GetManifestResourceStream(icon);
-                return (Bitmap)Image.FromStream(stream);
-            }         
+            return bitmap;
+        }
+
+        public void setBitmap()
+        {
+            Stream stream = assembly.GetManifestResourceStream(icon);
+            bitmap = (Bitmap)Image.FromStream(stream);
         }
     }
 }

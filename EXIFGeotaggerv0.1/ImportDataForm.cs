@@ -20,9 +20,7 @@ namespace EXIFGeotaggerv0._1
         public ImportDataForm()
         {
             InitializeComponent();
-            
-           
-            
+              
         }
 
         private void ImportDataForm_Load(object sender, EventArgs e)
@@ -45,9 +43,6 @@ namespace EXIFGeotaggerv0._1
                 
                 mDBPath = openFileDialog.FileName;
                 txtDBName.Text = mDBPath;
-                
-
-
             }
             else
             {
@@ -70,9 +65,7 @@ namespace EXIFGeotaggerv0._1
             {
                 btnColour.BackColor = colorDialog1.Color;
                 mParent.mlayerColourHex = colorDialog1.Color.Name;
-               
-
-
+                mParent.mlayerColour = colorDialog1.Color;
             }
         }
 

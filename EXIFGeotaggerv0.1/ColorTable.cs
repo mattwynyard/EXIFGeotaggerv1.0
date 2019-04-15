@@ -20,8 +20,13 @@ namespace EXIFGeotaggerv0._1
             {
                 {"ffff8080", "EXIFGeotaggerv0._1.BitMap.OpenCameraPink"},
                 {"ffffff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraLemon"},
-                { "ffff8000", "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange"},
-                { "80ff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraLightLime"}
+                {"ffff8000", "EXIFGeotaggerv0._1.BitMap.OpenCameraOrange"},
+                {"ff80ff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraLightLime"},
+                {"ff00ff80", "EXIFGeotaggerv0._1.BitMap.OpenCameraSpringGreen"},
+                {"ff80ffff", "EXIFGeotaggerv0._1.BitMap.OpenCameraElectricBlue"},
+                {"ff0080ff", "EXIFGeotaggerv0._1.BitMap.OpenCameraDodgerBlue"},
+                {"ffff80c0", "EXIFGeotaggerv0._1.BitMap.OpenCameraTeaRose"},
+                {"ffff80ff", "EXIFGeotaggerv0._1.BitMap.OpenCameraFuschiaPink"}
             };
         }
     }
