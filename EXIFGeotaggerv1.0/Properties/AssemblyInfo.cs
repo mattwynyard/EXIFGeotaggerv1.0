@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Onsite Developments")]
-[assembly: AssemblyProduct("EXIFGeotaggerv0.1")]
+[assembly: AssemblyProduct("EXIFGeotaggerv1.0")]
 [assembly: AssemblyCopyright("Copyright © Onsite Developments 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

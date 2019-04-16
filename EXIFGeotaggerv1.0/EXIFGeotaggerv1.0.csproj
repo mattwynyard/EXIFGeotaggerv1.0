@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{2FD055B9-6B6D-47CB-80BE-8665085AFF9A}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>EXIFGeotaggerv0._1</RootNamespace>
-    <AssemblyName>EXIFGeotaggerv0.1</AssemblyName>
+    <RootNamespace>EXIFGeotaggerv1.0</RootNamespace>
+    <AssemblyName>EXIFGeotaggerv1.0</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>false</Deterministic>
