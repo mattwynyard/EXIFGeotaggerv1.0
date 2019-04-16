@@ -55,6 +55,7 @@
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bgWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.listLayers = new System.Windows.Forms.ListView();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -113,6 +114,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.listLayers);
             this.splitContainer1.Panel1.Controls.Add(this.ckBoxLayers);
             this.splitContainer1.Panel1.Controls.Add(this.txtConsole);
             // 
@@ -321,6 +323,17 @@
             this.bgWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker1_ProgressChanged);
             this.bgWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker1_RunWorkerCompleted);
             // 
+            // listLayers
+            // 
+            this.listLayers.CheckBoxes = true;
+            this.listLayers.Location = new System.Drawing.Point(273, 227);
+            this.listLayers.Name = "listLayers";
+            this.listLayers.Size = new System.Drawing.Size(121, 97);
+            this.listLayers.TabIndex = 6;
+            this.listLayers.UseCompatibleStateImageBehavior = false;
+            this.listLayers.View = System.Windows.Forms.View.List;
+            this.listLayers.SelectedIndexChanged += new System.EventHandler(this.listLayers_SelectedIndexChanged);
+            // 
             // EXIFGeoTagger
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -375,6 +388,7 @@
         private System.Windows.Forms.ToolStripMenuItem accesDataMenu;
         private System.Windows.Forms.ToolStripMenuItem excelDataMenu;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.ListView listLayers;
     }
 }
 

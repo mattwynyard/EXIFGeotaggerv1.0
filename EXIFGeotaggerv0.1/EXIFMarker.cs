@@ -28,6 +28,7 @@ namespace EXIFGeotaggerv0._1
         protected double pdop;
         protected String inspector;
         protected DateTime timestamp;
+        protected Boolean geomark;
 
         public EXIFMarker()
         {
@@ -151,6 +152,17 @@ namespace EXIFGeotaggerv0._1
             set
             {
                 this.timestamp = value;
+            }
+        }
+        public Boolean GeoMark
+        {
+            get
+            {
+                return geomark;
+            }
+            set
+            {
+                this.geomark = value;
             }
         }
     }
