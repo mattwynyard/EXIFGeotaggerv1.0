@@ -1,4 +1,4 @@
-﻿namespace EXIFGeotaggerv0._1
+﻿namespace EXIFGeotagger //v0._1
 {
     partial class ImportDataForm
     {

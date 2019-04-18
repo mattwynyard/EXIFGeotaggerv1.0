@@ -1,4 +1,4 @@
-﻿namespace EXIFGeotaggerv0._1
+﻿namespace EXIFGeotagger
 {
     partial class ProgressForm
     {

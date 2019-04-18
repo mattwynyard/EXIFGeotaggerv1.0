@@ -13,7 +13,7 @@ using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Soap;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace EXIFGeotaggerv0._1
+namespace EXIFGeotagger
 {
     [Serializable()]
     class EXIFMarker

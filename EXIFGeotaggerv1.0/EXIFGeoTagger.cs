@@ -20,7 +20,7 @@ using GMap.NET.WindowsForms.Markers;
 using System.Threading;
 
 
-namespace EXIFGeotaggerv0._1
+namespace EXIFGeotagger //v0._1
 {
     public partial class EXIFGeoTagger : Form
     {

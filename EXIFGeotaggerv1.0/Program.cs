@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace EXIFGeotaggerv0._1
+namespace EXIFGeotagger //v0._1
 {
     static class Program
     {

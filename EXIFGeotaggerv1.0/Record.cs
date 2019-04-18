@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EXIFGeotaggerv0._1
+namespace EXIFGeotagger //v0._1
 {
     class Record : EXIFMarker
     {

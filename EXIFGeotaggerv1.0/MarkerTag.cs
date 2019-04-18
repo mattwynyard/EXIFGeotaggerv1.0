@@ -7,7 +7,7 @@ using System.Drawing;
 using System.Reflection;
 using System.IO;
 
-namespace EXIFGeotaggerv0._1
+namespace EXIFGeotagger //v0._1
 {
     class MarkerTag
     {
