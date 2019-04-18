@@ -775,9 +775,9 @@ namespace EXIFGeotaggerv0._1
                             image.SetPropertyItem(propItemPDop);
                             image.SetPropertyItem(propItemSat);
                             image.SetPropertyItem(propItemDateTime);
-                            string file = Path.GetFileNameWithoutExtension(filePath);
+                            string file = Path.GetFileName(filePath);
                             //string fullName = file.Substring(0, 19) + "_" + r.Id + ".jpg";
-                            image.Save(outFolder + "\\" + Path.GetFileName(file));
+                            image.Save(outFolder + "\\" + Path.GetFileName(filePath));
                             image.Dispose();
                             image = null;
                         } else
