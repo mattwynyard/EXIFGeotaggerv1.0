@@ -969,5 +969,10 @@ namespace EXIFGeotaggerv0._1
             mArrow = true;
             
         }
+
+        private void lbScale_Click(object sender, EventArgs e)
+        {
+
+        }
     } //end class   
 } //end namespace

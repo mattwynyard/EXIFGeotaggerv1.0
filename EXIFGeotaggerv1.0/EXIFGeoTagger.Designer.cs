@@ -366,11 +366,14 @@
             // 
             // lbScale
             // 
+            this.lbScale.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lbScale.AutoSize = true;
             this.lbScale.Location = new System.Drawing.Point(243, 514);
             this.lbScale.Name = "lbScale";
-            this.lbScale.Size = new System.Drawing.Size(0, 13);
+            this.lbScale.Size = new System.Drawing.Size(46, 13);
             this.lbScale.TabIndex = 7;
+            this.lbScale.Text = "Scale 1:";
+            this.lbScale.Click += new System.EventHandler(this.lbScale_Click);
             // 
             // EXIFGeoTagger
             // 
