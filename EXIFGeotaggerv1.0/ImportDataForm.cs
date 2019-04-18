@@ -74,5 +74,16 @@ namespace EXIFGeotaggerv0._1
             mParent.mDBPath = mDBPath;
             mParent.mLayer = txtLayer.Text;
         }
+
+        private void ckBoxGeomark_CheckedChanged(object sender, EventArgs e)
+        {
+            if (ckBoxGeomark.Checked)
+            {
+                this.mParent.allRecords = true;
+            } else
+            {
+                this.mParent.allRecords = false;
+            }
+        }
     }
 }

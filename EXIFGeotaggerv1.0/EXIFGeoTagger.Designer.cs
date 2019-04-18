@@ -28,9 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EXIFGeoTagger));
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.txtConsole = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.listLayers = new System.Windows.Forms.ListView();
             this.ckBoxLayers = new System.Windows.Forms.CheckedListBox();
             this.lbPosition = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -55,7 +57,9 @@
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bgWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.listLayers = new System.Windows.Forms.ListView();
+            this.btnZoom = new System.Windows.Forms.Button();
+            this.btnArrow = new System.Windows.Forms.Button();
+            this.lbScale = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -89,7 +93,7 @@
             this.gMap.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
             this.gMap.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
             this.gMap.ShowTileGridLines = false;
-            this.gMap.Size = new System.Drawing.Size(665, 531);
+            this.gMap.Size = new System.Drawing.Size(665, 512);
             this.gMap.TabIndex = 5;
             this.gMap.Zoom = 10D;
             this.gMap.OnMarkerClick += new GMap.NET.WindowsForms.MarkerClick(this.gMap_OnMarkerClick);
@@ -114,17 +118,31 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnArrow);
+            this.splitContainer1.Panel1.Controls.Add(this.btnZoom);
             this.splitContainer1.Panel1.Controls.Add(this.listLayers);
             this.splitContainer1.Panel1.Controls.Add(this.ckBoxLayers);
             this.splitContainer1.Panel1.Controls.Add(this.txtConsole);
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.lbScale);
             this.splitContainer1.Panel2.Controls.Add(this.lbPosition);
             this.splitContainer1.Panel2.Controls.Add(this.gMap);
             this.splitContainer1.Size = new System.Drawing.Size(1186, 531);
             this.splitContainer1.SplitterDistance = 517;
             this.splitContainer1.TabIndex = 6;
+            // 
+            // listLayers
+            // 
+            this.listLayers.CheckBoxes = true;
+            this.listLayers.Location = new System.Drawing.Point(273, 227);
+            this.listLayers.Name = "listLayers";
+            this.listLayers.Size = new System.Drawing.Size(121, 97);
+            this.listLayers.TabIndex = 6;
+            this.listLayers.UseCompatibleStateImageBehavior = false;
+            this.listLayers.View = System.Windows.Forms.View.List;
+            this.listLayers.SelectedIndexChanged += new System.EventHandler(this.listLayers_SelectedIndexChanged);
             // 
             // ckBoxLayers
             // 
@@ -140,7 +158,8 @@
             // 
             this.lbPosition.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lbPosition.AutoSize = true;
-            this.lbPosition.Location = new System.Drawing.Point(3, 518);
+            this.lbPosition.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbPosition.Location = new System.Drawing.Point(3, 515);
             this.lbPosition.Name = "lbPosition";
             this.lbPosition.Size = new System.Drawing.Size(47, 13);
             this.lbPosition.TabIndex = 6;
@@ -323,16 +342,35 @@
             this.bgWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker1_ProgressChanged);
             this.bgWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker1_RunWorkerCompleted);
             // 
-            // listLayers
+            // btnZoom
             // 
-            this.listLayers.CheckBoxes = true;
-            this.listLayers.Location = new System.Drawing.Point(273, 227);
-            this.listLayers.Name = "listLayers";
-            this.listLayers.Size = new System.Drawing.Size(121, 97);
-            this.listLayers.TabIndex = 6;
-            this.listLayers.UseCompatibleStateImageBehavior = false;
-            this.listLayers.View = System.Windows.Forms.View.List;
-            this.listLayers.SelectedIndexChanged += new System.EventHandler(this.listLayers_SelectedIndexChanged);
+            this.btnZoom.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnZoom.Image = ((System.Drawing.Image)(resources.GetObject("btnZoom.Image")));
+            this.btnZoom.Location = new System.Drawing.Point(14, 66);
+            this.btnZoom.Name = "btnZoom";
+            this.btnZoom.Size = new System.Drawing.Size(40, 40);
+            this.btnZoom.TabIndex = 7;
+            this.btnZoom.UseVisualStyleBackColor = true;
+            this.btnZoom.Click += new System.EventHandler(this.btnZoom_Click);
+            // 
+            // btnArrow
+            // 
+            this.btnArrow.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnArrow.Image = ((System.Drawing.Image)(resources.GetObject("btnArrow.Image")));
+            this.btnArrow.Location = new System.Drawing.Point(14, 22);
+            this.btnArrow.Name = "btnArrow";
+            this.btnArrow.Size = new System.Drawing.Size(40, 40);
+            this.btnArrow.TabIndex = 8;
+            this.btnArrow.UseVisualStyleBackColor = true;
+            this.btnArrow.Click += new System.EventHandler(this.btnArrow_Click);
+            // 
+            // lbScale
+            // 
+            this.lbScale.AutoSize = true;
+            this.lbScale.Location = new System.Drawing.Point(243, 514);
+            this.lbScale.Name = "lbScale";
+            this.lbScale.Size = new System.Drawing.Size(0, 13);
+            this.lbScale.TabIndex = 7;
             // 
             // EXIFGeoTagger
             // 
@@ -389,6 +427,9 @@
         private System.Windows.Forms.ToolStripMenuItem excelDataMenu;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ListView listLayers;
+        private System.Windows.Forms.Button btnZoom;
+        private System.Windows.Forms.Button btnArrow;
+        private System.Windows.Forms.Label lbScale;
     }
 }
 

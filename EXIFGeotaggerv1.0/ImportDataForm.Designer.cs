@@ -38,6 +38,7 @@
             this.btnColour = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.ckBoxGeomark = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // txtDBName
@@ -127,11 +128,23 @@
             this.label4.TabIndex = 8;
             this.label4.Text = "Colour";
             // 
+            // ckBoxGeomark
+            // 
+            this.ckBoxGeomark.AutoSize = true;
+            this.ckBoxGeomark.Location = new System.Drawing.Point(231, 93);
+            this.ckBoxGeomark.Name = "ckBoxGeomark";
+            this.ckBoxGeomark.Size = new System.Drawing.Size(176, 17);
+            this.ckBoxGeomark.TabIndex = 9;
+            this.ckBoxGeomark.Text = "Include non-geomarked records";
+            this.ckBoxGeomark.UseVisualStyleBackColor = true;
+            this.ckBoxGeomark.CheckedChanged += new System.EventHandler(this.ckBoxGeomark_CheckedChanged);
+            // 
             // ImportDataForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(580, 315);
+            this.Controls.Add(this.ckBoxGeomark);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.btnColour);
@@ -161,5 +174,6 @@
         private System.Windows.Forms.Button btnColour;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox ckBoxGeomark;
     }
 }

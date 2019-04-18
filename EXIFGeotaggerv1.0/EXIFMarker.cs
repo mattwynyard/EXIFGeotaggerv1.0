@@ -18,6 +18,7 @@ namespace EXIFGeotaggerv0._1
     [Serializable()]
     class EXIFMarker
     {
+        protected string id;
         protected String photo;
         protected double latitude;
         protected double longitude;
@@ -44,6 +45,18 @@ namespace EXIFGeotaggerv0._1
             get
             {
                 return photo;
+            }
+        }
+
+        public string Id
+        {
+            get
+            {
+                return id;
+            }
+            set
+            {
+                this.id = value;
             }
         }
 
