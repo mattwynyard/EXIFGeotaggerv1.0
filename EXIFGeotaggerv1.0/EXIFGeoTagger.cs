@@ -66,7 +66,7 @@ namespace EXIFGeotagger //v0._1
 
         private List<GMapMarker> photoMarkerArray;
         private List<GMapMarker> markerArray;
-        private List<EXIFMarker> exifPhotoMarkerArray;
+        private List<Record> exifPhotoMarkerArray;
         private List<GMapOverlay> gpsOverlayArray;
 
         private Dictionary<string, GMapMarker[]> overlayDict;
@@ -152,7 +152,7 @@ namespace EXIFGeotagger //v0._1
         /// <param name="e"></param>
         private void connectAccess_Click(object sender, EventArgs e)
         {
-            ImportDataForm importForm = new ImportDataForm();
+            ImportDataForm importForm = new ImportDataForm("access");
             mRecordDict = new Dictionary<string, Record>();
             importForm.mParent = this;
             importForm.Show();
@@ -211,12 +211,9 @@ namespace EXIFGeotagger //v0._1
                 Console.WriteLine(ex.Message);
                 this.menuRunGeoTag.Enabled = false;
             }
-
             plotLayer();
-
             txtConsole.Clear();
             txtConsole.AppendText("Records: " + recordCount);
-
         }
 
         /// <summary>
@@ -248,6 +245,14 @@ namespace EXIFGeotagger //v0._1
             {
                 Console.WriteLine(e.StackTrace);
             }
+        }
+
+        public void deSerializeData(String path)
+        {
+            Serializer s = new Serializer(path);
+            mRecordDict = s.deserialize();
+            plotLayer();
+
         }
         #endregion
 
@@ -710,6 +715,7 @@ namespace EXIFGeotagger //v0._1
         private void bgWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
+           
             Record r;
             //GMapOverlay photoOverlay = new GMapOverlay("photos");
             int length = mFiles.Length;
@@ -748,22 +754,23 @@ namespace EXIFGeotagger //v0._1
 
                         if (r.GeoMark)
                         {
+                            RecordUtil RecordUtil = new RecordUtil(r);
+                            propItemLat = RecordUtil.getEXIFCoordinate("latitude", propItemLat);
+                            propItemLon = RecordUtil.getEXIFCoordinate("longitude", propItemLon);
+                            propItemAlt = RecordUtil.getEXIFNumber(propItemAlt, "altitude", 10);
+                            propItemLatRef = RecordUtil.getEXIFCoordinateRef("latitude", propItemLatRef);
+                            propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
+                            propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
+                            propItemAltRef = RecordUtil.getEXIFAltitudeRef(propItemAltRef);
 
-                            propItemLat = r.getEXIFCoordinate("latitude", propItemLat);
-                            propItemLon = r.getEXIFCoordinate("longitude", propItemLon);
-                            propItemAlt = r.getEXIFNumber(propItemAlt, "altitude", 10);
-                            propItemLatRef = r.getEXIFCoordinateRef("latitude", propItemLatRef);
-                            propItemLonRef = r.getEXIFCoordinateRef("longitude", propItemLonRef);
-                            propItemAltRef = r.getEXIFAltitudeRef(propItemAltRef);
+                            propItemDir = RecordUtil.getEXIFNumber(propItemDir, "bearing", 10);
+                            propItemVel = RecordUtil.getEXIFNumber(propItemVel, "velocity", 100);
+                            propItemPDop = RecordUtil.getEXIFNumber(propItemPDop, "pdop", 10);
+                            propItemSat = RecordUtil.getEXIFInt(propItemSat, r.Satellites);
 
-                            propItemDir = r.getEXIFNumber(propItemDir, "bearing", 10);
-                            propItemVel = r.getEXIFNumber(propItemVel, "velocity", 100);
-                            propItemPDop = r.getEXIFNumber(propItemPDop, "pdop", 10);
-                            propItemSat = r.getEXIFInt(propItemSat, r.Satellites);
+                            propItemDateTime = RecordUtil.getEXIFDateTime(propItemDateTime);
 
-                            propItemDateTime = r.getEXIFDateTime(propItemDateTime);
-
-                            r = null;
+                            RecordUtil = null;
                             image.SetPropertyItem(propItemLat);
                             image.SetPropertyItem(propItemLon);
                             image.SetPropertyItem(propItemLatRef);
@@ -973,6 +980,31 @@ namespace EXIFGeotagger //v0._1
         private void lbScale_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void dataFiledatToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "EXIF Data|*.exf";
+            saveDialog.Title = "Save an EXIF data File";
+            DialogResult result = saveDialog.ShowDialog();
+
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(saveDialog.FileName))
+            {
+                String inPath = saveDialog.FileName;
+                Serializer s = new Serializer(mRecordDict);
+                s.serialize(inPath);
+            }
+        }
+
+        private void eXIFDataFiledatToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            
+            ImportDataForm importForm = new ImportDataForm("exf");
+            mRecordDict = new Dictionary<string, Record>();
+            importForm.mParent = this;
+            importForm.Show();
+           
         }
     } //end class   
 } //end namespace

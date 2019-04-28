@@ -1,29 +1,35 @@
 ﻿using System;
-using System.Drawing.Imaging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GMap.NET;
+using GMap.NET.WindowsForms;
+using GMap.NET.WindowsForms.Markers;
+using GMap.NET.MapProviders;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.Serialization;
+//using System.Runtime.Serialization.Formatters.Soap;
+using System.Runtime.Serialization.Formatters.Binary;
 
-namespace EXIFGeotagger //v0._1
+namespace EXIFGeotagger
 {
-    class Record : EXIFMarker
+    [Serializable()]
+    class Record
     {
-        //private String photo;
-        //private double latitude;
-        //private double longitude;
-        //private double altitude;
-        //private double bearing;
-        //private double velocity;
-        //private int satellites;
-        //private double pdop;
-        //private String inspector;
-        //private DateTime timestamp;
-
-        int[] exifLatitude;
-        int[] exifLongitude;
-        string exifLatitudeRef;
-        string exifLongitudeRef;
+        protected string id;
+        protected String photo;
+        protected double latitude;
+        protected double longitude;
+        protected double altitude;
+        protected double bearing;
+        protected double velocity;
+        protected int satellites;
+        protected double pdop;
+        protected String inspector;
+        protected DateTime timestamp;
+        protected Boolean geomark;
 
         public Record()
         {
@@ -34,248 +40,143 @@ namespace EXIFGeotagger //v0._1
             this.photo = photo;
         }
 
-        public PropertyItem getEXIFNumber(PropertyItem item, String type, int precision)
+        public String PhotoName
         {
-            int value = 0;
-            int multiplier = precision;
-            if (type.Equals("altitude"))
+            get
             {
-                value = (int)Math.Round(Math.Abs(this.Altitude) * multiplier);
-            } else if (type.Equals("bearing"))
-            {
-                value = (int)Math.Round(Math.Abs(this.Bearing) * multiplier);
+                return photo;
             }
-            else if (type.Equals("velocity"))
-            {
-                value = (int)Math.Round(Math.Abs(this.Velocity) * multiplier);
-            }
-            else if (type.Equals("pdop"))
-            {
-                value = (int)Math.Round(Math.Abs(this.PDop) * multiplier);
-            }
-            int[] values = { value, multiplier };
-
-            byte[] byteArray = new byte[8];
-            int offset = 0;
-            foreach (var x in values)
-            {
-                BitConverter.GetBytes(x).CopyTo(byteArray, offset);
-                offset += 4;
-            }
-            item.Value = byteArray;
-            return item; 
         }
 
-        public PropertyItem getEXIFInt(PropertyItem item, int number)
+        public string Id
         {
-            int value = number;
-            item.Value = ASCIIEncoding.ASCII.GetBytes(value.ToString() + "\0");
-            item.Type = 2;
-            return item;
+            get
+            {
+                return id;
+            }
+            set
+            {
+                this.id = value;
+            }
         }
 
-       public PropertyItem getEXIFAltitudeRef(PropertyItem item)
+        public double Latitude
         {
-            int value;
-            if (this.altitude < 0)
+            get
             {
-                value = 0;
-            } else
-            {
-                value = 1;
+                return latitude;
             }
-            int[] values = { value };
-            byte[] byteArray = new byte[4];
-            BitConverter.GetBytes(values[0]).CopyTo(byteArray, 0);
-            item.Value = byteArray;
-            return item;
+            set
+            {
+                this.latitude = value;
+            }
         }
 
-        public PropertyItem getEXIFDateTime(PropertyItem item)
+        public double Longitude
         {
-            byte[] bytes = ASCIIEncoding.ASCII.GetBytes(this.timestamp.ToString());
-            item.Value = bytes;
-            return item;
+            get
+            {
+                return longitude;
+            }
+            set
+            {
+                this.longitude = value;
+            }
         }
 
-            public PropertyItem getEXIFCoordinate(String coordinate, PropertyItem item )
+        public double Altitude
         {
-            double coord = 0;
-            int multiplier = 10000;
-            if (coordinate.Equals("latitude"))
+            get
             {
-                coord = Math.Abs(this.latitude);
-            } else
-            {
-                coord = Math.Abs(this.longitude);
+                return altitude;
             }
-
-            int d = (int)coord;
-            coord -= d;
-            coord *= 60;
-            int m = (int)coord;
-            coord -= m;
-            coord *= 60;
-            int s = (int)Math.Round(coord * multiplier);
-
-            int[] values = { d, 1, m, 1, s, multiplier };
-
-            byte[] byteArray = new byte[24];
-            int offset = 0;
-            foreach (var value in values)
+            set
             {
-                BitConverter.GetBytes(value).CopyTo(byteArray, offset);
-                offset += 4;
+                this.altitude = value;
             }
-            item.Type = 5;
-            item.Value = byteArray; //write bytes
-            return item;
         }
 
-        public PropertyItem getEXIFCoordinateRef(String coordinate, PropertyItem item)
+        public double Bearing
         {
-            if (coordinate.Equals("latitude"))
+            get
             {
-                if (this.latitude < 0)
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("S\0");
-                }
-                else
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("N\0");
-                }
+                return bearing;
             }
-            else
+            set
             {
-                if (this.longitude < 0)
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("W\0");
-                }
-                else
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("E\0");
-                }
+                this.bearing = value;
             }
-            return item;
         }
 
-        //public String PhotoName
-        //{
-        //    get
-        //    {
-        //        return photo;
-        //    }
-        //}
+        public double Velocity
+        {
+            get
+            {
+                return velocity;
+            }
+            set
+            {
+                this.velocity = value;
+            }
+        }
 
-        //public double Latitude
-        //{
-        //    get
-        //    {
-        //        return latitude;
-        //    }
-        //    set
-        //    {
-        //        this.latitude = value;
-        //    }
-        //}
+        public int Satellites
+        {
+            get
+            {
+                return satellites;
+            }
+            set
+            {
+                this.satellites = value;
+            }
+        }
 
-        //public double Longitude
-        //{
-        //    get
-        //    {
-        //        return longitude;
-        //    }
-        //    set
-        //    {
-        //        this.longitude = value;
-        //    }
-        //}
+        public double PDop
+        {
+            get
+            {
+                return pdop;
+            }
+            set
+            {
+                this.pdop = value;
+            }
+        }
 
-        //public double Altitude
-        //{
-        //    get
-        //    {
-        //        return altitude;
-        //    }
-        //    set
-        //    {
-        //        this.altitude = value;
-        //    }
-        //}
+        public String Inspector
+        {
+            get
+            {
+                return inspector;
+            }
+            set
+            {
+                this.inspector = value;
+            }
+        }
 
-        //public double Bearing
-        //{
-        //    get
-        //    {
-        //        return bearing;
-        //    }
-        //    set
-        //    {
-        //        this.bearing = value;
-        //    }
-        //}
-
-        //public double Velocity
-        //{
-        //    get
-        //    {
-        //        return velocity;
-        //    }
-        //    set
-        //    {
-        //        this.velocity = value;
-        //    }
-        //}
-
-        //public int Satellites
-        //{
-        //    get
-        //    {
-        //        return satellites;
-        //    }
-        //    set
-        //    {
-        //        this.satellites = value;
-        //    }
-        //}
-
-        //public double PDop
-        //{
-        //    get
-        //    {
-        //        return pdop;
-        //    }
-        //    set
-        //    {
-        //        this.pdop = value;
-        //    }
-        //}
-
-        //public String Inspector
-        //{
-        //    get
-        //    {
-        //        return inspector;
-        //    }
-        //    set
-        //    {
-        //        this.inspector = value;
-        //    }
-        //}
-
-        //public DateTime TimeStamp
-        //{
-        //    get
-        //    {
-        //        return timestamp;
-        //    }
-        //    set
-        //    {
-        //        this.timestamp = value;
-        //    }
-        //}
-
+        public DateTime TimeStamp
+        {
+            get
+            {
+                return timestamp;
+            }
+            set
+            {
+                this.timestamp = value;
+            }
+        }
+        public Boolean GeoMark
+        {
+            get
+            {
+                return geomark;
+            }
+            set
+            {
+                this.geomark = value;
+            }
+        }
     }
-
-
 }

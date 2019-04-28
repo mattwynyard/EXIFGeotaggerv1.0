@@ -13,17 +13,29 @@ namespace EXIFGeotagger //v0._1
     
     public partial class ImportDataForm : Form
     {
-        private String mDBPath;
+        private String mfilePath;
         public EXIFGeoTagger mParent;
         OpenFileDialog openFileDialog;
+        String fileType;
+        String filter;
 
-        public ImportDataForm()
+        public ImportDataForm(string fileType)
         {
             InitializeComponent();
-              
+            this.fileType = fileType;
+            if (fileType.Equals("access"))
+            {
+                this.Text = "Import Access Database";
+                filter = "mdb files|*.mdb";
+            }
+            else if (fileType.Equals("dat"))
+            {
+                this.Text = "Open Data File";
+                filter = "exf files|*.exf";
+            }
         }
 
-        private void ImportDataForm_Load(object sender, EventArgs e)
+            private void ImportDataForm_Load(object sender, EventArgs e)
         {
             this.BringToFront();
             this.TopMost = true;
@@ -31,18 +43,29 @@ namespace EXIFGeotagger //v0._1
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "mdb files|*.mdb";
-            openFileDialog.FilterIndex = 2;
-            openFileDialog.Title = "Browse Files";
-            openFileDialog.RestoreDirectory = true;
-            openFileDialog.DefaultExt = "mdb";
+            if (fileType.Equals("access")) {
+                openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = filter;
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.Title = "Browse Files";
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.DefaultExt = "mdb";
+            } else if (fileType.Equals("exf"))
+            {
+                
+                openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = filter;
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.Title = "Browse Files";
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.DefaultExt = "exf";
+            }
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                
-                mDBPath = openFileDialog.FileName;
-                txtDBName.Text = mDBPath;
+
+                mfilePath = openFileDialog.FileName;
+                txtDBName.Text = mfilePath;
             }
             else
             {
@@ -55,8 +78,14 @@ namespace EXIFGeotagger //v0._1
         {
             Close();
             mParent.BringToFront();
-            mParent.importAccessData(sender, e);
-            
+            if (fileType.Equals("access"))
+            {
+                mParent.importAccessData(sender, e);
+            }
+            else if (fileType.Equals("exf"))
+            {
+                mParent.deSerializeData(mfilePath);
+            }
         }
 
         private void btnColour_Click(object sender, EventArgs e)
@@ -71,7 +100,7 @@ namespace EXIFGeotagger //v0._1
 
         private void txtLayer_TextChanged(object sender, EventArgs e)
         {
-            mParent.mDBPath = mDBPath;
+            mParent.mDBPath = mfilePath;
             mParent.mLayer = txtLayer.Text;
         }
 

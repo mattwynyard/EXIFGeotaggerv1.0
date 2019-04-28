@@ -32,8 +32,11 @@
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.txtConsole = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnArrow = new System.Windows.Forms.Button();
+            this.btnZoom = new System.Windows.Forms.Button();
             this.listLayers = new System.Windows.Forms.ListView();
             this.ckBoxLayers = new System.Windows.Forms.CheckedListBox();
+            this.lbScale = new System.Windows.Forms.Label();
             this.lbPosition = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,6 +47,8 @@
             this.menuQuit = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.accessmdbToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataFiledatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.layerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.plotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,9 +62,7 @@
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bgWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.btnZoom = new System.Windows.Forms.Button();
-            this.btnArrow = new System.Windows.Forms.Button();
-            this.lbScale = new System.Windows.Forms.Label();
+            this.eXIFDataFiledatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -69,8 +72,8 @@
             // 
             // gMap
             // 
-            this.gMap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.gMap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gMap.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.gMap.Bearing = 0F;
@@ -110,8 +113,8 @@
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.Location = new System.Drawing.Point(12, 21);
             this.splitContainer1.Name = "splitContainer1";
@@ -133,6 +136,28 @@
             this.splitContainer1.SplitterDistance = 517;
             this.splitContainer1.TabIndex = 6;
             // 
+            // btnArrow
+            // 
+            this.btnArrow.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnArrow.Image = ((System.Drawing.Image)(resources.GetObject("btnArrow.Image")));
+            this.btnArrow.Location = new System.Drawing.Point(14, 22);
+            this.btnArrow.Name = "btnArrow";
+            this.btnArrow.Size = new System.Drawing.Size(40, 40);
+            this.btnArrow.TabIndex = 8;
+            this.btnArrow.UseVisualStyleBackColor = true;
+            this.btnArrow.Click += new System.EventHandler(this.btnArrow_Click);
+            // 
+            // btnZoom
+            // 
+            this.btnZoom.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnZoom.Image = ((System.Drawing.Image)(resources.GetObject("btnZoom.Image")));
+            this.btnZoom.Location = new System.Drawing.Point(14, 66);
+            this.btnZoom.Name = "btnZoom";
+            this.btnZoom.Size = new System.Drawing.Size(40, 40);
+            this.btnZoom.TabIndex = 7;
+            this.btnZoom.UseVisualStyleBackColor = true;
+            this.btnZoom.Click += new System.EventHandler(this.btnZoom_Click);
+            // 
             // listLayers
             // 
             this.listLayers.CheckBoxes = true;
@@ -153,6 +178,17 @@
             this.ckBoxLayers.TabIndex = 5;
             this.ckBoxLayers.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.ckBox_ItemCheck);
             this.ckBoxLayers.SelectedIndexChanged += new System.EventHandler(this.ckBoxLayers_SelectedIndexChanged);
+            // 
+            // lbScale
+            // 
+            this.lbScale.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbScale.AutoSize = true;
+            this.lbScale.Location = new System.Drawing.Point(243, 514);
+            this.lbScale.Name = "lbScale";
+            this.lbScale.Size = new System.Drawing.Size(46, 13);
+            this.lbScale.TabIndex = 7;
+            this.lbScale.Text = "Scale 1:";
+            this.lbScale.Click += new System.EventHandler(this.lbScale_Click);
             // 
             // lbPosition
             // 
@@ -187,7 +223,8 @@
             this.menuOpen,
             this.menuSave,
             this.menuQuit,
-            this.importToolStripMenuItem});
+            this.importToolStripMenuItem,
+            this.exportToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -197,7 +234,7 @@
             this.menuNew.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.projectToolStripMenuItem});
             this.menuNew.Name = "menuNew";
-            this.menuNew.Size = new System.Drawing.Size(146, 22);
+            this.menuNew.Size = new System.Drawing.Size(180, 22);
             this.menuNew.Text = "New ";
             // 
             // projectToolStripMenuItem
@@ -208,9 +245,11 @@
             // 
             // menuOpen
             // 
+            this.menuOpen.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.eXIFDataFiledatToolStripMenuItem});
             this.menuOpen.Name = "menuOpen";
             this.menuOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuOpen.Size = new System.Drawing.Size(146, 22);
+            this.menuOpen.Size = new System.Drawing.Size(180, 22);
             this.menuOpen.Text = "&Open";
             this.menuOpen.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.fileMenuOpen_Click);
             // 
@@ -218,7 +257,7 @@
             // 
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(146, 22);
+            this.menuSave.Size = new System.Drawing.Size(180, 22);
             this.menuSave.Text = "&Save";
             this.menuSave.Click += new System.EventHandler(this.menuSave_Click);
             // 
@@ -226,7 +265,7 @@
             // 
             this.menuQuit.Name = "menuQuit";
             this.menuQuit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.menuQuit.Size = new System.Drawing.Size(146, 22);
+            this.menuQuit.Size = new System.Drawing.Size(180, 22);
             this.menuQuit.Text = "&Quit";
             this.menuQuit.Click += new System.EventHandler(this.menuQuit_Click);
             // 
@@ -235,7 +274,7 @@
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.accessmdbToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.importToolStripMenuItem.Text = "Import";
             this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess_Click);
             // 
@@ -244,6 +283,21 @@
             this.accessmdbToolStripMenuItem.Name = "accessmdbToolStripMenuItem";
             this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.accessmdbToolStripMenuItem.Text = "Access (.mdb)";
+            // 
+            // exportToolStripMenuItem
+            // 
+            this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.dataFiledatToolStripMenuItem});
+            this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exportToolStripMenuItem.Text = "Export";
+            // 
+            // dataFiledatToolStripMenuItem
+            // 
+            this.dataFiledatToolStripMenuItem.Name = "dataFiledatToolStripMenuItem";
+            this.dataFiledatToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.dataFiledatToolStripMenuItem.Text = "Data File (*.dat)";
+            this.dataFiledatToolStripMenuItem.Click += new System.EventHandler(this.dataFiledatToolStripMenuItem_Click);
             // 
             // layerToolStripMenuItem
             // 
@@ -342,38 +396,12 @@
             this.bgWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker1_ProgressChanged);
             this.bgWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker1_RunWorkerCompleted);
             // 
-            // btnZoom
+            // eXIFDataFiledatToolStripMenuItem
             // 
-            this.btnZoom.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnZoom.Image = ((System.Drawing.Image)(resources.GetObject("btnZoom.Image")));
-            this.btnZoom.Location = new System.Drawing.Point(14, 66);
-            this.btnZoom.Name = "btnZoom";
-            this.btnZoom.Size = new System.Drawing.Size(40, 40);
-            this.btnZoom.TabIndex = 7;
-            this.btnZoom.UseVisualStyleBackColor = true;
-            this.btnZoom.Click += new System.EventHandler(this.btnZoom_Click);
-            // 
-            // btnArrow
-            // 
-            this.btnArrow.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnArrow.Image = ((System.Drawing.Image)(resources.GetObject("btnArrow.Image")));
-            this.btnArrow.Location = new System.Drawing.Point(14, 22);
-            this.btnArrow.Name = "btnArrow";
-            this.btnArrow.Size = new System.Drawing.Size(40, 40);
-            this.btnArrow.TabIndex = 8;
-            this.btnArrow.UseVisualStyleBackColor = true;
-            this.btnArrow.Click += new System.EventHandler(this.btnArrow_Click);
-            // 
-            // lbScale
-            // 
-            this.lbScale.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbScale.AutoSize = true;
-            this.lbScale.Location = new System.Drawing.Point(243, 514);
-            this.lbScale.Name = "lbScale";
-            this.lbScale.Size = new System.Drawing.Size(46, 13);
-            this.lbScale.TabIndex = 7;
-            this.lbScale.Text = "Scale 1:";
-            this.lbScale.Click += new System.EventHandler(this.lbScale_Click);
+            this.eXIFDataFiledatToolStripMenuItem.Name = "eXIFDataFiledatToolStripMenuItem";
+            this.eXIFDataFiledatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.eXIFDataFiledatToolStripMenuItem.Text = "EXIF data file (*.dat)";
+            this.eXIFDataFiledatToolStripMenuItem.Click += new System.EventHandler(this.eXIFDataFiledatToolStripMenuItem_Click);
             // 
             // EXIFGeoTagger
             // 
@@ -433,6 +461,9 @@
         private System.Windows.Forms.Button btnZoom;
         private System.Windows.Forms.Button btnArrow;
         private System.Windows.Forms.Label lbScale;
+        private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dataFiledatToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem eXIFDataFiledatToolStripMenuItem;
     }
 }
 
