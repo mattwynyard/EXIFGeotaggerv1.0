@@ -28,7 +28,7 @@ namespace EXIFGeotagger //v0._1
                 this.Text = "Import Access Database";
                 filter = "mdb files|*.mdb";
             }
-            else if (fileType.Equals("dat"))
+            else if (fileType.Equals("exf"))
             {
                 this.Text = "Open Data File";
                 filter = "exf files|*.exf";

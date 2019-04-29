@@ -400,7 +400,7 @@
             // 
             this.eXIFDataFiledatToolStripMenuItem.Name = "eXIFDataFiledatToolStripMenuItem";
             this.eXIFDataFiledatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.eXIFDataFiledatToolStripMenuItem.Text = "EXIF data file (*.dat)";
+            this.eXIFDataFiledatToolStripMenuItem.Text = "EXIF data file (*.exf)";
             this.eXIFDataFiledatToolStripMenuItem.Click += new System.EventHandler(this.eXIFDataFiledatToolStripMenuItem_Click);
             // 
             // EXIFGeoTagger

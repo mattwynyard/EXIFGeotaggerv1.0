@@ -301,7 +301,8 @@ namespace EXIFGeotagger //v0._1
 
             //string icon = ColorTable.ColorTableDict[mlayerColourHex];
 
-            MarkerTag tag = new MarkerTag(mlayerColourHex, 4);
+            MarkerTag tag = new MarkerTag(mlayerColourHex);
+            tag.Size = 4;
             tag.setBitmap();
             newOverlay = buildMarker(newOverlay, tag, mLayer);
 
@@ -342,6 +343,7 @@ namespace EXIFGeotagger //v0._1
                     Double lon = record.Value.Longitude;
 
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
+                    tag.PhotoName = record.Key;
                     marker.Tag = tag;
                     overlay.Markers.Add(marker);
                     //markerArray.Add(marker);
@@ -369,7 +371,10 @@ namespace EXIFGeotagger //v0._1
             for (int i = 0; i < count - 1; i += step)
             {
                 GMapMarker marker = markers[i];
+                //MarkerTag newTag = (MarkerTag)marker.Tag;
+                //newTag.PhotoName = markers[i].Tag.
                 GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
+                //newMarker.Tag = markers[i].Tag;
                 if (marker.Tag != null)
                 {
                     newMarker.Tag = marker.Tag;
@@ -385,7 +390,8 @@ namespace EXIFGeotagger //v0._1
             //Assembly assembly = Assembly.GetExecutingAssembly();
             //Stream stream = assembly.GetManifestResourceStream(icon);
             //bmpPhoto = (Bitmap)Image.FromStream(stream);
-            MarkerTag tag = new MarkerTag("ffff80ff", 4);
+            MarkerTag tag = new MarkerTag("ffff80ff");
+            tag.Size = 4;
             tag.setBitmap();
             photoOverlay = buildPhotoMarker(photoOverlay, tag, "photos");
             gMap.Overlays.Add(photoOverlay);
@@ -675,9 +681,11 @@ namespace EXIFGeotagger //v0._1
 
         private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
         {
-            String id = marker.Tag.ToString();
-
-            MessageBox.Show(id);
+            string id = marker.Tag.ToString();
+            string bucket = "centralwaikato2019";
+            PhotoForm photoForm = new PhotoForm(bucket, id);
+            photoForm.Show();
+            //MessageBox.Show(id);
         }
 
 
