@@ -12,27 +12,30 @@ using System.Text;
 using System.Windows.Forms;
 using Amazon;
 
-namespace EXIFGeotagger
+
+namespace Amazon
 {
-    public partial class PhotoForm : Form
+
+    class AWSConnection
     {
+        private const string accessKey = "AKIAIRKQ6PW67PU5NC7A";
+        private const string secretKey = "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";
         private string mKey;
         private string mBucket;
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast2;
-        private AmazonS3Client mClient;
+        private static AmazonS3Client mClient;
         private Image mImage;
 
-        public PhotoForm(string bucket, string photo)
+        public AWSConnection()
         {
-            InitializeComponent();
-            mBucket = bucket;
-            mKey = photo;
-           
-
+            mClient = new AmazonS3Client(
+                    accessKey, secretKey, bucketRegion);
         }
 
-        private void PhotoForm_Load(object sender, EventArgs e)
+        public AWSConnection(string bucket, string photo)
         {
+            mBucket = bucket;
+            mKey = photo;
             mClient = new AmazonS3Client(bucketRegion);
             ReadObjectDataAsync().Wait();
         }
@@ -54,7 +57,7 @@ namespace EXIFGeotagger
 
                     responseStream.CopyTo(stream);
                     mImage = Image.FromStream(stream, true);
-                    this.pictureBox.Image = mImage;
+                    //this.pictureBox.Image = mImage;
 
                 }
             }
@@ -66,16 +69,6 @@ namespace EXIFGeotagger
             {
                 Console.WriteLine("Unknown encountered on server. Message:'{0}' when writing an object", e.Message);
             }
-        }
-
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        private void pictureBox_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }

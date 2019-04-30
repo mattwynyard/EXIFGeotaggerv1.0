@@ -19,7 +19,7 @@ namespace EXIFGeotagger
     class Record
     {
         protected string id;
-        protected String photo;
+        protected string photo;
         protected double latitude;
         protected double longitude;
         protected double altitude;
@@ -27,20 +27,20 @@ namespace EXIFGeotagger
         protected double velocity;
         protected int satellites;
         protected double pdop;
-        protected String inspector;
+        protected string inspector;
         protected DateTime timestamp;
-        protected Boolean geomark;
+        protected bool geomark;
 
         public Record()
         {
         }
 
-        public Record(String photo)
+        public Record(string photo)
         {
             this.photo = photo;
         }
 
-        public String PhotoName
+        public string PhotoName
         {
             get
             {
@@ -56,7 +56,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.id = value;
+                id = value;
             }
         }
 
@@ -68,7 +68,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.latitude = value;
+                latitude = value;
             }
         }
 
@@ -80,7 +80,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.longitude = value;
+                longitude = value;
             }
         }
 
@@ -92,7 +92,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.altitude = value;
+                altitude = value;
             }
         }
 
@@ -104,7 +104,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.bearing = value;
+                bearing = value;
             }
         }
 
@@ -116,7 +116,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.velocity = value;
+                velocity = value;
             }
         }
 
@@ -128,7 +128,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.satellites = value;
+                satellites = value;
             }
         }
 
@@ -140,7 +140,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.pdop = value;
+                pdop = value;
             }
         }
 
@@ -152,7 +152,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.inspector = value;
+                inspector = value;
             }
         }
 
@@ -164,7 +164,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.timestamp = value;
+                timestamp = value;
             }
         }
         public Boolean GeoMark
@@ -175,7 +175,7 @@ namespace EXIFGeotagger
             }
             set
             {
-                this.geomark = value;
+                geomark = value;
             }
         }
     }

@@ -18,12 +18,20 @@ using GMap.NET.MapProviders;
 using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
 using System.Threading;
+using Amazon;
+using System.Net;
 
+public delegate Image getAWSImage();
 
 namespace EXIFGeotagger //v0._1
 {
     public partial class EXIFGeoTagger : Form
     {
+
+
+        Image image;
+
+
         public string mDBPath;
         public string mLayer;
         public Color mlayerColour;
@@ -79,9 +87,8 @@ namespace EXIFGeotagger //v0._1
         private List<PointLatLng> zoomRect;
         private GMapOverlay zoomOverlay;
         private GMapPolygon rect;
-        
-
         private ListViewItem layerItem;
+        private AWSConnection awsClient;
 
         /// <summary>
         /// Class constructor to intialize form
@@ -89,7 +96,7 @@ namespace EXIFGeotagger //v0._1
         public EXIFGeoTagger()
         {
             InitializeComponent();
-
+            //awsClient = new AWSConnection();
             this.menuRunGeoTag.Enabled = true;
 
         }
@@ -119,24 +126,15 @@ namespace EXIFGeotagger //v0._1
             gMap.MouseUp += gMap_MouseUp;
             gMap.MouseMove += gMap_MouseMove;
             //gMap.MouseClick += gMap_MouseClick;
-            layerCount = 0;
-
             gMap.MapScaleInfoEnabled = true;
             gMap.PreviewKeyDown += gMap_KeyDown;
-
-
-
             gMap.Enter += gMap_onEnter;
             //gMap.Leave += gMap_onLeave;
-
-            //btnArrow.
-
             overlayDict = new Dictionary<string, GMapMarker[]>();
             //layerItem = new ListViewItem();
             imageList = new ImageList();
+            layerCount = 0;
         }
-
-
 
         private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -299,12 +297,8 @@ namespace EXIFGeotagger //v0._1
             txtConsole.AppendText("ColourName: " + mlayerColour.ToString());
             GMapOverlay newOverlay = new GMapOverlay(mLayer);
 
-            //string icon = ColorTable.ColorTableDict[mlayerColourHex];
-
-            MarkerTag tag = new MarkerTag(mlayerColourHex);
-            tag.Size = 4;
-            tag.setBitmap();
-            newOverlay = buildMarker(newOverlay, tag, mLayer);
+            
+            newOverlay = buildMarker(newOverlay, mLayer);
 
             gMap.Overlays.Add(newOverlay);
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
@@ -332,13 +326,17 @@ namespace EXIFGeotagger //v0._1
         }
 
 
-        private GMapOverlay buildMarker(GMapOverlay overlay, MarkerTag tag, String name)
+        private GMapOverlay buildMarker(GMapOverlay overlay, String name)
         {
-            Bitmap bitmap = tag.getBitmap();
+            
             if (mRecordDict != null)
             {
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
+                    MarkerTag tag = new MarkerTag(mlayerColourHex);
+                    MarkerTag.Size = 4;
+                    MarkerTag.setBitmap();
+                    Bitmap bitmap = MarkerTag.getBitmap();
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
 
@@ -346,10 +344,8 @@ namespace EXIFGeotagger //v0._1
                     tag.PhotoName = record.Key;
                     marker.Tag = tag;
                     overlay.Markers.Add(marker);
-                    //markerArray.Add(marker);
                 }
             }
-            //bitmap.Dispose();
             return overlay;
         }
 
@@ -357,24 +353,17 @@ namespace EXIFGeotagger //v0._1
         {
             overlay.Markers.Clear();
             GMapMarker[] markers = overlayDict[overlay.Id];
-
-
             int count = markers.Length;
-            MarkerTag tag = (MarkerTag)markers[0].Tag;
-            tag.Size = size;
+            MarkerTag.Size = size;
 
             int step = getStep(size);
-            //tag.getBitmap().Dispose();
-            tag.setBitmap();
-            Bitmap bitmap = tag.getBitmap();
+            MarkerTag.setBitmap();
+            Bitmap bitmap = MarkerTag.getBitmap();
 
             for (int i = 0; i < count - 1; i += step)
             {
                 GMapMarker marker = markers[i];
-                //MarkerTag newTag = (MarkerTag)marker.Tag;
-                //newTag.PhotoName = markers[i].Tag.
                 GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
-                //newMarker.Tag = markers[i].Tag;
                 if (marker.Tag != null)
                 {
                     newMarker.Tag = marker.Tag;
@@ -387,12 +376,9 @@ namespace EXIFGeotagger //v0._1
         {
             browseFolder();
             GMapOverlay photoOverlay = new GMapOverlay("photos");
-            //Assembly assembly = Assembly.GetExecutingAssembly();
-            //Stream stream = assembly.GetManifestResourceStream(icon);
-            //bmpPhoto = (Bitmap)Image.FromStream(stream);
             MarkerTag tag = new MarkerTag("ffff80ff");
-            tag.Size = 4;
-            tag.setBitmap();
+            MarkerTag.Size = 4;
+            MarkerTag.setBitmap();
             photoOverlay = buildPhotoMarker(photoOverlay, tag, "photos");
             gMap.Overlays.Add(photoOverlay);
             GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
@@ -409,7 +395,7 @@ namespace EXIFGeotagger //v0._1
         private GMapOverlay buildPhotoMarker(GMapOverlay overlay, MarkerTag tag, String name)
         {
 
-            Bitmap bitmap = tag.getBitmap();
+            Bitmap bitmap = MarkerTag.getBitmap();
             foreach (string filePath in mFiles)
             {
                 try
@@ -636,11 +622,7 @@ namespace EXIFGeotagger //v0._1
 
         private RectLatLng polygonToRect(List<PointLatLng> points)
         {
-            //try
-            //{
-
             double lat = (points[0].Lat + points[2].Lat) / 2;
-
             double lon = (points[0].Lng + points[2].Lng) / 2;
             if (points[0].Lat > points[3].Lat) {
                 if (points[0].Lng < points[1].Lng) //top left -> bottom right
@@ -683,12 +665,27 @@ namespace EXIFGeotagger //v0._1
         {
             string id = marker.Tag.ToString();
             string bucket = "centralwaikato2019";
-            PhotoForm photoForm = new PhotoForm(bucket, id);
-            photoForm.Show();
-            //MessageBox.Show(id);
+            string url = "https://centralwaikato2019.s3.ap-southeast-2.amazonaws.com/" + id + ".jpg";
+            var buffer = new byte[1024 * 8]; // 8k buffer.
+            MemoryStream data = new MemoryStream();
+            int offset = 0;
+            var request = (HttpWebRequest)WebRequest.Create(url);
+            var response = request.GetResponse();
+            int bytesRead = 0;
+            using (var responseStream = response.GetResponseStream())
+            {
+                while ((bytesRead = responseStream.Read(buffer, 0, buffer.Length)) != 0)
+                {
+                    data.Write(buffer, 0, bytesRead);
+                    offset += bytesRead;
+                }
+            }
+            image = Image.FromStream(data);
+            data.Close();
+            lbPhoto.Text = id;
+            pictureBox.Image = image;
         }
-
-
+        
 
         private void menuQuit_Click(object sender, EventArgs e)
         {

@@ -40,6 +40,7 @@
             this.pictureBox.Size = new System.Drawing.Size(776, 383);
             this.pictureBox.TabIndex = 0;
             this.pictureBox.TabStop = false;
+            this.pictureBox.Click += new System.EventHandler(this.pictureBox_Click);
             // 
             // btnOk
             // 
