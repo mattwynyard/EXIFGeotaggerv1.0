@@ -29,15 +29,13 @@ namespace EXIFGeotagger //v0._1
     {
 
 
-        Image image;
-
-
+        Image image; //photo in photo viewer
         public string mDBPath;
         public string mLayer;
         public Color mlayerColour;
         public String mlayerColourHex;
 
-
+        private Dictionary<string, GMapMarker[]> overlayDict;
         GMapOverlay overlay;
 
         //index of currently layer in checkbox
@@ -77,7 +75,7 @@ namespace EXIFGeotagger //v0._1
         private List<Record> exifPhotoMarkerArray;
         private List<GMapOverlay> gpsOverlayArray;
 
-        private Dictionary<string, GMapMarker[]> overlayDict;
+        
 
         private Boolean data = false;
 
@@ -98,16 +96,14 @@ namespace EXIFGeotagger //v0._1
             InitializeComponent();
             //awsClient = new AWSConnection();
             this.menuRunGeoTag.Enabled = true;
-
         }
 
         /// <summary>
         /// Initial method called to setup map paramenters and register events.
-        /// Also builds overaly dictionary.
+        /// Also intialises overaly dictionary.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-
         private void gMap_Load(object sender, EventArgs e)
         {
             gMap.MapProvider = GMapProviders.GoogleMap;
@@ -134,10 +130,6 @@ namespace EXIFGeotagger //v0._1
             //layerItem = new ListViewItem();
             imageList = new ImageList();
             layerCount = 0;
-        }
-
-        private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
-        {
         }
 
         #region DatabaseConnect
@@ -254,38 +246,7 @@ namespace EXIFGeotagger //v0._1
         }
         #endregion
 
-
-        #region Markers
-        private void markersMenuItem_Click(object sender, EventArgs e)
-        {
-        }
-
-        private void ckBoxLayers_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //txtConsole.AppendText(ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem).ToString());
-            //txtConsole.AppendText(ckBoxLayers.SelectedItem.ToString());
-            mSelectedOverlay = ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem);
-        }
-
-        private void listLayers_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //mSelectedOverlay = listLayers.Items.IndexOf(listLayers.SelectedItems);
-        }
-
-        private void ckBox_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            overlay = gMap.Overlays.ElementAt(mSelectedOverlay);
-            if (overlay.IsVisibile == false)
-            {
-                overlay.IsVisibile = true;
-            }
-            else
-            {
-                overlay.IsVisibile = false;
-            }
-
-        }
-
+        #region Plotting
         /// <summary>
         /// Called from <see cref="importAccessData(object sender, EventArgs e)"/> creates new overaly and adds it to overlays in map control
         /// Intialises new MarkerTag which sets colour and inital size of the icon and sets the bitmap for the marker
@@ -295,17 +256,13 @@ namespace EXIFGeotagger //v0._1
             txtConsole.Clear();
             txtConsole.AppendText("Colour: " + mlayerColourHex.ToString());
             txtConsole.AppendText("ColourName: " + mlayerColour.ToString());
+
             GMapOverlay newOverlay = new GMapOverlay(mLayer);
-
-            
-            newOverlay = buildMarker(newOverlay, mLayer);
-
+            newOverlay = buildMarker(newOverlay);
             gMap.Overlays.Add(newOverlay);
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
-
             overlayDict.Add(newOverlay.Id, markers);
             overlay = newOverlay;
-
             ckBoxLayers.Items.Add(overlay.Id, true);
 
             //Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[mlayerColourHex.ToString()] + "_24px.png");
@@ -325,10 +282,15 @@ namespace EXIFGeotagger //v0._1
             overlay.IsVisibile = true;
         }
 
-
-        private GMapOverlay buildMarker(GMapOverlay overlay, String name)
+        /// <summary>
+        /// Called when layer is intially bulit when importing raw data (database/files etc)
+        /// Iterates through the record dictionary and assigns a marker tag to each record which contains information 
+        /// about icon size, color etc. Then creates a new google marker adds bitmap, coordinate information and marker tag.
+        /// </summary>
+        /// <param name="overlay - the intial overlay that markers will be added to"></param>
+        /// <returns>the GPOverlay containing the markers</returns>
+        private GMapOverlay buildMarker(GMapOverlay overlay)
         {
-            
             if (mRecordDict != null)
             {
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
@@ -339,7 +301,6 @@ namespace EXIFGeotagger //v0._1
                     Bitmap bitmap = MarkerTag.getBitmap();
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
-
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
                     tag.PhotoName = record.Key;
                     marker.Tag = tag;
@@ -370,26 +331,6 @@ namespace EXIFGeotagger //v0._1
                 }
                 overlay.Markers.Add(newMarker);
             }
-        }
-
-        private void photosToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            browseFolder();
-            GMapOverlay photoOverlay = new GMapOverlay("photos");
-            MarkerTag tag = new MarkerTag("ffff80ff");
-            MarkerTag.Size = 4;
-            MarkerTag.setBitmap();
-            photoOverlay = buildPhotoMarker(photoOverlay, tag, "photos");
-            gMap.Overlays.Add(photoOverlay);
-            GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
-
-            overlayDict.Add(photoOverlay.Id, markers);
-            overlay = photoOverlay;
-
-            ckBoxLayers.Items.Add(overlay.Id, true);
-            photoOverlay.IsVisibile = true;
-            overlay.IsVisibile = true;
-
         }
 
         private GMapOverlay buildPhotoMarker(GMapOverlay overlay, MarkerTag tag, String name)
@@ -429,7 +370,9 @@ namespace EXIFGeotagger //v0._1
                     marker.Tag = tag;
                     overlay.Markers.Add(marker);
 
-                } catch (ArgumentException ex) {
+                }
+                catch (ArgumentException ex)
+                {
 
                 }
                 catch (NullReferenceException ex)
@@ -440,8 +383,23 @@ namespace EXIFGeotagger //v0._1
             txtConsole.AppendText("Photos ready.." + Environment.NewLine);
             return overlay;
         }
-
         #endregion
+
+        #region GMap Events
+        //private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
+        //{
+        //    connectAccess_Click(sender, e);
+        //    GMapOverlay overlay = new GMapOverlay("markers");
+
+        //    //gpsMarkerArray = new List<GMapMarker>();
+        //    overlay = buildMarker(overlay, "EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
+        //    gMap.Overlays.Add(overlay);
+
+        //    ckBoxLayers.Items.Add(markers.Id, false);
+        //    overlay.IsVisibile = true;
+        //    this.menuRunGeoTag.Enabled = true;
+
+        //}
 
         private void gMap_OnMapZoomChanged()
         {
@@ -450,9 +408,9 @@ namespace EXIFGeotagger //v0._1
             double metersPerPx = 156543.03392 * Math.Cos(gMap.ViewArea.LocationMiddle.Lat * Math.PI / 180) / Math.Pow(2, gMap.Zoom);
             //txtConsole.AppendText("Scale: " + metersPerPx + Environment.NewLine);
             double scale = metersPerPx * (96 / 0.0254);
-            txtConsole.AppendText("Scale 1:" + scale +  "m" + Environment.NewLine);
+            txtConsole.AppendText("Scale 1:" + scale + "m" + Environment.NewLine);
 
-            lbScale.Text =  "Scale 1: " + Math.Round(scale);
+            lbScale.Text = "Scale 1: " + Math.Round(scale);
 
             GMapOverlay[] overlays = gMap.Overlays.ToArray<GMapOverlay>();
 
@@ -495,22 +453,6 @@ namespace EXIFGeotagger //v0._1
 
             }
         }
-
-        #region Events
-        //private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
-        //{
-        //    connectAccess_Click(sender, e);
-        //    GMapOverlay overlay = new GMapOverlay("markers");
-
-        //    //gpsMarkerArray = new List<GMapMarker>();
-        //    overlay = buildMarker(overlay, "EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
-        //    gMap.Overlays.Add(overlay);
-
-        //    ckBoxLayers.Items.Add(markers.Id, false);
-        //    overlay.IsVisibile = true;
-        //    this.menuRunGeoTag.Enabled = true;
-
-        //}
 
         private void gMap_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
@@ -620,39 +562,6 @@ namespace EXIFGeotagger //v0._1
         //    }
         //}
 
-        private RectLatLng polygonToRect(List<PointLatLng> points)
-        {
-            double lat = (points[0].Lat + points[2].Lat) / 2;
-            double lon = (points[0].Lng + points[2].Lng) / 2;
-            if (points[0].Lat > points[3].Lat) {
-                if (points[0].Lng < points[1].Lng) //top left -> bottom right
-                {
-                    lat = lat - (lat - points[0].Lat);
-                    lon = lon - (lon - points[3].Lng);
-                } else //top right -> bottom left
-                {
-                    lat = lat + (lat - points[3].Lat);
-                    lon = lon + (lon - points[0].Lng);
-                }
-            } else
-            {
-                if (points[0].Lng > points[1].Lng) //bottom right -> top left
-                {
-                    lat = lat + (lat - points[0].Lat);
-                    lon = lon + (lon - points[3].Lng);
-                } else
-                {
-                    lat = lat - (lat - points[3].Lat); //bottom left -> top right
-                    lon = lon - (lon - points[0].Lng);
-                }
-            }
-
-            double width = Math.Abs(Math.Abs(points[1].Lng) - Math.Abs(points[0].Lng));
-                double height = Math.Abs(Math.Abs(points[3].Lat) - Math.Abs(points[0].Lat));
-                RectLatLng rect = new RectLatLng(lat, lon, width, height);
-                return rect;
-        }
-
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
         {
             var point = gMap.FromLocalToLatLng(e.X, e.Y);
@@ -685,8 +594,104 @@ namespace EXIFGeotagger //v0._1
             lbPhoto.Text = id;
             pictureBox.Image = image;
         }
-        
 
+        private void gMap_onEnter(object sender, EventArgs e)
+        {
+            txtConsole.Clear();
+            txtConsole.AppendText("Enter");
+            if (mZoom)
+            {
+                Cursor = Cursors.Cross;
+                Cursor.Show();
+            }
+            else if (mArrow)
+            {
+                Cursor = Cursors.Arrow;
+                Cursor.Show();
+            }
+        }
+
+        private void btnZoom_Click(object sender, EventArgs e)
+        {
+            Cursor = Cursors.Cross;
+            mZoom = true;
+            mArrow = false;
+        }
+
+        private void btnArrow_Click(object sender, EventArgs e)
+        {
+            Cursor = Cursors.Arrow;
+            mZoom = false;
+            mArrow = true;
+        }
+
+        private void lbScale_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        //private void gMap_onLeave(object sender, EventArgs e)
+        //{
+        //    txtConsole.Clear();
+        //    txtConsole.AppendText("Leave");
+        //    Cursor = Cursors.Arrow;
+        //}
+
+        #endregion
+
+        #region Form Events
+        private void photosToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            browseFolder();
+            GMapOverlay photoOverlay = new GMapOverlay("photos");
+            MarkerTag tag = new MarkerTag("ffff80ff");
+            MarkerTag.Size = 4;
+            MarkerTag.setBitmap();
+            photoOverlay = buildPhotoMarker(photoOverlay, tag, "photos");
+            gMap.Overlays.Add(photoOverlay);
+            GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
+
+            overlayDict.Add(photoOverlay.Id, markers);
+            overlay = photoOverlay;
+
+            ckBoxLayers.Items.Add(overlay.Id, true);
+            photoOverlay.IsVisibile = true;
+            overlay.IsVisibile = true;
+
+        }
+        private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
+        {
+        }
+
+        private void markersMenuItem_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void ckBoxLayers_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //txtConsole.AppendText(ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem).ToString());
+            //txtConsole.AppendText(ckBoxLayers.SelectedItem.ToString());
+            mSelectedOverlay = ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem);
+        }
+
+        private void listLayers_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //mSelectedOverlay = listLayers.Items.IndexOf(listLayers.SelectedItems);
+        }
+
+        private void ckBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            overlay = gMap.Overlays.ElementAt(mSelectedOverlay);
+            if (overlay.IsVisibile == false)
+            {
+                overlay.IsVisibile = true;
+            }
+            else
+            {
+                overlay.IsVisibile = false;
+            }
+
+        }
         private void menuQuit_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Really Quit?", "Exit", MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -702,6 +707,49 @@ namespace EXIFGeotagger //v0._1
             geotagForm.Show();
         }
 
+        private void menuSave_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void EXIFGeoTagger_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AboutBox1 AboutBox = new AboutBox1();
+            AboutBox.Show();
+        }
+
+        private void dataFiledatToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "EXIF Data|*.exf";
+            saveDialog.Title = "Save an EXIF data File";
+            DialogResult result = saveDialog.ShowDialog();
+
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(saveDialog.FileName))
+            {
+                String inPath = saveDialog.FileName;
+                Serializer s = new Serializer(mRecordDict);
+                s.serialize(inPath);
+            }
+        }
+
+        private void eXIFDataFiledatToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            ImportDataForm importForm = new ImportDataForm("exf");
+            mRecordDict = new Dictionary<string, Record>();
+            importForm.mParent = this;
+            importForm.Show();
+
+        }
+        #endregion
+
+        #region Threading
         public void startWorker(object sender, EventArgs e)
         {
             if (bgWorker1.IsBusy != true)
@@ -874,6 +922,43 @@ namespace EXIFGeotagger //v0._1
         #endregion
 
         #region HELPERFUNCTIONS
+
+        private RectLatLng polygonToRect(List<PointLatLng> points)
+        {
+            double lat = (points[0].Lat + points[2].Lat) / 2;
+            double lon = (points[0].Lng + points[2].Lng) / 2;
+            if (points[0].Lat > points[3].Lat)
+            {
+                if (points[0].Lng < points[1].Lng) //top left -> bottom right
+                {
+                    lat = lat - (lat - points[0].Lat);
+                    lon = lon - (lon - points[3].Lng);
+                }
+                else //top right -> bottom left
+                {
+                    lat = lat + (lat - points[3].Lat);
+                    lon = lon + (lon - points[0].Lng);
+                }
+            }
+            else
+            {
+                if (points[0].Lng > points[1].Lng) //bottom right -> top left
+                {
+                    lat = lat + (lat - points[0].Lat);
+                    lon = lon + (lon - points[3].Lng);
+                }
+                else
+                {
+                    lat = lat - (lat - points[3].Lat); //bottom left -> top right
+                    lon = lon - (lon - points[0].Lng);
+                }
+            }
+
+            double width = Math.Abs(Math.Abs(points[1].Lng) - Math.Abs(points[0].Lng));
+            double height = Math.Abs(Math.Abs(points[3].Lat) - Math.Abs(points[0].Lat));
+            RectLatLng rect = new RectLatLng(lat, lon, width, height);
+            return rect;
+        }
         private void browseFolder()
         {
             using (var browseDialog = new FolderBrowserDialog())
@@ -925,91 +1010,6 @@ namespace EXIFGeotagger //v0._1
             }
         }
         #endregion
-
-        private void menuSave_Click(object sender, EventArgs e)
-        {
-
-        }
-
-
-
-        private void EXIFGeoTagger_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AboutBox1 AboutBox = new AboutBox1();
-            AboutBox.Show();
-        }
-
-        private void gMap_onEnter(object sender, EventArgs e)
-        {
-            txtConsole.Clear();
-            txtConsole.AppendText("Enter");
-            if (mZoom)
-            {
-                Cursor = Cursors.Cross;
-                Cursor.Show();
-            } else if(mArrow)
-            {
-                Cursor = Cursors.Arrow;
-                Cursor.Show();
-            }
-        }
-
-        //private void gMap_onLeave(object sender, EventArgs e)
-        //{
-        //    txtConsole.Clear();
-        //    txtConsole.AppendText("Leave");
-        //    Cursor = Cursors.Arrow;
-        //}
-
-            private void btnZoom_Click(object sender, EventArgs e)
-        {
-            Cursor = Cursors.Cross;
-            mZoom = true;
-            mArrow = false;
-            
-        }
-
-        private void btnArrow_Click(object sender, EventArgs e)
-        {
-            Cursor = Cursors.Arrow;
-            mZoom = false;
-            mArrow = true;
-            
-        }
-
-        private void lbScale_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataFiledatToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SaveFileDialog saveDialog = new SaveFileDialog();
-            saveDialog.Filter = "EXIF Data|*.exf";
-            saveDialog.Title = "Save an EXIF data File";
-            DialogResult result = saveDialog.ShowDialog();
-
-            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(saveDialog.FileName))
-            {
-                String inPath = saveDialog.FileName;
-                Serializer s = new Serializer(mRecordDict);
-                s.serialize(inPath);
-            }
-        }
-
-        private void eXIFDataFiledatToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            
-            ImportDataForm importForm = new ImportDataForm("exf");
-            mRecordDict = new Dictionary<string, Record>();
-            importForm.mParent = this;
-            importForm.Show();
-           
-        }
+      
     } //end class   
 } //end namespace
