@@ -18,19 +18,17 @@ namespace Amazon
 
     class AWSConnection
     {
-        private const string accessKey = "AKIAIRKQ6PW67PU5NC7A";
-        private const string secretKey = "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";
         private string mKey;
         private string mBucket;
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast2;
         private static AmazonS3Client mClient;
         private Image mImage;
 
-        public AWSConnection()
-        {
-            mClient = new AmazonS3Client(
-                    accessKey, secretKey, bucketRegion);
-        }
+        //public AWSConnection()
+        //{
+        //    mClient = new AmazonS3Client(
+        //            accessKey, secretKey, bucketRegion);
+        //}
 
         public AWSConnection(string bucket, string photo)
         {
