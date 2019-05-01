@@ -14,6 +14,10 @@ namespace EXIFGeotagger //v0._1
     public partial class ImportDataForm : Form
     {
         private String mDBPath;
+        //public getDBPathCallback getDBPathCallback;
+        //public getLayerCallback getLayerCallback;
+        //public getLayerColor getLayerColor;
+        //public getLayerColorHex getLayerColorHex;
         public EXIFGeoTagger mParent;
         OpenFileDialog openFileDialog;
 
@@ -42,6 +46,7 @@ namespace EXIFGeotagger //v0._1
             {
                 
                 mDBPath = openFileDialog.FileName;
+                
                 txtDBName.Text = mDBPath;
             }
             else
@@ -64,15 +69,19 @@ namespace EXIFGeotagger //v0._1
             if (colorDialog1.ShowDialog() == DialogResult.OK)
             {
                 btnColour.BackColor = colorDialog1.Color;
-                mParent.mlayerColourHex = colorDialog1.Color.Name;
-                mParent.mlayerColour = colorDialog1.Color;
+                mParent.mLayerColorHex = colorDialog1.Color.Name;
+                //getLayerColorHex(colorDialog1.Color.Name);
+                //getLayerColor(colorDialog1.Color);
+                mParent.mLayerColor = colorDialog1.Color;
             }
         }
 
         private void txtLayer_TextChanged(object sender, EventArgs e)
         {
             mParent.mDBPath = mDBPath;
+            //getDBPathCallback(mDBPath);
             mParent.mLayer = txtLayer.Text;
+            //getLayerCallback(txtLayer.Text);
         }
 
         private void ckBoxGeomark_CheckedChanged(object sender, EventArgs e)

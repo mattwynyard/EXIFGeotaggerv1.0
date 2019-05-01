@@ -19,15 +19,19 @@ using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
 using System.Threading;
 
+//public delegate void getDBPathCallback(string path);
+//public delegate void getLayerCallback(string layer);
+//public delegate void getLayerColor(Color color);
+//public delegate void getLayerColorHex(string hex);
 
-namespace EXIFGeotagger //v0._1
-{
+namespace EXIFGeotagger { 
+
     public partial class EXIFGeoTagger : Form
     {
         public string mDBPath;
         public string mLayer;
-        public Color mlayerColour;
-        public String mlayerColourHex;
+        public Color mLayerColor;
+        public string mLayerColorHex;
 
 
         GMapOverlay overlay;
@@ -56,7 +60,7 @@ namespace EXIFGeotagger //v0._1
         private ImageList imageList;
         private List<string> layerList;
 
-        private Assembly myAssembly;
+        private Assembly myAssembly = Assembly.GetExecutingAssembly();
         private Stream myStream;
 
         private static Bitmap bmpPhoto;
@@ -154,8 +158,32 @@ namespace EXIFGeotagger //v0._1
         {
             ImportDataForm importForm = new ImportDataForm();
             mRecordDict = new Dictionary<string, Record>();
-            importForm.mParent = this;
+            //importForm.getDBPathCallback = new getDBPathCallback(getDBPath);
+            //importForm.getLayerCallback = new getLayerCallback(getLayer);
+            //importForm.getLayerColor = new getLayerColor(getLayerColor);
+            //importForm.getLayerColorHex = new getLayerColorHex(getLayerColorHex);
+            importForm.mParent = this; //change to delegate
             importForm.Show();
+        }
+
+        private void getLayerColorHex(string color)
+        {
+            mLayerColorHex = color;
+        }
+
+        private void getLayerColor(Color color)
+        {
+            mLayerColor = color;
+        }
+
+        private void getDBPath(string path)
+        {
+            mDBPath = path;
+        }
+
+        private void getLayer(string layer)
+        {
+            mLayer= layer;
         }
 
         /// <summary>
@@ -290,13 +318,14 @@ namespace EXIFGeotagger //v0._1
         private void plotLayer()
         {
             txtConsole.Clear();
-            txtConsole.AppendText("Colour: " + mlayerColourHex.ToString());
-            txtConsole.AppendText("ColourName: " + mlayerColour.ToString());
+            txtConsole.AppendText("Colour: " + mLayerColorHex.ToString());
+            txtConsole.AppendText("ColourName: " + mLayerColor.ToString());
             GMapOverlay newOverlay = new GMapOverlay(mLayer);
 
             //string icon = ColorTable.ColorTableDict[mlayerColourHex];
 
-            MarkerTag tag = new MarkerTag(mlayerColourHex, 4);
+            MarkerTag tag = new MarkerTag(mLayerColorHex, 4);
+
             tag.setBitmap();
             newOverlay = buildMarker(newOverlay, tag, mLayer);
 

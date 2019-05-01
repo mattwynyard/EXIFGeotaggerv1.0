@@ -18,16 +18,15 @@ namespace EXIFGeotagger //v0._1
         {
             ColorTableDict = new Dictionary<string, string>()
             {
-                //TODO make better way of accessing bitmap name/path upon version update i.e changing to v1.1
-                {"ffff8080", "EXIFGeotaggerv1.0.BitMap.OpenCameraPink"},
-                {"ffffff80", "EXIFGeotaggerv1.0.BitMap.OpenCameraLemon"},
-                {"ffff8000", "EXIFGeotaggerv1.0.BitMap.OpenCameraOrange"},
-                {"ff80ff80", "EXIFGeotaggerv1.0.BitMap.OpenCameraLightLime"},
-                {"ff00ff80", "EXIFGeotaggerv1.0.BitMap.OpenCameraSpringGreen"},
-                {"ff80ffff", "EXIFGeotaggerv1.0.BitMap.OpenCameraElectricBlue"},
-                {"ff0080ff", "EXIFGeotaggerv1.0.BitMap.OpenCameraDodgerBlue"},
-                {"ffff80c0", "EXIFGeotaggerv1.0.BitMap.OpenCameraTeaRose"},
-                {"ffff80ff", "EXIFGeotaggerv1.0.BitMap.OpenCameraFuschiaPink"}
+                {"ffff8080", "EXIFGeotagger.BitMap.OpenCameraPink"},
+                {"ffffff80", "EXIFGeotagger.BitMap.OpenCameraLemon"},
+                {"ffff8000", "EXIFGeotagger.BitMap.OpenCameraOrange"},
+                {"ff80ff80", "EXIFGeotagger.BitMap.OpenCameraLightLime"},
+                {"ff00ff80", "EXIFGeotagger.BitMap.OpenCameraSpringGreen"},
+                {"ff80ffff", "EXIFGeotagger.BitMap.OpenCameraElectricBlue"},
+                {"ff0080ff", "EXIFGeotagger.BitMap.OpenCameraDodgerBlue"},
+                {"ffff80c0", "EXIFGeotagger.BitMap.OpenCameraTeaRose"},
+                {"ffff80ff", "EXIFGeotagger.BitMap.OpenCameraFuschiaPink"}
             };
         }
     }
