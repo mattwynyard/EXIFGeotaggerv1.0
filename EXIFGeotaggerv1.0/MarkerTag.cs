@@ -11,33 +11,32 @@ namespace EXIFGeotagger //v0._1
 {
     class MarkerTag
     {
-        private string icon;
-        private int size; //size in pixels of icon
+        private static string icon;
+        private static int mSize; //size in pixels of icon
         private static Bitmap bitmap;
 
-        Assembly assembly = Assembly.GetExecutingAssembly();
+        private static Assembly assembly = Assembly.GetExecutingAssembly();
 
         public MarkerTag()
         {
 
         }
 
-        public MarkerTag(String color, int size)
+        public MarkerTag(String color)
         {
-            this.Color = color;
-            this.size = size;
-            this.icon = ColorTable.ColorTableDict[this.Color] + "_" + size.ToString() + "px.png";
+            Color = color;
+
         }
 
-        public String Color { get; set; }
+        public static String Color { get; set; }
 
+        public String PhotoName { get; set; }
 
-
-        public int Size
+        public static int Size
         {
             get
             {
-                return size;
+                return mSize;
             }
             set
             {
@@ -45,24 +44,27 @@ namespace EXIFGeotagger //v0._1
                 {
                     icon = null;
                 }
-                this.size = value;
-                this.icon = ColorTable.ColorTableDict[this.Color] + "_" + size.ToString() + "px.png";
+                mSize = value;
+                icon = ColorTable.ColorTableDict[Color] + "_" + mSize.ToString() + "px.png";
             }
         }
 
-        //public string Bitmap { get; set; } 
-
-        public Bitmap getBitmap()
+        public static Bitmap getBitmap()
         {
             return bitmap;
         }
 
-        public void setBitmap()
+        public static void setBitmap()
         {
         
             //string[] resources = this.GetType().Assembly.GetManifestResourceNames();
             Stream stream = assembly.GetManifestResourceStream(icon);
             bitmap = (Bitmap)Image.FromStream(stream);
+        }
+
+        public override string ToString()
+        {
+            return PhotoName;
         }
     }
 }

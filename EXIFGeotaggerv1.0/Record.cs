@@ -1,151 +1,182 @@
 ﻿using System;
-using System.Drawing.Imaging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GMap.NET;
+using GMap.NET.WindowsForms;
+using GMap.NET.WindowsForms.Markers;
+using GMap.NET.MapProviders;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.Serialization;
+//using System.Runtime.Serialization.Formatters.Soap;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace EXIFGeotagger
 {
-    class Record : EXIFMarker
+    [Serializable()]
+    class Record
     {
-        int[] exifLatitude;
-        int[] exifLongitude;
-        string exifLatitudeRef;
-        string exifLongitudeRef;
+        protected string id;
+        protected string photo;
+        protected double latitude;
+        protected double longitude;
+        protected double altitude;
+        protected double bearing;
+        protected double velocity;
+        protected int satellites;
+        protected double pdop;
+        protected string inspector;
+        protected DateTime timestamp;
+        protected bool geomark;
 
         public Record()
         {
         }
 
-        public Record(String photo)
+        public Record(string photo)
         {
             this.photo = photo;
         }
 
-        public PropertyItem getEXIFNumber(PropertyItem item, String type, int precision)
+        public string PhotoName
         {
-            int value = 0;
-            int multiplier = precision;
-            if (type.Equals("altitude"))
+            get
             {
-                value = (int)Math.Round(Math.Abs(this.Altitude) * multiplier);
-            } else if (type.Equals("bearing"))
-            {
-                value = (int)Math.Round(Math.Abs(this.Bearing) * multiplier);
+                return photo;
             }
-            else if (type.Equals("velocity"))
-            {
-                value = (int)Math.Round(Math.Abs(this.Velocity) * multiplier);
-            }
-            else if (type.Equals("pdop"))
-            {
-                value = (int)Math.Round(Math.Abs(this.PDop) * multiplier);
-            }
-            int[] values = { value, multiplier };
-
-            byte[] byteArray = new byte[8];
-            int offset = 0;
-            foreach (var x in values)
-            {
-                BitConverter.GetBytes(x).CopyTo(byteArray, offset);
-                offset += 4;
-            }
-            item.Value = byteArray;
-            return item; 
         }
 
-        public PropertyItem getEXIFInt(PropertyItem item, int number)
+        public string Id
         {
-            int value = number;
-            item.Value = ASCIIEncoding.ASCII.GetBytes(value.ToString() + "\0");
-            item.Type = 2;
-            return item;
+            get
+            {
+                return id;
+            }
+            set
+            {
+                id = value;
+            }
         }
 
-       public PropertyItem getEXIFAltitudeRef(PropertyItem item)
+        public double Latitude
         {
-            int value;
-            if (this.altitude < 0)
+            get
             {
-                value = 0;
-            } else
-            {
-                value = 1;
+                return latitude;
             }
-            int[] values = { value };
-            byte[] byteArray = new byte[4];
-            BitConverter.GetBytes(values[0]).CopyTo(byteArray, 0);
-            item.Value = byteArray;
-            return item;
+            set
+            {
+                latitude = value;
+            }
         }
 
-        public PropertyItem getEXIFDateTime(PropertyItem item)
+        public double Longitude
         {
-            byte[] bytes = ASCIIEncoding.ASCII.GetBytes(this.timestamp.ToString());
-            item.Value = bytes;
-            return item;
+            get
+            {
+                return longitude;
+            }
+            set
+            {
+                longitude = value;
+            }
         }
 
-            public PropertyItem getEXIFCoordinate(String coordinate, PropertyItem item )
+        public double Altitude
         {
-            double coord = 0;
-            int multiplier = 10000;
-            if (coordinate.Equals("latitude"))
+            get
             {
-                coord = Math.Abs(this.latitude);
-            } else
-            {
-                coord = Math.Abs(this.longitude);
+                return altitude;
             }
-
-            int d = (int)coord;
-            coord -= d;
-            coord *= 60;
-            int m = (int)coord;
-            coord -= m;
-            coord *= 60;
-            int s = (int)Math.Round(coord * multiplier);
-
-            int[] values = { d, 1, m, 1, s, multiplier };
-
-            byte[] byteArray = new byte[24];
-            int offset = 0;
-            foreach (var value in values)
+            set
             {
-                BitConverter.GetBytes(value).CopyTo(byteArray, offset);
-                offset += 4;
+                altitude = value;
             }
-            item.Type = 5;
-            item.Value = byteArray; //write bytes
-            return item;
         }
 
-        public PropertyItem getEXIFCoordinateRef(String coordinate, PropertyItem item)
+        public double Bearing
         {
-            if (coordinate.Equals("latitude"))
+            get
             {
-                if (this.latitude < 0)
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("S\0");
-                }
-                else
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("N\0");
-                }
+                return bearing;
             }
-            else
+            set
             {
-                if (this.longitude < 0)
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("W\0");
-                }
-                else
-                {
-                    item.Value = ASCIIEncoding.ASCII.GetBytes("E\0");
-                }
+                bearing = value;
             }
-            return item;
+        }
+
+        public double Velocity
+        {
+            get
+            {
+                return velocity;
+            }
+            set
+            {
+                velocity = value;
+            }
+        }
+
+        public int Satellites
+        {
+            get
+            {
+                return satellites;
+            }
+            set
+            {
+                satellites = value;
+            }
+        }
+
+        public double PDop
+        {
+            get
+            {
+                return pdop;
+            }
+            set
+            {
+                pdop = value;
+            }
+        }
+
+        public String Inspector
+        {
+            get
+            {
+                return inspector;
+            }
+            set
+            {
+                inspector = value;
+            }
+        }
+
+        public DateTime TimeStamp
+        {
+            get
+            {
+                return timestamp;
+            }
+            set
+            {
+                timestamp = value;
+            }
+        }
+        public Boolean GeoMark
+        {
+            get
+            {
+                return geomark;
+            }
+            set
+            {
+                geomark = value;
+            }
         }
     }
 }

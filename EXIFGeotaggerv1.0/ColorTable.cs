@@ -18,6 +18,7 @@ namespace EXIFGeotagger //v0._1
         {
             ColorTableDict = new Dictionary<string, string>()
             {
+                //TODO make better way of accessing bitmap name/path upon version update i.e changing to v1.1
                 {"ffff8080", "EXIFGeotagger.BitMap.OpenCameraPink"},
                 {"ffffff80", "EXIFGeotagger.BitMap.OpenCameraLemon"},
                 {"ffff8000", "EXIFGeotagger.BitMap.OpenCameraOrange"},
