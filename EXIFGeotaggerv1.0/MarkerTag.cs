@@ -14,20 +14,23 @@ namespace EXIFGeotagger //v0._1
         private static string icon;
         private static int mSize; //size in pixels of icon
         private static Bitmap bitmap;
-
         private static Assembly assembly = Assembly.GetExecutingAssembly();
+        //private Record record;
 
-        public MarkerTag()
+        public MarkerTag(int id)
         {
-
+            
         }
 
         public MarkerTag(String color)
         {
             Color = color;
-
+            //ID = id;
         }
 
+        public Record Record { get; set; }
+
+        public int ID { get; set;  }
         public static String Color { get; set; }
 
         public String PhotoName { get; set; }

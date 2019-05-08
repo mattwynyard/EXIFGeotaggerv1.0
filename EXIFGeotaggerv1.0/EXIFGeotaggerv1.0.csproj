@@ -271,14 +271,6 @@
     <EmbeddedResource Include="BitMap\OpenCameraTeaRose_8px.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_12px.png" />
-    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_16px.png" />
-    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_20px.png" />
-    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_24px.png" />
-    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_4px.png" />
-    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_8px.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="BitMap\zoom_32px.png" />
   </ItemGroup>
   <ItemGroup>
@@ -289,6 +281,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="BitMap\Cursors\Cursor1.cur" />
+    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_16px.png" />
+    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_12px.png" />
+    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_20px.png" />
+    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_24px.png" />
+    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_4px.png" />
+    <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_8px.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

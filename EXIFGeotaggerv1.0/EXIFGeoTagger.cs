@@ -125,6 +125,7 @@ namespace EXIFGeotagger //v0._1
             gMap.MapScaleInfoEnabled = true;
             gMap.PreviewKeyDown += gMap_KeyDown;
             gMap.Enter += gMap_onEnter;
+            gMap.OnMarkerDoubleClick += gMap_onMarkerDoubleClick;
             //gMap.Leave += gMap_onLeave;
             overlayDict = new Dictionary<string, GMapMarker[]>();
             //layerItem = new ListViewItem();
@@ -258,7 +259,7 @@ namespace EXIFGeotagger //v0._1
             txtConsole.AppendText("ColourName: " + mlayerColour.ToString());
 
             GMapOverlay newOverlay = new GMapOverlay(mLayer);
-            newOverlay = buildMarker(newOverlay);
+            newOverlay = buildMarkers(newOverlay);
             gMap.Overlays.Add(newOverlay);
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
             overlayDict.Add(newOverlay.Id, markers);
@@ -289,25 +290,45 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="overlay - the intial overlay that markers will be added to"></param>
         /// <returns>the GPOverlay containing the markers</returns>
-        private GMapOverlay buildMarker(GMapOverlay overlay)
+        private GMapOverlay buildMarkers(GMapOverlay overlay)
         {
             if (mRecordDict != null)
             {
+                int id = 0;
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
                     MarkerTag tag = new MarkerTag(mlayerColourHex);
                     MarkerTag.Size = 4;
                     MarkerTag.setBitmap();
                     Bitmap bitmap = MarkerTag.getBitmap();
+                    tag.PhotoName = record.Key;
+                    tag.Record = record.Value;
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
-                    tag.PhotoName = record.Key;
                     marker.Tag = tag;
+                    marker.ToolTipText = "hello\nout there";
+                    marker.ToolTip.Fill = Brushes.Gray;
+                    marker.ToolTip.Foreground = Brushes.White;
+                    marker.ToolTip.Stroke = Pens.Black;
+                    marker.ToolTip.TextPadding = new Size(20, 20);
+                    marker.ToolTipMode = MarkerTooltipMode.OnMouseOver;
                     overlay.Markers.Add(marker);
+                    id++;
                 }
             }
             return overlay;
+        }
+
+        private GMapMarker setToolTip(GMapMarker marker )
+        {
+            marker.ToolTipText = "hello\nout there";
+            marker.ToolTip.Fill = Brushes.White;
+            marker.ToolTip.Foreground = Brushes.Black;
+            marker.ToolTip.Stroke = Pens.Black;
+            marker.ToolTip.TextPadding = new Size(20, 20);
+            marker.ToolTipMode = MarkerTooltipMode.OnMouseOver;
+            return marker;
         }
 
         private void rebuildMarkers(GMapOverlay overlay, int size)
@@ -316,18 +337,19 @@ namespace EXIFGeotagger //v0._1
             GMapMarker[] markers = overlayDict[overlay.Id];
             int count = markers.Length;
             MarkerTag.Size = size;
-
             int step = getStep(size);
             MarkerTag.setBitmap();
             Bitmap bitmap = MarkerTag.getBitmap();
+           
 
             for (int i = 0; i < count - 1; i += step)
             {
-                GMapMarker marker = markers[i];
-                GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
-                if (marker.Tag != null)
+            //GMapMarker marker = markers[i];
+            GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
+            setToolTip(markers[i]);
+                if (markers[i].Tag != null)
                 {
-                    newMarker.Tag = marker.Tag;
+                    newMarker.Tag = markers[i].Tag;
                 }
                 overlay.Markers.Add(newMarker);
             }
@@ -386,20 +408,6 @@ namespace EXIFGeotagger //v0._1
         #endregion
 
         #region GMap Events
-        //private void accessmdbToolStripMenuItem_Click(object sender, EventArgs e)
-        //{
-        //    connectAccess_Click(sender, e);
-        //    GMapOverlay overlay = new GMapOverlay("markers");
-
-        //    //gpsMarkerArray = new List<GMapMarker>();
-        //    overlay = buildMarker(overlay, "EXIFGeotaggerv0._1.BitMap.OpenCamera8px.png", "markers");
-        //    gMap.Overlays.Add(overlay);
-
-        //    ckBoxLayers.Items.Add(markers.Id, false);
-        //    overlay.IsVisibile = true;
-        //    this.menuRunGeoTag.Enabled = true;
-
-        //}
 
         private void gMap_OnMapZoomChanged()
         {
@@ -448,7 +456,7 @@ namespace EXIFGeotagger //v0._1
             {
                 foreach (GMapOverlay overlay in overlays)
                 {
-                    rebuildMarkers(overlay, 24);
+                    rebuildMarkers(overlay, 20);
                 }
 
             }
@@ -456,7 +464,6 @@ namespace EXIFGeotagger //v0._1
 
         private void gMap_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            
             txtConsole.Clear();
             //txtConsole.AppendText("Key Code: " + e.KeyCode + Environment.NewLine);
             //txtConsole.AppendText("Key Value: " + e.KeyValue + Environment.NewLine);
@@ -568,6 +575,11 @@ namespace EXIFGeotagger //v0._1
 
             lbPosition.Text = "latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6);
             //gMap.MouseHover += gMap_OnMouseHoverChanged;
+        }
+
+        private void gMap_onMarkerDoubleClick(GMapMarker marker, MouseEventArgs e)
+        {
+            //marker.
         }
 
         private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
@@ -761,6 +773,7 @@ namespace EXIFGeotagger //v0._1
                 progress.Show();
                 progress.BringToFront();
                 // Start the asynchronous operation.
+
                 bgWorker1.RunWorkerAsync();
             }
         }
@@ -1010,6 +1023,15 @@ namespace EXIFGeotagger //v0._1
             }
         }
         #endregion
-      
+
+        private void PictureBox_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void MenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
     } //end class   
 } //end namespace
