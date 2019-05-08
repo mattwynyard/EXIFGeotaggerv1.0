@@ -59,6 +59,8 @@ namespace EXIFGeotagger //v0._1
 
         public static void setBitmap()
         {
+        
+            //string[] resources = this.GetType().Assembly.GetManifestResourceNames();
             Stream stream = assembly.GetManifestResourceStream(icon);
             bitmap = (Bitmap)Image.FromStream(stream);
         }
