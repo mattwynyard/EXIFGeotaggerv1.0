@@ -10,19 +10,13 @@ using System.IO;
 namespace EXIFGeotagger //v0._1
 {
     class MarkerTag
-    {
-        private static string icon;
-        private static int mSize; //size in pixels of icon
-        private static Bitmap bitmap;
-        private static Assembly assembly = Assembly.GetExecutingAssembly();
-        //private Record record;
-
+    {   
         public MarkerTag(int id)
         {
             
         }
 
-        public MarkerTag(String color)
+        public MarkerTag(String color, int id)
         {
             Color = color;
             //ID = id;
@@ -31,43 +25,20 @@ namespace EXIFGeotagger //v0._1
         public Record Record { get; set; }
 
         public int ID { get; set;  }
-        public static String Color { get; set; }
+        public string Color { get; set; }
 
         public String PhotoName { get; set; }
 
-        public static int Size
-        {
-            get
-            {
-                return mSize;
-            }
-            set
-            {
-                if (icon != null)
-                {
-                    icon = null;
-                }
-                mSize = value;
-                icon = ColorTable.ColorTableDict[Color] + "_" + mSize.ToString() + "px.png";
-            }
-        }
-
-        public static Bitmap getBitmap()
-        {
-            return bitmap;
-        }
-
-        public static void setBitmap()
-        {
-        
-            //string[] resources = this.GetType().Assembly.GetManifestResourceNames();
-            Stream stream = assembly.GetManifestResourceStream(icon);
-            bitmap = (Bitmap)Image.FromStream(stream);
-        }
+        public int Size { get; set; }
 
         public override string ToString()
         {
-            return PhotoName;
+            StringBuilder s = new StringBuilder();
+            s.Append(PhotoName + '\n');
+            s.Append(Record.TimeStamp.ToString() + '\n');
+            s.Append("Accuracy: " + Math.Round(Record.PDop, 1) + " m" + '\n');
+            s.Append("Satellites: " + Record.Satellites + '\n');
+            return s.ToString();
         }
     }
 }

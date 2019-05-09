@@ -36,22 +36,18 @@ namespace EXIFGeotagger //v0._1
         public String mlayerColourHex;
 
         private Dictionary<string, GMapMarker[]> overlayDict;
-        GMapOverlay overlay;
+        GMapOverlay mOverlay;
 
         //index of currently layer in checkbox
         private int mSelectedOverlay;
         private Dictionary<string, Record> mRecordDict;
         public string[] mFiles; //array containing absolute paths of photos.
         public string outFolder; //folder path to save geotag photos
-        string inFolder; //folder path to read geotag photos
 
         public Boolean allRecords;
-
         //Tools
         private Boolean mZoom = false;
         private Boolean mArrow = true;
-
-
         //FORMS
         private ProgressForm progress;
 
@@ -263,24 +259,24 @@ namespace EXIFGeotagger //v0._1
             gMap.Overlays.Add(newOverlay);
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
             overlayDict.Add(newOverlay.Id, markers);
-            overlay = newOverlay;
-            ckBoxLayers.Items.Add(overlay.Id, true);
+            mOverlay = newOverlay;
+            //ckBoxLayers.Items.Add(overlay.Id, true);
 
-            //Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[mlayerColourHex.ToString()] + "_24px.png");
-            //Bitmap bitmap = (Bitmap)Image.FromStream(stream);
-            //imageList.Images.Add(bitmap);
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[mlayerColourHex.ToString()] + "_24px.png");
+            Bitmap bitmap = (Bitmap)Image.FromStream(stream);
+            imageList.Images.Add(bitmap);
 
-            //ListViewItem layerItem = new ListViewItem(overlay.Id, layerCount);
-            //layerCount++;
+            ListViewItem layerItem = new ListViewItem(newOverlay.Id, layerCount);
+            layerCount++;
 
-            ////layerItem.Text = overlay.Id;
-            //layerItem.Checked = true;
+            layerItem.Text = newOverlay.Id;
+            layerItem.Checked = true;
 
-            //listLayers.SmallImageList = imageList;
-            //listLayers.Items.Add(layerItem);
+            listLayers.SmallImageList = imageList;
+            listLayers.Items.Add(layerItem);
 
             newOverlay.IsVisibile = true;
-            overlay.IsVisibile = true;
+            mOverlay.IsVisibile = true;
         }
 
         /// <summary>
@@ -295,38 +291,43 @@ namespace EXIFGeotagger //v0._1
             if (mRecordDict != null)
             {
                 int id = 0;
+                Bitmap bitmap = ColorTable.getBitmap(mlayerColourHex, 4);
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
-                    MarkerTag tag = new MarkerTag(mlayerColourHex);
-                    MarkerTag.Size = 4;
-                    MarkerTag.setBitmap();
-                    Bitmap bitmap = MarkerTag.getBitmap();
+                    MarkerTag tag = new MarkerTag(mlayerColourHex, id);
+                    tag.Size = 4;
                     tag.PhotoName = record.Key;
                     tag.Record = record.Value;
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
                     marker.Tag = tag;
-                    marker.ToolTipText = "hello\nout there";
-                    marker.ToolTip.Fill = Brushes.Gray;
-                    marker.ToolTip.Foreground = Brushes.White;
-                    marker.ToolTip.Stroke = Pens.Black;
-                    marker.ToolTip.TextPadding = new Size(20, 20);
-                    marker.ToolTipMode = MarkerTooltipMode.OnMouseOver;
+                    marker = setToolTip(marker);
                     overlay.Markers.Add(marker);
                     id++;
                 }
             }
+            overlay.IsVisibile = true;
             return overlay;
         }
 
-        private GMapMarker setToolTip(GMapMarker marker )
+    //    private Bitmap getBitmap(string color, int size)
+    //    {
+    //        Assembly assembly = Assembly.GetExecutingAssembly();
+    //        Stream stream = assembly.GetManifestResourceStream(icon);
+    //        return (Bitmap)Image.FromStream(stream);
+
+    //}
+
+        private GMapMarker setToolTip(GMapMarker marker)
         {
-            marker.ToolTipText = "hello\nout there";
+            MarkerTag tag = (MarkerTag)marker.Tag;
+            
+            marker.ToolTipText = '\n' + tag.ToString();
             marker.ToolTip.Fill = Brushes.White;
             marker.ToolTip.Foreground = Brushes.Black;
             marker.ToolTip.Stroke = Pens.Black;
-            marker.ToolTip.TextPadding = new Size(20, 20);
+            //marker.ToolTip.TextPadding = new Size(20, 20);
             marker.ToolTipMode = MarkerTooltipMode.OnMouseOver;
             return marker;
         }
@@ -336,75 +337,71 @@ namespace EXIFGeotagger //v0._1
             overlay.Markers.Clear();
             GMapMarker[] markers = overlayDict[overlay.Id];
             int count = markers.Length;
-            MarkerTag.Size = size;
             int step = getStep(size);
-            MarkerTag.setBitmap();
-            Bitmap bitmap = MarkerTag.getBitmap();
-           
-
+            MarkerTag tag = (MarkerTag)markers[0].Tag;
+            Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
             for (int i = 0; i < count - 1; i += step)
             {
-            //GMapMarker marker = markers[i];
-            GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
-            setToolTip(markers[i]);
+                tag = (MarkerTag)markers[i].Tag;
+                tag.Size = size;   
+                GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
+                
                 if (markers[i].Tag != null)
                 {
                     newMarker.Tag = markers[i].Tag;
                 }
+                setToolTip(newMarker);
                 overlay.Markers.Add(newMarker);
+               
             }
         }
 
-        private GMapOverlay buildPhotoMarker(GMapOverlay overlay, MarkerTag tag, String name)
-        {
+        //private GMapOverlay buildPhotoMarker(GMapOverlay overlay, MarkerTag tag, String name)
+        //{
+        //    //Bitmap bitmap = MarkerTag.getBitmap();
+        //    foreach (string filePath in mFiles)
+        //    {
+        //        try
+        //        {
+        //            Image image = new Bitmap(filePath);
+        //            PropertyItem[] propItems = image.PropertyItems;
+        //            PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+        //            PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+        //            PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+        //            PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+        //            image.Dispose();
+        //            byte[] latBytes = propItemLat.Value;
+        //            byte[] latRefBytes = propItemLatRef.Value;
+        //            byte[] lonBytes = propItemLon.Value;
+        //            byte[] lonRefBytes = propItemLonRef.Value;
+        //            string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
+        //            string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
+        //            double latitude = byteToDegrees(latBytes);
+        //            double longitude = byteToDegrees(lonBytes);
+        //            if (latitudeRef.Equals("S\0"))
+        //            {
+        //                latitude = -latitude;
+        //            }
+        //            if (longitudeRef.Equals("W\0"))
+        //            {
+        //                longitude = -longitude;
+        //            }
+        //            //GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
+        //            marker.Tag = tag;
+        //            overlay.Markers.Add(marker);
+        //        }
+        //        catch (ArgumentException ex)
+        //        {
 
-            Bitmap bitmap = MarkerTag.getBitmap();
-            foreach (string filePath in mFiles)
-            {
-                try
-                {
-                    Image image = new Bitmap(filePath);
-                    PropertyItem[] propItems = image.PropertyItems;
-                    PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                    PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                    PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                    PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                    image.Dispose();
-                    byte[] latBytes = propItemLat.Value;
-                    byte[] latRefBytes = propItemLatRef.Value;
-                    byte[] lonBytes = propItemLon.Value;
-                    byte[] lonRefBytes = propItemLonRef.Value;
-
-                    string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
-                    string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
-
-                    double latitude = byteToDegrees(latBytes);
-                    double longitude = byteToDegrees(lonBytes);
-                    if (latitudeRef.Equals("S\0"))
-                    {
-                        latitude = -latitude;
-                    }
-                    if (longitudeRef.Equals("W\0"))
-                    {
-                        longitude = -longitude;
-                    }
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
-                    marker.Tag = tag;
-                    overlay.Markers.Add(marker);
-
-                }
-                catch (ArgumentException ex)
-                {
-
-                }
-                catch (NullReferenceException ex)
-                {
-                    txtConsole.AppendText(ex.StackTrace);
-                }
-            }
-            txtConsole.AppendText("Photos ready.." + Environment.NewLine);
-            return overlay;
-        }
+        //        }
+        //        catch (NullReferenceException ex)
+        //        {
+        //            txtConsole.AppendText(ex.StackTrace);
+        //        }
+        //    }
+        //    txtConsole.AppendText("Photos ready.." + Environment.NewLine);
+        //    return overlay;
+        //}
         #endregion
 
         #region GMap Events
@@ -652,25 +649,25 @@ namespace EXIFGeotagger //v0._1
         #endregion
 
         #region Form Events
-        private void photosToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            browseFolder();
-            GMapOverlay photoOverlay = new GMapOverlay("photos");
-            MarkerTag tag = new MarkerTag("ffff80ff");
-            MarkerTag.Size = 4;
-            MarkerTag.setBitmap();
-            photoOverlay = buildPhotoMarker(photoOverlay, tag, "photos");
-            gMap.Overlays.Add(photoOverlay);
-            GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
+        //private void photosToolStripMenuItem_Click(object sender, EventArgs e)
+        //{
+        //    browseFolder();
+        //    GMapOverlay photoOverlay = new GMapOverlay("photos");
+        //    MarkerTag tag = new MarkerTag("ffff80ff");
+        //    MarkerTag.Size = 4;
+        //    MarkerTag.setBitmap();
+        //    photoOverlay = buildPhotoMarker(photoOverlay, tag, "photos");
+        //    gMap.Overlays.Add(photoOverlay);
+        //    GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
 
-            overlayDict.Add(photoOverlay.Id, markers);
-            overlay = photoOverlay;
+        //    overlayDict.Add(photoOverlay.Id, markers);
+        //    overlay = photoOverlay;
 
-            ckBoxLayers.Items.Add(overlay.Id, true);
-            photoOverlay.IsVisibile = true;
-            overlay.IsVisibile = true;
+        //    ckBoxLayers.Items.Add(overlay.Id, true);
+        //    photoOverlay.IsVisibile = true;
+        //    overlay.IsVisibile = true;
 
-        }
+        //}
         private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
         {
         }
@@ -679,31 +676,32 @@ namespace EXIFGeotagger //v0._1
         {
         }
 
-        private void ckBoxLayers_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //txtConsole.AppendText(ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem).ToString());
-            //txtConsole.AppendText(ckBoxLayers.SelectedItem.ToString());
-            mSelectedOverlay = ckBoxLayers.Items.IndexOf(ckBoxLayers.SelectedItem);
-        }
-
         private void listLayers_SelectedIndexChanged(object sender, EventArgs e)
         {
-            //mSelectedOverlay = listLayers.Items.IndexOf(listLayers.SelectedItems);
+
+            try
+            {
+                mSelectedOverlay = listLayers.Items.IndexOf(listLayers.SelectedItems[0]);
+            } catch (ArgumentOutOfRangeException ex)
+            {
+
+            }
         }
 
-        private void ckBox_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void listLayers_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            overlay = gMap.Overlays.ElementAt(mSelectedOverlay);
-            if (overlay.IsVisibile == false)
+            //ListViewItem item = e.Item.Index;
+            mOverlay = gMap.Overlays.ElementAt(e.Index);
+            if (mOverlay.IsVisibile == false)
             {
-                overlay.IsVisibile = true;
+                mOverlay.IsVisibile = true;
             }
             else
             {
-                overlay.IsVisibile = false;
+                mOverlay.IsVisibile = false;
             }
-
         }
+
         private void menuQuit_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Really Quit?", "Exit", MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -1033,5 +1031,6 @@ namespace EXIFGeotagger //v0._1
         {
 
         }
+
     } //end class   
 } //end namespace

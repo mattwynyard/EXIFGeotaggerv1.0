@@ -12,6 +12,7 @@ namespace EXIFGeotagger //v0._1
     public static class ColorTable
     {
         public static readonly IDictionary<string, string> ColorTableDict;
+        private static Assembly assembly = Assembly.GetExecutingAssembly();
 
 
         static ColorTable()
@@ -30,6 +31,13 @@ namespace EXIFGeotagger //v0._1
                 {"Red", "EXIFGeotagger.BitMap.OpenCameraRed" }
 
             };
+        }
+
+        public static Bitmap getBitmap(string color, int size)
+        {
+            String icon = ColorTableDict[color] + "_" + size.ToString() + "px.png";
+            Stream stream = assembly.GetManifestResourceStream(icon);
+            return (Bitmap)Image.FromStream(stream);
         }
     }
 }
