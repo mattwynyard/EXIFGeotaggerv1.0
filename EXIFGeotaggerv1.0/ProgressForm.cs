@@ -12,9 +12,10 @@ namespace EXIFGeotagger //v0._1
 {
     public partial class ProgressForm : Form
     {
-        public ProgressForm()
+        public ProgressForm(string label)
         {
             InitializeComponent();
+            lbMessage.Text = label;
         }
 
         public string Message

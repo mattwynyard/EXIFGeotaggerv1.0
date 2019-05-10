@@ -10,10 +10,11 @@ using System.IO;
 namespace EXIFGeotagger //v0._1
 {
     class MarkerTag
-    {   
-        public MarkerTag(int id)
+    {
+        public string path;
+        public MarkerTag()
         {
-            
+
         }
 
         public MarkerTag(String color, int id)
@@ -24,12 +25,14 @@ namespace EXIFGeotagger //v0._1
 
         public Record Record { get; set; }
 
-        public int ID { get; set;  }
+        public int ID { get; set; }
         public string Color { get; set; }
 
         public String PhotoName { get; set; }
 
         public int Size { get; set; }
+
+        public string Path { get; set; }
 
         public override string ToString()
         {

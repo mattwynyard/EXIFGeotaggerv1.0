@@ -11,13 +11,20 @@ using System.Windows.Forms;
 namespace EXIFGeotagger //v0._1
 {
     
+    
     public partial class ImportDataForm : Form
     {
+        public event layerVariablesDelegate layerVariables;
+        public delegate void layerVariablesDelegate(string filePath, string layer, string color);
+
         private String mfilePath;
         public EXIFGeoTagger mParent;
-        OpenFileDialog openFileDialog;
-        String fileType;
-        String filter;
+        private OpenFileDialog openFileDialog;
+        private FolderBrowserDialog browseFolderDialog;
+        private string fileType;
+        private string filter;
+        private string mlayerColourHex;
+        private string mLayer;
 
         public ImportDataForm(string fileType)
         {
@@ -32,6 +39,10 @@ namespace EXIFGeotagger //v0._1
             {
                 this.Text = "Open Data File";
                 filter = "exf files|*.exf";
+            } else if (fileType.Equals("photos"))
+            {
+                this.Text = "Import photo data";
+                filter = "jpg files|*.jpg";
             }
         }
 
@@ -43,16 +54,17 @@ namespace EXIFGeotagger //v0._1
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            if (fileType.Equals("access")) {
+            if (fileType.Equals("access"))
+            {
                 openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = filter;
                 openFileDialog.FilterIndex = 2;
                 openFileDialog.Title = "Browse Files";
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.DefaultExt = "mdb";
-            } else if (fileType.Equals("exf"))
+            }
+            else if (fileType.Equals("exf"))
             {
-                
                 openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = filter;
                 openFileDialog.FilterIndex = 2;
@@ -60,17 +72,32 @@ namespace EXIFGeotagger //v0._1
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.DefaultExt = "exf";
             }
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            else if (fileType.Equals("photos"))
             {
-
-                mfilePath = openFileDialog.FileName;
-                txtDBName.Text = mfilePath;
+                browseFolderDialog = new FolderBrowserDialog();
+                if (browseFolderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    mfilePath = browseFolderDialog.SelectedPath;
+                    txtDBName.Text = mfilePath;
+                    
+                } else
+                {
+                    Close();
+                    mParent.BringToFront();
+                }
             }
-            else
+            if (openFileDialog != null)
             {
-                Close();
-                mParent.BringToFront();
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+
+                    mfilePath = openFileDialog.FileName;
+                    txtDBName.Text = mfilePath;
+                }
+                else
+                {
+                    Close();
+                }
             }
         }
 
@@ -80,12 +107,22 @@ namespace EXIFGeotagger //v0._1
             mParent.BringToFront();
             if (fileType.Equals("access"))
             {
-                mParent.importAccessData(sender, e);
+                //mParent.importAccessData(sender, e);
+                mParent.startWorker(sender, e);
             }
             else if (fileType.Equals("exf"))
             {
                 mParent.deSerializeData(mfilePath);
             }
+            else if (fileType.Equals("photos"))
+            {
+                if (this.layerVariables != null)
+                {
+                    this.layerVariables(mfilePath, mLayer, mlayerColourHex);
+                }
+            }
+
+
         }
 
         private void btnColour_Click(object sender, EventArgs e)
@@ -93,6 +130,7 @@ namespace EXIFGeotagger //v0._1
             if (colorDialog1.ShowDialog() == DialogResult.OK)
             {
                 btnColour.BackColor = colorDialog1.Color;
+                mlayerColourHex = colorDialog1.Color.Name;
                 mParent.mlayerColourHex = colorDialog1.Color.Name;
                 mParent.mlayerColour = colorDialog1.Color;
             }
@@ -102,6 +140,7 @@ namespace EXIFGeotagger //v0._1
         {
             mParent.mDBPath = mfilePath;
             mParent.mLayer = txtLayer.Text;
+            mLayer = txtLayer.Text;
         }
 
         private void ckBoxGeomark_CheckedChanged(object sender, EventArgs e)
