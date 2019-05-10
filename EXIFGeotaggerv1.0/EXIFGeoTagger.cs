@@ -30,7 +30,7 @@ namespace EXIFGeotagger //v0._1
  
         private Image image; //photo in photo viewer
         public string mDBPath;
-        public string mLayer;
+        public string mLayer; //imported layer
         public Color mlayerColour;
         public String mlayerColourHex;
 
@@ -1153,8 +1153,6 @@ namespace EXIFGeotagger //v0._1
         private void MenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
 
-        }
-
-        
+        }  
     } //end class   
 } //end namespace

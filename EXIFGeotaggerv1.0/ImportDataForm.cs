@@ -11,7 +11,10 @@ using System.Windows.Forms;
 namespace EXIFGeotagger //v0._1
 {
     
-    
+ /// <summary>
+ /// Form used for data import. Obtains user input for the file or folder path, layer name and the color of markers
+ /// 
+ /// </summary> 
     public partial class ImportDataForm : Form
     {
         public event layerVariablesDelegate layerVariables;
@@ -32,26 +35,36 @@ namespace EXIFGeotagger //v0._1
             this.fileType = fileType;
             if (fileType.Equals("access"))
             {
-                this.Text = "Import Access Database";
+                Text = "Import Access Database";
                 filter = "mdb files|*.mdb";
             }
             else if (fileType.Equals("exf"))
             {
-                this.Text = "Open Data File";
+                Text = "Open Data File";
                 filter = "exf files|*.exf";
             } else if (fileType.Equals("photos"))
             {
-                this.Text = "Import photo data";
+                Text = "Import photo data";
                 filter = "jpg files|*.jpg";
             }
         }
 
-            private void ImportDataForm_Load(object sender, EventArgs e)
+        /// <summary>
+        /// Bring form to the top
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ImportDataForm_Load(object sender, EventArgs e)
         {
-            this.BringToFront();
-            this.TopMost = true;
+            BringToFront();
+            TopMost = true;
         }
 
+        /// <summary>
+        /// Sets up the file/folder dialog depending on the file type requested for import
+        /// </summary>
+        /// <param name="sender"> the browse button</param>
+        /// <param name="e"></param>
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             if (fileType.Equals("access"))
@@ -86,11 +99,12 @@ namespace EXIFGeotagger //v0._1
                     mParent.BringToFront();
                 }
             }
+
+            //TODO temp hack to handle folder dialog vs file dialog
             if (openFileDialog != null)
             {
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-
                     mfilePath = openFileDialog.FileName;
                     txtDBName.Text = mfilePath;
                 }
@@ -107,7 +121,6 @@ namespace EXIFGeotagger //v0._1
             mParent.BringToFront();
             if (fileType.Equals("access"))
             {
-                //mParent.importAccessData(sender, e);
                 mParent.startWorker(sender, e);
             }
             else if (fileType.Equals("exf"))
@@ -116,13 +129,8 @@ namespace EXIFGeotagger //v0._1
             }
             else if (fileType.Equals("photos"))
             {
-                if (this.layerVariables != null)
-                {
-                    this.layerVariables(mfilePath, mLayer, mlayerColourHex);
-                }
+                layerVariables(mfilePath, mLayer, mlayerColourHex);    
             }
-
-
         }
 
         private void btnColour_Click(object sender, EventArgs e)
@@ -147,10 +155,10 @@ namespace EXIFGeotagger //v0._1
         {
             if (ckBoxGeomark.Checked)
             {
-                this.mParent.allRecords = true;
+                mParent.allRecords = true;
             } else
             {
-                this.mParent.allRecords = false;
+                mParent.allRecords = false;
             }
         }
     }
