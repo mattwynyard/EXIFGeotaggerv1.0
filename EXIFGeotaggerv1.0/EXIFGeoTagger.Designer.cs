@@ -447,6 +447,7 @@
             this.btnLeft.Size = new System.Drawing.Size(29, 64);
             this.btnLeft.TabIndex = 12;
             this.btnLeft.UseVisualStyleBackColor = true;
+            this.btnLeft.Click += new System.EventHandler(this.BtnLeft_Click);
             // 
             // btnRight
             // 
@@ -457,6 +458,7 @@
             this.btnRight.Size = new System.Drawing.Size(29, 64);
             this.btnRight.TabIndex = 11;
             this.btnRight.UseVisualStyleBackColor = true;
+            this.btnRight.Click += new System.EventHandler(this.BtnRight_Click);
             // 
             // pictureBox
             // 
