@@ -32,13 +32,10 @@
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.txtConsole = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.lbPhoto = new System.Windows.Forms.Label();
             this.lbScale = new System.Windows.Forms.Label();
-            this.btnArrow = new System.Windows.Forms.Button();
             this.lbPosition = new System.Windows.Forms.Label();
-            this.btnZoom = new System.Windows.Forms.Button();
             this.listLayers = new System.Windows.Forms.ListView();
-            this.pictureBox = new System.Windows.Forms.PictureBox();
+            this.lbPhoto = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuNew = new System.Windows.Forms.ToolStripMenuItem();
@@ -53,6 +50,8 @@
             this.dataFiledatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.layerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.markersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.photosToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.plotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.photosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.markersMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,14 +64,17 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bgWorker1 = new System.ComponentModel.BackgroundWorker();
             this.bgWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.markersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.photosToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnArrow = new System.Windows.Forms.Button();
+            this.btnZoom = new System.Windows.Forms.Button();
+            this.btnLeft = new System.Windows.Forms.Button();
+            this.btnRight = new System.Windows.Forms.Button();
+            this.pictureBox = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             this.SuspendLayout();
             // 
             // gMap
@@ -136,21 +138,13 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.btnLeft);
+            this.splitContainer1.Panel2.Controls.Add(this.btnRight);
             this.splitContainer1.Panel2.Controls.Add(this.lbPhoto);
             this.splitContainer1.Panel2.Controls.Add(this.pictureBox);
             this.splitContainer1.Size = new System.Drawing.Size(1348, 638);
             this.splitContainer1.SplitterDistance = 587;
             this.splitContainer1.TabIndex = 6;
-            // 
-            // lbPhoto
-            // 
-            this.lbPhoto.AutoSize = true;
-            this.lbPhoto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbPhoto.Location = new System.Drawing.Point(3, 12);
-            this.lbPhoto.Name = "lbPhoto";
-            this.lbPhoto.Size = new System.Drawing.Size(45, 16);
-            this.lbPhoto.TabIndex = 10;
-            this.lbPhoto.Text = "label1";
             // 
             // lbScale
             // 
@@ -163,17 +157,6 @@
             this.lbScale.Text = "Scale 1:";
             this.lbScale.Click += new System.EventHandler(this.lbScale_Click);
             // 
-            // btnArrow
-            // 
-            this.btnArrow.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnArrow.Image = ((System.Drawing.Image)(resources.GetObject("btnArrow.Image")));
-            this.btnArrow.Location = new System.Drawing.Point(14, 22);
-            this.btnArrow.Name = "btnArrow";
-            this.btnArrow.Size = new System.Drawing.Size(40, 40);
-            this.btnArrow.TabIndex = 8;
-            this.btnArrow.UseVisualStyleBackColor = true;
-            this.btnArrow.Click += new System.EventHandler(this.btnArrow_Click);
-            // 
             // lbPosition
             // 
             this.lbPosition.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -184,17 +167,6 @@
             this.lbPosition.Size = new System.Drawing.Size(47, 13);
             this.lbPosition.TabIndex = 6;
             this.lbPosition.Text = "lat: long:";
-            // 
-            // btnZoom
-            // 
-            this.btnZoom.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnZoom.Image = ((System.Drawing.Image)(resources.GetObject("btnZoom.Image")));
-            this.btnZoom.Location = new System.Drawing.Point(14, 66);
-            this.btnZoom.Name = "btnZoom";
-            this.btnZoom.Size = new System.Drawing.Size(40, 40);
-            this.btnZoom.TabIndex = 7;
-            this.btnZoom.UseVisualStyleBackColor = true;
-            this.btnZoom.Click += new System.EventHandler(this.btnZoom_Click);
             // 
             // listLayers
             // 
@@ -208,17 +180,15 @@
             this.listLayers.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listLayers_ItemCheck);
             this.listLayers.SelectedIndexChanged += new System.EventHandler(this.listLayers_SelectedIndexChanged);
             // 
-            // pictureBox
+            // lbPhoto
             // 
-            this.pictureBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox.Location = new System.Drawing.Point(3, 31);
-            this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(754, 607);
-            this.pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox.TabIndex = 8;
-            this.pictureBox.TabStop = false;
+            this.lbPhoto.AutoSize = true;
+            this.lbPhoto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbPhoto.Location = new System.Drawing.Point(3, 12);
+            this.lbPhoto.Name = "lbPhoto";
+            this.lbPhoto.Size = new System.Drawing.Size(45, 16);
+            this.lbPhoto.TabIndex = 10;
+            this.lbPhoto.Text = "label1";
             // 
             // menuStrip1
             // 
@@ -254,7 +224,7 @@
             this.menuNew.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.projectToolStripMenuItem});
             this.menuNew.Name = "menuNew";
-            this.menuNew.Size = new System.Drawing.Size(180, 22);
+            this.menuNew.Size = new System.Drawing.Size(154, 22);
             this.menuNew.Text = "New ";
             // 
             // projectToolStripMenuItem
@@ -269,7 +239,7 @@
             this.eXIFDataFiledatToolStripMenuItem});
             this.menuOpen.Name = "menuOpen";
             this.menuOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuOpen.Size = new System.Drawing.Size(180, 22);
+            this.menuOpen.Size = new System.Drawing.Size(154, 22);
             this.menuOpen.Text = "&Open";
             this.menuOpen.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.fileMenuOpen_Click);
             // 
@@ -284,7 +254,7 @@
             // 
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(180, 22);
+            this.menuSave.Size = new System.Drawing.Size(154, 22);
             this.menuSave.Text = "&Save As";
             this.menuSave.Click += new System.EventHandler(this.menuSave_Click);
             // 
@@ -292,7 +262,7 @@
             // 
             this.menuQuit.Name = "menuQuit";
             this.menuQuit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.menuQuit.Size = new System.Drawing.Size(180, 22);
+            this.menuQuit.Size = new System.Drawing.Size(154, 22);
             this.menuQuit.Text = "&Quit";
             this.menuQuit.Click += new System.EventHandler(this.menuQuit_Click);
             // 
@@ -301,7 +271,7 @@
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.accessmdbToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.importToolStripMenuItem.Text = "Import";
             this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess_Click);
             // 
@@ -316,13 +286,13 @@
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dataFiledatToolStripMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            this.exportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.exportToolStripMenuItem.Text = "Export";
             // 
             // dataFiledatToolStripMenuItem
             // 
             this.dataFiledatToolStripMenuItem.Name = "dataFiledatToolStripMenuItem";
-            this.dataFiledatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.dataFiledatToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.dataFiledatToolStripMenuItem.Text = "Data File (*.dat)";
             this.dataFiledatToolStripMenuItem.Click += new System.EventHandler(this.dataFiledatToolStripMenuItem_Click);
             // 
@@ -340,8 +310,21 @@
             this.markersToolStripMenuItem,
             this.photosToolStripMenuItem1});
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(96, 22);
             this.saveToolStripMenuItem.Text = "Add";
+            // 
+            // markersToolStripMenuItem
+            // 
+            this.markersToolStripMenuItem.Name = "markersToolStripMenuItem";
+            this.markersToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.markersToolStripMenuItem.Text = "Markers";
+            // 
+            // photosToolStripMenuItem1
+            // 
+            this.photosToolStripMenuItem1.Name = "photosToolStripMenuItem1";
+            this.photosToolStripMenuItem1.Size = new System.Drawing.Size(116, 22);
+            this.photosToolStripMenuItem1.Text = "Photos";
+            this.photosToolStripMenuItem1.Click += new System.EventHandler(this.PhotosToolStripMenuItem1_Click);
             // 
             // plotToolStripMenuItem
             // 
@@ -433,18 +416,60 @@
             this.bgWorker2.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker2_ProgressChanged);
             this.bgWorker2.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker2_RunWorkerCompleted);
             // 
-            // markersToolStripMenuItem
+            // btnArrow
             // 
-            this.markersToolStripMenuItem.Name = "markersToolStripMenuItem";
-            this.markersToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.markersToolStripMenuItem.Text = "Markers";
+            this.btnArrow.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnArrow.Image = ((System.Drawing.Image)(resources.GetObject("btnArrow.Image")));
+            this.btnArrow.Location = new System.Drawing.Point(14, 22);
+            this.btnArrow.Name = "btnArrow";
+            this.btnArrow.Size = new System.Drawing.Size(40, 40);
+            this.btnArrow.TabIndex = 8;
+            this.btnArrow.UseVisualStyleBackColor = true;
+            this.btnArrow.Click += new System.EventHandler(this.btnArrow_Click);
             // 
-            // photosToolStripMenuItem1
+            // btnZoom
             // 
-            this.photosToolStripMenuItem1.Name = "photosToolStripMenuItem1";
-            this.photosToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
-            this.photosToolStripMenuItem1.Text = "Photos";
-            this.photosToolStripMenuItem1.Click += new System.EventHandler(this.PhotosToolStripMenuItem1_Click);
+            this.btnZoom.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnZoom.Image = ((System.Drawing.Image)(resources.GetObject("btnZoom.Image")));
+            this.btnZoom.Location = new System.Drawing.Point(14, 66);
+            this.btnZoom.Name = "btnZoom";
+            this.btnZoom.Size = new System.Drawing.Size(40, 40);
+            this.btnZoom.TabIndex = 7;
+            this.btnZoom.UseVisualStyleBackColor = true;
+            this.btnZoom.Click += new System.EventHandler(this.btnZoom_Click);
+            // 
+            // btnLeft
+            // 
+            this.btnLeft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLeft.Image = global::EXIFGeotagger.Properties.Resources.left_36;
+            this.btnLeft.Location = new System.Drawing.Point(3, 276);
+            this.btnLeft.Name = "btnLeft";
+            this.btnLeft.Size = new System.Drawing.Size(29, 64);
+            this.btnLeft.TabIndex = 12;
+            this.btnLeft.UseVisualStyleBackColor = true;
+            // 
+            // btnRight
+            // 
+            this.btnRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRight.Image = global::EXIFGeotagger.Properties.Resources.right_36;
+            this.btnRight.Location = new System.Drawing.Point(728, 276);
+            this.btnRight.Name = "btnRight";
+            this.btnRight.Size = new System.Drawing.Size(29, 64);
+            this.btnRight.TabIndex = 11;
+            this.btnRight.UseVisualStyleBackColor = true;
+            // 
+            // pictureBox
+            // 
+            this.pictureBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBox.Location = new System.Drawing.Point(30, 55);
+            this.pictureBox.Name = "pictureBox";
+            this.pictureBox.Size = new System.Drawing.Size(692, 572);
+            this.pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox.TabIndex = 8;
+            this.pictureBox.TabStop = false;
             // 
             // EXIFGeoTagger
             // 
@@ -464,9 +489,9 @@
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -512,6 +537,8 @@
         private System.ComponentModel.BackgroundWorker bgWorker2;
         private System.Windows.Forms.ToolStripMenuItem markersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem photosToolStripMenuItem1;
+        private System.Windows.Forms.Button btnRight;
+        private System.Windows.Forms.Button btnLeft;
     }
 }
 

@@ -281,6 +281,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="BitMap\Cursors\Cursor1.cur" />
+    <None Include="images\left-36.png" />
+    <None Include="images\right-36.png" />
+    <None Include="images\right-48.png" />
+    <None Include="images\right-256.png" />
     <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_16px.png" />
     <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_12px.png" />
     <EmbeddedResource Include="BitMap\OpenCameraFuschiaPink_20px.png" />

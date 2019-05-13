@@ -36,6 +36,7 @@ namespace EXIFGeotagger //v0._1
 
         private Dictionary<string, GMapMarker[]> overlayDict;
         private GMapOverlay mOverlay;
+        private GMapOverlay selectedMarkersOverlay;
 
         //index of currently layer in checkbox
         private int mSelectedOverlay;
@@ -69,6 +70,12 @@ namespace EXIFGeotagger //v0._1
         private double max_lat;
         private double max_lng;
 
+        private Boolean mouseInBounds;
+
+        GMapMarker currentMarker;
+
+
+
         /// <summary>
         /// Class constructor to intialize form
         /// </summary>
@@ -77,6 +84,7 @@ namespace EXIFGeotagger //v0._1
             InitializeComponent();
             //awsClient = new AWSConnection();
             this.menuRunGeoTag.Enabled = true;
+            //selectedMarkersOverlay = new GMapOverlay("selected");
         }
 
         /// <summary>
@@ -107,11 +115,13 @@ namespace EXIFGeotagger //v0._1
             gMap.PreviewKeyDown += gMap_KeyDown;
             gMap.Enter += gMap_onEnter;
             gMap.OnMarkerDoubleClick += gMap_onMarkerDoubleClick;
-            //gMap.Leave += gMap_onLeave;
+            gMap.Leave += gMap_onLeave;
             overlayDict = new Dictionary<string, GMapMarker[]>();
             //layerItem = new ListViewItem();
             imageList = new ImageList();
             layerCount = 0;
+            selectedMarkersOverlay = new GMapOverlay("selected");
+            //gMap.Overlays.Add(selectedMarkersOverlay);
         }
 
         #region DatabaseConnect
@@ -553,19 +563,23 @@ namespace EXIFGeotagger //v0._1
 
         }
 
-        //private void gMap_MouseClick(object sender, MouseEventArgs e)
-        //{
-        //    if (mouseDown == true)
-        //    {
-        //        if (rect != null)
-        //        {
-        //            zoomRect.Clear();
-        //            gMap.Overlays.Remove(zoomOverlay);
-        //            zoomOverlay.Polygons.Remove(rect);
-        //        }
+        private void gMap_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (mouseInBounds)
+            {
+                selectedMarkersOverlay.Clear();
+            }
+            //if (mouseDown == true)
+            //{
+            //    if (rect != null)
+            //    {
+            //        zoomRect.Clear();
+            //        gMap.Overlays.Remove(zoomOverlay);
+            //        zoomOverlay.Polygons.Remove(rect);
+            //    }
 
-        //    }
-        //}
+            //}
+        }
 
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
         {
@@ -583,19 +597,57 @@ namespace EXIFGeotagger //v0._1
         private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
         {
             MarkerTag tag = (MarkerTag)marker.Tag;
+            if (tag.IsSelected)
+            {
+                //tag.IsSelected = false;
+                //selectedMarkersOverlay.Markers.Remove(marker);
+                selectedMarkersOverlay.Clear();
+                gMap.Overlays.Remove(selectedMarkersOverlay);
+
+
+            } else
+            {
+                selectedMarkersOverlay.Clear();
+                gMap.Overlays.Remove(selectedMarkersOverlay);
+                getPicture(marker);
+            }   
+        }
+
+        private void getPicture(GMapMarker marker)
+        {
+            MarkerTag tag = (MarkerTag)marker.Tag;
+
+            Bitmap bitmap = ColorTable.getBitmap("Red", tag.Size);
+            PointLatLng point = new PointLatLng(marker.Position.Lat, marker.Position.Lat);
+            
+            GMapMarker newMarker = new GMarkerGoogle(point, bitmap);
+
+            MarkerTag newTag = new MarkerTag();
+            newTag.IsSelected = true;
+            newTag.Color = "red";
+            newTag.Size = tag.Size;
+
+            newMarker.Tag = newTag;
+            
+            newMarker.LocalPosition = marker.LocalPosition;
+            newMarker.Offset = marker.Offset;
+            selectedMarkersOverlay.Markers.Add(newMarker);
+            gMap.Overlays.Add(selectedMarkersOverlay);
+            gMap.Refresh();
+
             if (tag.Path != null)
             {
                 try
                 {
                     lbPhoto.Text = tag.PhotoName;
                     pictureBox.Image = Image.FromFile(tag.Path);
-                } catch (FileNotFoundException ex)
+                }
+                catch (FileNotFoundException ex)
                 {
                     lbPhoto.Text = ex.Message;
                 }
-                
-
-            } else
+            }
+            else
             {
                 string bucket = "central-waikato";
                 string url = "https://centralwaikato2019.s3.ap-southeast-2.amazonaws.com/" + tag.PhotoName + ".jpg";
@@ -625,14 +677,14 @@ namespace EXIFGeotagger //v0._1
                     lbPhoto.Text = ex.Message;
                 }
             }
-            
-            
         }
+
 
         private void gMap_onEnter(object sender, EventArgs e)
         {
             txtConsole.Clear();
             txtConsole.AppendText("Enter");
+            mouseInBounds = true;
             if (mZoom)
             {
                 Cursor = Cursors.Cross;
@@ -664,12 +716,14 @@ namespace EXIFGeotagger //v0._1
 
         }
 
-        //private void gMap_onLeave(object sender, EventArgs e)
-        //{
-        //    txtConsole.Clear();
-        //    txtConsole.AppendText("Leave");
-        //    Cursor = Cursors.Arrow;
-        //}
+        private void gMap_onLeave(object sender, EventArgs e)
+        {
+            txtConsole.Clear();
+            txtConsole.AppendText("Leave");
+            Cursor = Cursors.Arrow;
+            mouseInBounds = false;
+        }
+
 
         #endregion
 
@@ -1050,7 +1104,6 @@ namespace EXIFGeotagger //v0._1
                 }
             }
             progress.Close();
-
         }
 
         #endregion

@@ -20,7 +20,8 @@ namespace EXIFGeotagger //v0._1
         public MarkerTag(String color, int id)
         {
             Color = color;
-            //ID = id;
+            ID = id;
+            IsSelected = false;
         }
 
         public Record Record { get; set; }
@@ -33,6 +34,8 @@ namespace EXIFGeotagger //v0._1
         public int Size { get; set; }
 
         public string Path { get; set; }
+
+        public Boolean IsSelected { get; set; } 
 
         public override string ToString()
         {

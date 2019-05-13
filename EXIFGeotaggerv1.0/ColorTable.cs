@@ -35,8 +35,16 @@ namespace EXIFGeotagger //v0._1
 
         public static Bitmap getBitmap(string color, int size)
         {
-            String icon = ColorTableDict[color] + "_" + size.ToString() + "px.png";
-            Stream stream = assembly.GetManifestResourceStream(icon);
+            Stream stream = null;
+            try
+            {
+                String icon = ColorTableDict[color] + "_" + size.ToString() + "px.png";
+                stream = assembly.GetManifestResourceStream(icon);
+                
+            } catch (ArgumentNullException)
+            {
+
+            }
             return (Bitmap)Image.FromStream(stream);
         }
     }
