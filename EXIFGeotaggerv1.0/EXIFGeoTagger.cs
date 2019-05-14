@@ -781,7 +781,7 @@ namespace EXIFGeotagger //v0._1
             ListView ls = sender as ListView;
             if (ls.FocusedItem.Checked) {
                 string overlayName = ls.FocusedItem.Text;
-                GMapOverlay overlay = gMap.Overlays
+                //GMapOverlay overlay = gMap.Overlays
             }
         }
 
@@ -937,7 +937,6 @@ namespace EXIFGeotagger //v0._1
         private void bgWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
-           
             Record r;
             int length = mFiles.Length;
             geoTagCount = 0;
@@ -981,14 +980,11 @@ namespace EXIFGeotagger //v0._1
                             propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
                             propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
                             propItemAltRef = RecordUtil.getEXIFAltitudeRef(propItemAltRef);
-
                             propItemDir = RecordUtil.getEXIFNumber(propItemDir, "bearing", 10);
                             propItemVel = RecordUtil.getEXIFNumber(propItemVel, "velocity", 100);
                             propItemPDop = RecordUtil.getEXIFNumber(propItemPDop, "pdop", 10);
                             propItemSat = RecordUtil.getEXIFInt(propItemSat, r.Satellites);
-
                             propItemDateTime = RecordUtil.getEXIFDateTime(propItemDateTime);
-
                             RecordUtil = null;
                             image.SetPropertyItem(propItemLat);
                             image.SetPropertyItem(propItemLon);
@@ -1002,7 +998,6 @@ namespace EXIFGeotagger //v0._1
                             image.SetPropertyItem(propItemSat);
                             image.SetPropertyItem(propItemDateTime);
                             string file = Path.GetFileName(filePath);
-                            //string fullName = file.Substring(0, 19) + "_" + r.Id + ".jpg";
                             image.Save(outFolder + "\\" + Path.GetFileName(filePath));
                             image.Dispose();
                             image = null;
