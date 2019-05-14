@@ -12,6 +12,8 @@ namespace EXIFGeotagger //v0._1
 {
     public partial class ProgressForm : Form
     {
+        public event cancelDelegate cancel;
+        public delegate void cancelDelegate(object sender, EventArgs e);
         public ProgressForm(string label)
         {
             InitializeComponent();
@@ -36,8 +38,7 @@ namespace EXIFGeotagger //v0._1
             EventHandler<EventArgs> ea = Canceled;
             /* If there are no subscribers, eh will be null so we need to check
              * to avoid a NullReferenceException. */
-            if (ea != null)
-                ea(this, e);
+            cancel(sender, e);
         }
 
         private void ProgressForm_Load(object sender, EventArgs e)

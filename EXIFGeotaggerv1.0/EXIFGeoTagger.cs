@@ -72,8 +72,8 @@ namespace EXIFGeotagger //v0._1
         private double max_lng;
 
         private Boolean mouseInBounds;
+        private CancellationTokenSource _cts;
 
-        
         /// <summary>
         /// Class constructor to intialize form
         /// </summary>
@@ -296,60 +296,154 @@ namespace EXIFGeotagger //v0._1
             }
             
         }
-        private GMapOverlay buildPhotoMarker(GMapOverlay overlay, string folderPath, string color)
-        {     
-            int id = 0;
-            Bitmap bitmap = ColorTable.getBitmap(color, 4);
-            string[] files = Directory.GetFiles(folderPath);
-            foreach (string file in files)
+
+        private void cancelImport(object sender, EventArgs e)
+        {
+            if (_cts != null)
+                _cts.Cancel();
+        }
+        private async void buildPhotoMarker(GMapOverlay overlay, string folderPath, string color)
+        {
+            string[] files = Directory.GetFiles(folderPath);       
+            ProgressForm progressForm = new ProgressForm("Importing Photos...");
+            progressForm.Show();
+            progressForm.BringToFront();
+            progressForm.cancel += cancelImport;
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+            var progressHandler1 = new Progress<int>(value =>
             {
-                try
-                {
-                    MarkerTag tag = new MarkerTag(color, id);
-                    tag.PhotoName = Path.GetFileName(file);
-                    tag.Path = Path.GetFullPath(file);
-                    Image image = new Bitmap(file);
-                    PropertyItem[] propItems = image.PropertyItems;
-                    PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                    PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                    PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                    PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                    image.Dispose();
+                progressForm.ProgressValue = value;
+                progressForm.Message = "Import in progress, please wait... " + value.ToString() + "% completed";
 
-                    byte[] latBytes = propItemLat.Value;
-                    byte[] latRefBytes = propItemLatRef.Value;
-                    byte[] lonBytes = propItemLon.Value;
-                    byte[] lonRefBytes = propItemLonRef.Value;
-                    string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
-                    string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
-                    double latitude = byteToDegrees(latBytes);
-                    double longitude = byteToDegrees(lonBytes);
-                    
-                    if (latitudeRef.Equals("S\0"))
-                    {
-                        latitude = -latitude;
-                    }
-                    if (longitudeRef.Equals("W\0"))
-                    {
-                        longitude = -longitude;
-                    }
-                    resetMinMax();
-                    setMinMax(latitude, longitude);
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
-                    marker.Tag = tag;
-                    overlay.Markers.Add(marker);
-                }
-                catch (ArgumentException ex)
+            });
+            var progressValue = progressHandler1 as IProgress<int>;
+            try
+            {
+                await Task.Run(() =>
                 {
+                    int id = 0;
+                    Bitmap bitmap = ColorTable.getBitmap(color, 4);
+                    int length = files.Length;
+                    int counter = 0;
+                    foreach (string file in files)
+                    {
+                        MarkerTag tag = new MarkerTag(color, id);
+                        tag.PhotoName = Path.GetFileName(file);
+                        tag.Path = Path.GetFullPath(file);
+                        Image image = new Bitmap(file);
+                        PropertyItem[] propItems = image.PropertyItems;
+                        PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+                        PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+                        PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+                        PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                        image.Dispose();
 
-                }
-                catch (NullReferenceException ex)
-                {
-                    txtConsole.AppendText(ex.StackTrace);
-                }
+                        byte[] latBytes = propItemLat.Value;
+                        byte[] latRefBytes = propItemLatRef.Value;
+                        byte[] lonBytes = propItemLon.Value;
+                        byte[] lonRefBytes = propItemLonRef.Value;
+                        string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
+                        string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
+                        double latitude = byteToDegrees(latBytes);
+                        double longitude = byteToDegrees(lonBytes);
+
+                        if (latitudeRef.Equals("S\0"))
+                        {
+                            latitude = -latitude;
+                        }
+                        if (longitudeRef.Equals("W\0"))
+                        {
+                            longitude = -longitude;
+                        }
+                        resetMinMax();
+                        setMinMax(latitude, longitude);
+                        GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
+                        marker.Tag = tag;
+                        overlay.Markers.Add(marker);
+                        counter++;
+                        double percent = ((double)counter / length) * 100;
+                        int percentInt = (int)Math.Ceiling(percent);
+                        if (progressValue != null)
+                        {
+                            progressValue.Report(percentInt);
+                           
+                        }
+                        token.ThrowIfCancellationRequested();
+                    }
+                });
+                progressValue.Report(100);
+                string title = "Importing complete";
+                string message = "Complete";
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
+                MsgBox(message, title, buttons);
+                progressForm.Close();
+                refreshUI(overlay, color);
             }
-            txtConsole.AppendText("Photos ready.." + Environment.NewLine);
-            return overlay;
+            catch (ArgumentException ex)
+            {
+
+            }
+            catch (NullReferenceException ex)
+            {
+                txtConsole.AppendText(ex.StackTrace);
+            }
+            catch (OperationCanceledException)
+            {
+                string titleCancel = "Cancelled";
+                string messageCancel = "Import cancelled";
+                MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
+                MsgBox(messageCancel, titleCancel, buttonsCancel);
+                progressForm.Close();
+            }
+            
+        }
+
+        private void MsgBox(string title, string message, MessageBoxButtons buttons)
+        {
+            DialogResult result = MessageBox.Show(message, title, buttons);
+            if (result == DialogResult.Yes)
+            {
+                Close();
+            }
+        }
+
+        private void refreshUI(GMapOverlay photoOverlay, string color)
+        {
+            GMapOverlay newOverlay = new GMapOverlay(mLayer);
+            gMap.Overlays.Add(photoOverlay);
+            GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
+
+            mOverlayDict.Add(photoOverlay.Id, markers);
+            mOverlay = photoOverlay;
+
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[color] + "_24px.png");
+            Bitmap bitmap = (Bitmap)Image.FromStream(stream);
+            imageList.Images.Add(bitmap);
+
+            ListViewItem layerItem = new ListViewItem(newOverlay.Id, layerCount);
+            layerCount++;
+
+            layerItem.Text = newOverlay.Id;
+            layerItem.Checked = true;
+
+            listLayers.SmallImageList = imageList;
+            listLayers.Items.Add(layerItem);
+
+            newOverlay.IsVisibile = true;
+            mOverlay.IsVisibile = true;
+            zoomRect = new List<PointLatLng>();
+
+            PointLatLng topLeft = new PointLatLng(max_lat, min_lng);
+            PointLatLng topRight = new PointLatLng(max_lat, max_lng);
+            PointLatLng bottomRight = new PointLatLng(min_lat, max_lng);
+            PointLatLng bottomLeft = new PointLatLng(min_lat, min_lng);
+            zoomRect.Add(topLeft);
+            zoomRect.Add(topRight);
+            zoomRect.Add(bottomRight);
+            zoomRect.Add(bottomLeft);
+            gMap.SetZoomToFitRect(polygonToRect(zoomRect));
+            zoomRect.Clear();
         }
 
         private void setMinMax(double lat, double lng)
@@ -389,43 +483,8 @@ namespace EXIFGeotagger //v0._1
         public void photoImportCallback(string folderPath, string layer, string color)
         {
             GMapOverlay newOverlay = new GMapOverlay(mLayer);
-            txtConsole.AppendText("Layer" + mLayer + Environment.NewLine);
             GMapOverlay photoOverlay = new GMapOverlay(layer);
-            photoOverlay = buildPhotoMarker(photoOverlay, folderPath, color);
-            gMap.Overlays.Add(photoOverlay);
-            GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
-
-            mOverlayDict.Add(photoOverlay.Id, markers);
-            mOverlay = photoOverlay;
-
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[color.ToString()] + "_24px.png");
-            Bitmap bitmap = (Bitmap)Image.FromStream(stream);
-            imageList.Images.Add(bitmap);
-
-            ListViewItem layerItem = new ListViewItem(newOverlay.Id, layerCount);
-            layerCount++;
-
-            layerItem.Text = newOverlay.Id;
-            layerItem.Checked = true;
-
-            listLayers.SmallImageList = imageList;
-            listLayers.Items.Add(layerItem);
-
-            newOverlay.IsVisibile = true;
-            mOverlay.IsVisibile = true;
-            zoomRect = new List<PointLatLng>();
-
-            PointLatLng topLeft = new PointLatLng(max_lat, min_lng);
-            PointLatLng topRight = new PointLatLng(max_lat, max_lng);
-            PointLatLng bottomRight = new PointLatLng(min_lat, max_lng);
-            PointLatLng bottomLeft = new PointLatLng(min_lat, min_lng);
-            zoomRect.Add(topLeft);
-            zoomRect.Add(topRight);
-            zoomRect.Add(bottomRight);
-            zoomRect.Add(bottomLeft);
-            gMap.SetZoomToFitRect(polygonToRect(zoomRect));
-            zoomRect.Clear();
-            //resetMinMax();
+            buildPhotoMarker(photoOverlay, folderPath, color);         
         }
 
 
@@ -762,7 +821,6 @@ namespace EXIFGeotagger //v0._1
             ImportDataForm importForm = new ImportDataForm("photos");
             mRecordDict = new Dictionary<string, Record>();
             importForm.mParent = this;
-            //importForm.Callback += this.photoImportCallback;
             importForm.Show();
             importForm.layerVariables += photoImportCallback;
         }
@@ -880,7 +938,6 @@ namespace EXIFGeotagger //v0._1
                     bgWorker2.RunWorkerAsync();
                 }
             }
-
         }
 
         private void bgWorker2_DoWork(object sender, DoWorkEventArgs e)
@@ -1020,6 +1077,15 @@ namespace EXIFGeotagger //v0._1
         // This event handler cancels the backgroundworker, fired from Cancel button in AlertForm.
         private void buttonCancel_Click(object sender, EventArgs e)
         {
+
+            if (_cts != null)
+            {
+                _cts.Cancel();
+                BringToFront();
+                progress.Close();
+            }
+               
+
             if (bgWorker1.WorkerSupportsCancellation == true)
             {
                 // Cancel the asynchronous operation.

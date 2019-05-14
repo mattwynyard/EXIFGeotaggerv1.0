@@ -19,8 +19,7 @@ namespace EXIFGeotagger //v0._1
     {
         public event layerVariablesDelegate layerVariables;
         public delegate void layerVariablesDelegate(string filePath, string layer, string color);
-
-        private String mfilePath;
+        private string mfilePath;
         public EXIFGeoTagger mParent;
         private OpenFileDialog openFileDialog;
         private FolderBrowserDialog browseFolderDialog;
