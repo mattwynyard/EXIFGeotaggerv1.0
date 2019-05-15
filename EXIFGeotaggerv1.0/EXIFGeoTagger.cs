@@ -922,7 +922,7 @@ namespace EXIFGeotagger //v0._1
             string[] files = Directory.GetFiles(inPath);
             readFromDatabase(dbPath, allRecords);
 
-            writeGeoTag(inPath, outPath, layer, color);
+            //writeGeoTag(inPath, outPath, layer, color);
 
         }
 
@@ -1063,7 +1063,7 @@ namespace EXIFGeotagger //v0._1
                 await Task.Run(() =>
                 {
                     string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
-                                        "Microsoft.Jet.OLEDB.4.0", mDBPath, 5);
+                                        "Microsoft.Jet.OLEDB.4.0", path, 5);
                     OleDbConnection connection = new OleDbConnection(connectionString);
                     string connectionStr = connection.ConnectionString;
                     string strSQL;
