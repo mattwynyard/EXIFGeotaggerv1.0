@@ -16,7 +16,9 @@ namespace EXIFGeotagger //v0._1
         private String inPath;
         private String outPath;
         public EXIFGeoTagger mParent;
-        FolderBrowserDialog folderBrowseDialog;
+        private FolderBrowserDialog folderBrowseDialog;
+        public event writeGeoTagDelegate writeGeoTag;
+        public delegate void writeGeoTagDelegate(string filePath, string layer, string color);
 
         public GeotagForm()
         {
@@ -70,6 +72,16 @@ namespace EXIFGeotagger //v0._1
             mParent.BringToFront();
             //mParent.TopMost = true;
             mParent.startWorker(sender, e);
+        }
+
+        private void Label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Label3_Click_1(object sender, EventArgs e)
+        {
+
         }
     }
 }

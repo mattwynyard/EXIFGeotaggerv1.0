@@ -35,25 +35,34 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.btnGeotag = new System.Windows.Forms.Button();
+            this.txtDataSource = new System.Windows.Forms.TextBox();
+            this.btnBrowse0 = new System.Windows.Forms.Button();
+            this.lbDataSource = new System.Windows.Forms.Label();
+            this.txtLayer = new System.Windows.Forms.TextBox();
+            this.lbLayer = new System.Windows.Forms.Label();
+            this.btnColor = new System.Windows.Forms.Button();
+            this.lbColor = new System.Windows.Forms.Label();
+            this.chkGeoMark = new System.Windows.Forms.CheckBox();
+            this.comboFileType = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // txtInputPath
             // 
-            this.txtInputPath.Location = new System.Drawing.Point(80, 45);
+            this.txtInputPath.Location = new System.Drawing.Point(12, 111);
             this.txtInputPath.Name = "txtInputPath";
             this.txtInputPath.Size = new System.Drawing.Size(447, 20);
             this.txtInputPath.TabIndex = 0;
             // 
             // txtOutputPath
             // 
-            this.txtOutputPath.Location = new System.Drawing.Point(80, 101);
+            this.txtOutputPath.Location = new System.Drawing.Point(12, 153);
             this.txtOutputPath.Name = "txtOutputPath";
             this.txtOutputPath.Size = new System.Drawing.Size(447, 20);
             this.txtOutputPath.TabIndex = 1;
             // 
             // btnBrowse1
             // 
-            this.btnBrowse1.Location = new System.Drawing.Point(533, 43);
+            this.btnBrowse1.Location = new System.Drawing.Point(465, 111);
             this.btnBrowse1.Name = "btnBrowse1";
             this.btnBrowse1.Size = new System.Drawing.Size(75, 23);
             this.btnBrowse1.TabIndex = 2;
@@ -63,7 +72,7 @@
             // 
             // btnBrowse2
             // 
-            this.btnBrowse2.Location = new System.Drawing.Point(533, 101);
+            this.btnBrowse2.Location = new System.Drawing.Point(465, 153);
             this.btnBrowse2.Name = "btnBrowse2";
             this.btnBrowse2.Size = new System.Drawing.Size(75, 23);
             this.btnBrowse2.TabIndex = 3;
@@ -75,7 +84,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(80, 26);
+            this.label1.Location = new System.Drawing.Point(12, 92);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(66, 16);
             this.label1.TabIndex = 4;
@@ -85,7 +94,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(77, 85);
+            this.label2.Location = new System.Drawing.Point(12, 134);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(76, 16);
             this.label2.TabIndex = 5;
@@ -93,7 +102,7 @@
             // 
             // btnGeotag
             // 
-            this.btnGeotag.Location = new System.Drawing.Point(533, 142);
+            this.btnGeotag.Location = new System.Drawing.Point(589, 208);
             this.btnGeotag.Name = "btnGeotag";
             this.btnGeotag.Size = new System.Drawing.Size(96, 41);
             this.btnGeotag.TabIndex = 6;
@@ -101,11 +110,101 @@
             this.btnGeotag.UseVisualStyleBackColor = true;
             this.btnGeotag.Click += new System.EventHandler(this.btnGeotag_Click);
             // 
+            // txtDataSource
+            // 
+            this.txtDataSource.Location = new System.Drawing.Point(12, 38);
+            this.txtDataSource.Name = "txtDataSource";
+            this.txtDataSource.Size = new System.Drawing.Size(447, 20);
+            this.txtDataSource.TabIndex = 7;
+            // 
+            // btnBrowse0
+            // 
+            this.btnBrowse0.Location = new System.Drawing.Point(465, 38);
+            this.btnBrowse0.Name = "btnBrowse0";
+            this.btnBrowse0.Size = new System.Drawing.Size(75, 23);
+            this.btnBrowse0.TabIndex = 8;
+            this.btnBrowse0.Text = "Browse";
+            this.btnBrowse0.UseVisualStyleBackColor = true;
+            // 
+            // lbDataSource
+            // 
+            this.lbDataSource.AutoSize = true;
+            this.lbDataSource.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbDataSource.Location = new System.Drawing.Point(9, 19);
+            this.lbDataSource.Name = "lbDataSource";
+            this.lbDataSource.Size = new System.Drawing.Size(83, 16);
+            this.lbDataSource.TabIndex = 9;
+            this.lbDataSource.Text = "Data Source";
+            this.lbDataSource.Click += new System.EventHandler(this.Label3_Click);
+            // 
+            // txtLayer
+            // 
+            this.txtLayer.Location = new System.Drawing.Point(12, 219);
+            this.txtLayer.Name = "txtLayer";
+            this.txtLayer.Size = new System.Drawing.Size(156, 20);
+            this.txtLayer.TabIndex = 10;
+            // 
+            // lbLayer
+            // 
+            this.lbLayer.AutoSize = true;
+            this.lbLayer.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbLayer.Location = new System.Drawing.Point(12, 200);
+            this.lbLayer.Name = "lbLayer";
+            this.lbLayer.Size = new System.Drawing.Size(42, 16);
+            this.lbLayer.TabIndex = 11;
+            this.lbLayer.Text = "Layer";
+            this.lbLayer.Click += new System.EventHandler(this.Label3_Click_1);
+            // 
+            // btnColor
+            // 
+            this.btnColor.Location = new System.Drawing.Point(174, 213);
+            this.btnColor.Name = "btnColor";
+            this.btnColor.Size = new System.Drawing.Size(32, 30);
+            this.btnColor.TabIndex = 12;
+            this.btnColor.UseVisualStyleBackColor = true;
+            // 
+            // lbColor
+            // 
+            this.lbColor.AutoSize = true;
+            this.lbColor.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbColor.Location = new System.Drawing.Point(171, 194);
+            this.lbColor.Name = "lbColor";
+            this.lbColor.Size = new System.Drawing.Size(47, 16);
+            this.lbColor.TabIndex = 13;
+            this.lbColor.Text = "Colour";
+            // 
+            // chkGeoMark
+            // 
+            this.chkGeoMark.AutoSize = true;
+            this.chkGeoMark.Location = new System.Drawing.Point(577, 67);
+            this.chkGeoMark.Name = "chkGeoMark";
+            this.chkGeoMark.Size = new System.Drawing.Size(176, 17);
+            this.chkGeoMark.TabIndex = 14;
+            this.chkGeoMark.Text = "Include non-geomarked records";
+            this.chkGeoMark.UseVisualStyleBackColor = true;
+            // 
+            // comboFileType
+            // 
+            this.comboFileType.FormattingEnabled = true;
+            this.comboFileType.Location = new System.Drawing.Point(600, 40);
+            this.comboFileType.Name = "comboFileType";
+            this.comboFileType.Size = new System.Drawing.Size(121, 21);
+            this.comboFileType.TabIndex = 15;
+            // 
             // GeotagForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(690, 210);
+            this.ClientSize = new System.Drawing.Size(795, 326);
+            this.Controls.Add(this.comboFileType);
+            this.Controls.Add(this.chkGeoMark);
+            this.Controls.Add(this.lbColor);
+            this.Controls.Add(this.btnColor);
+            this.Controls.Add(this.lbLayer);
+            this.Controls.Add(this.txtLayer);
+            this.Controls.Add(this.lbDataSource);
+            this.Controls.Add(this.btnBrowse0);
+            this.Controls.Add(this.txtDataSource);
             this.Controls.Add(this.btnGeotag);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -130,5 +229,14 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnGeotag;
+        private System.Windows.Forms.TextBox txtDataSource;
+        private System.Windows.Forms.Button btnBrowse0;
+        private System.Windows.Forms.Label lbDataSource;
+        private System.Windows.Forms.TextBox txtLayer;
+        private System.Windows.Forms.Label lbLayer;
+        private System.Windows.Forms.Button btnColor;
+        private System.Windows.Forms.Label lbColor;
+        private System.Windows.Forms.CheckBox chkGeoMark;
+        private System.Windows.Forms.ComboBox comboFileType;
     }
 }

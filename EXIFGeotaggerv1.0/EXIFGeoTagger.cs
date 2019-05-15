@@ -319,7 +319,7 @@ namespace EXIFGeotagger //v0._1
             });
             var progressValue = progressHandler1 as IProgress<int>;
             try
-            {
+            {     
                 await Task.Run(() =>
                 {
                     int id = 0;
@@ -487,12 +487,14 @@ namespace EXIFGeotagger //v0._1
             buildPhotoMarker(photoOverlay, folderPath, color);         
         }
 
+        public void writeGeoTagCallback(string folderPath, string layer, string color)
+        {
+        }
+            #endregion
 
-        #endregion
+            #region GMap Events
 
-        #region GMap Events
-
-        private void gMap_OnMapZoomChanged()
+            private void gMap_OnMapZoomChanged()
         {
             txtConsole.Clear();
             txtConsole.AppendText(gMap.Zoom.ToString());
@@ -869,6 +871,7 @@ namespace EXIFGeotagger //v0._1
             GeotagForm geotagForm = new GeotagForm();
             geotagForm.mParent = this;
             geotagForm.Show();
+            geotagForm.writeGeoTag += writeGeoTagCallback;
         }
 
         private void menuSave_Click(object sender, EventArgs e)
