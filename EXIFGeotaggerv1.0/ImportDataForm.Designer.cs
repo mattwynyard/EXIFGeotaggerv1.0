@@ -36,7 +36,6 @@
             this.txtLayer = new System.Windows.Forms.TextBox();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.btnColour = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.ckBoxGeomark = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
@@ -109,15 +108,6 @@
             this.btnColour.UseVisualStyleBackColor = true;
             this.btnColour.Click += new System.EventHandler(this.btnColour_Click);
             // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(0, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(35, 13);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "label3";
-            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -146,7 +136,6 @@
             this.ClientSize = new System.Drawing.Size(580, 315);
             this.Controls.Add(this.ckBoxGeomark);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
             this.Controls.Add(this.btnColour);
             this.Controls.Add(this.txtLayer);
             this.Controls.Add(this.label2);
@@ -172,7 +161,6 @@
         private System.Windows.Forms.TextBox txtLayer;
         private System.Windows.Forms.ColorDialog colorDialog1;
         private System.Windows.Forms.Button btnColour;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.CheckBox ckBoxGeomark;
     }
