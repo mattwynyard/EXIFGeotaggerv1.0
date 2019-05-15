@@ -120,7 +120,7 @@ namespace EXIFGeotagger //v0._1
             mParent.BringToFront();
             if (fileType.Equals("access"))
             {
-                mParent.startWorker(sender, e);
+                //mParent.startWorker(sender, e);
             }
             else if (fileType.Equals("exf"))
             {

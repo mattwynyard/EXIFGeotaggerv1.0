@@ -67,8 +67,6 @@
             this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bgWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.bgWorker2 = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -457,22 +455,6 @@
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // bgWorker1
-            // 
-            this.bgWorker1.WorkerReportsProgress = true;
-            this.bgWorker1.WorkerSupportsCancellation = true;
-            this.bgWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgWorker1_DoWork);
-            this.bgWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker1_ProgressChanged);
-            this.bgWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker1_RunWorkerCompleted);
-            // 
-            // bgWorker2
-            // 
-            this.bgWorker2.WorkerReportsProgress = true;
-            this.bgWorker2.WorkerSupportsCancellation = true;
-            this.bgWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgWorker2_DoWork);
-            this.bgWorker2.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker2_ProgressChanged);
-            this.bgWorker2.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker2_RunWorkerCompleted);
-            // 
             // EXIFGeoTagger
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -514,7 +496,6 @@
         private System.Windows.Forms.ToolStripMenuItem projectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem menuSave;
         private System.Windows.Forms.ToolStripMenuItem menuQuit;
-        private System.ComponentModel.BackgroundWorker bgWorker1;
         private System.Windows.Forms.ToolStripMenuItem plotToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem photosToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
@@ -536,7 +517,6 @@
         private System.Windows.Forms.ToolStripMenuItem eXIFDataFiledatToolStripMenuItem;
         private System.Windows.Forms.Label lbPhoto;
         private System.Windows.Forms.PictureBox pictureBox;
-        private System.ComponentModel.BackgroundWorker bgWorker2;
         private System.Windows.Forms.ToolStripMenuItem markersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem photosToolStripMenuItem1;
         private System.Windows.Forms.Button btnRight;

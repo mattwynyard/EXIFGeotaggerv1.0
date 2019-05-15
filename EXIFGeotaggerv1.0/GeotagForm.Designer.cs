@@ -42,8 +42,9 @@
             this.lbLayer = new System.Windows.Forms.Label();
             this.btnColor = new System.Windows.Forms.Button();
             this.lbColor = new System.Windows.Forms.Label();
-            this.chkGeoMark = new System.Windows.Forms.CheckBox();
+            this.ckBoxGeoMark = new System.Windows.Forms.CheckBox();
             this.comboFileType = new System.Windows.Forms.ComboBox();
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.SuspendLayout();
             // 
             // txtInputPath
@@ -116,6 +117,7 @@
             this.txtDataSource.Name = "txtDataSource";
             this.txtDataSource.Size = new System.Drawing.Size(447, 20);
             this.txtDataSource.TabIndex = 7;
+            this.txtDataSource.TextChanged += new System.EventHandler(this.txtDataSource_TextChanged);
             // 
             // btnBrowse0
             // 
@@ -125,6 +127,7 @@
             this.btnBrowse0.TabIndex = 8;
             this.btnBrowse0.Text = "Browse";
             this.btnBrowse0.UseVisualStyleBackColor = true;
+            this.btnBrowse0.Click += new System.EventHandler(this.btnBrowse0_Click);
             // 
             // lbDataSource
             // 
@@ -135,7 +138,6 @@
             this.lbDataSource.Size = new System.Drawing.Size(83, 16);
             this.lbDataSource.TabIndex = 9;
             this.lbDataSource.Text = "Data Source";
-            this.lbDataSource.Click += new System.EventHandler(this.Label3_Click);
             // 
             // txtLayer
             // 
@@ -153,7 +155,6 @@
             this.lbLayer.Size = new System.Drawing.Size(42, 16);
             this.lbLayer.TabIndex = 11;
             this.lbLayer.Text = "Layer";
-            this.lbLayer.Click += new System.EventHandler(this.Label3_Click_1);
             // 
             // btnColor
             // 
@@ -162,6 +163,7 @@
             this.btnColor.Size = new System.Drawing.Size(32, 30);
             this.btnColor.TabIndex = 12;
             this.btnColor.UseVisualStyleBackColor = true;
+            this.btnColor.Click += new System.EventHandler(this.btnColour_Click);
             // 
             // lbColor
             // 
@@ -173,15 +175,16 @@
             this.lbColor.TabIndex = 13;
             this.lbColor.Text = "Colour";
             // 
-            // chkGeoMark
+            // ckBoxGeoMark
             // 
-            this.chkGeoMark.AutoSize = true;
-            this.chkGeoMark.Location = new System.Drawing.Point(577, 67);
-            this.chkGeoMark.Name = "chkGeoMark";
-            this.chkGeoMark.Size = new System.Drawing.Size(176, 17);
-            this.chkGeoMark.TabIndex = 14;
-            this.chkGeoMark.Text = "Include non-geomarked records";
-            this.chkGeoMark.UseVisualStyleBackColor = true;
+            this.ckBoxGeoMark.AutoSize = true;
+            this.ckBoxGeoMark.Location = new System.Drawing.Point(577, 67);
+            this.ckBoxGeoMark.Name = "ckBoxGeoMark";
+            this.ckBoxGeoMark.Size = new System.Drawing.Size(176, 17);
+            this.ckBoxGeoMark.TabIndex = 14;
+            this.ckBoxGeoMark.Text = "Include non-geomarked records";
+            this.ckBoxGeoMark.UseVisualStyleBackColor = true;
+            this.ckBoxGeoMark.CheckedChanged += new System.EventHandler(this.chkGeoMark_CheckedChanged);
             // 
             // comboFileType
             // 
@@ -197,7 +200,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(795, 326);
             this.Controls.Add(this.comboFileType);
-            this.Controls.Add(this.chkGeoMark);
+            this.Controls.Add(this.ckBoxGeoMark);
             this.Controls.Add(this.lbColor);
             this.Controls.Add(this.btnColor);
             this.Controls.Add(this.lbLayer);
@@ -236,7 +239,8 @@
         private System.Windows.Forms.Label lbLayer;
         private System.Windows.Forms.Button btnColor;
         private System.Windows.Forms.Label lbColor;
-        private System.Windows.Forms.CheckBox chkGeoMark;
+        private System.Windows.Forms.CheckBox ckBoxGeoMark;
         private System.Windows.Forms.ComboBox comboFileType;
+        private System.Windows.Forms.ColorDialog colorDialog1;
     }
 }
