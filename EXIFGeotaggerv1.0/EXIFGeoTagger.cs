@@ -227,8 +227,8 @@ namespace EXIFGeotagger //v0._1
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
                     MarkerTag tag = new MarkerTag(color, id);
-                    //tag.PhotoName = Path.GetFileName(file);
-                    //tag.Path = Path.GetFullPath(file);
+                    tag.PhotoName = record.Value.PhotoName;
+                    tag.Path = record.Value.Path;
                     tag.Size = 4;
                     tag.PhotoName = record.Key;
                     tag.Record = record.Value;
