@@ -30,6 +30,9 @@ namespace EXIFGeotagger
         protected string inspector;
         protected DateTime timestamp;
         protected bool geomark;
+        protected bool geotag;
+        protected bool uploaded;
+        protected string path;
 
         public Record()
         {
@@ -38,6 +41,8 @@ namespace EXIFGeotagger
         public Record(string photo)
         {
             this.photo = photo;
+            geotag = false;
+            uploaded = false;
         }
 
         public string PhotoName
@@ -45,6 +50,10 @@ namespace EXIFGeotagger
             get
             {
                 return photo;
+            }
+            set
+            {
+                photo = value;
             }
         }
 
@@ -178,5 +187,11 @@ namespace EXIFGeotagger
                 geomark = value;
             }
         }
+
+        public Boolean GeoTag { get; set; }
+
+        public Boolean Uploaded { get; set; }
+
+        public string Path { get; set; }
     }
 }

@@ -34,6 +34,7 @@ namespace EXIFGeotagger //v0._1
         public Color mlayerColour;
         public String mlayerColourHex;
 
+        private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
         private GMapOverlay mOverlay; //the currently active overlay
         private GMapOverlay selectedMarkersOverlay; //overlay containing selected markers
@@ -42,6 +43,7 @@ namespace EXIFGeotagger //v0._1
         //index of currently layer in checkbox
         private int mSelectedOverlayIndex;
         private Dictionary<string, Record> mRecordDict;
+        private  Dictionary<string, Record> mNewRecordDict;
         public string[] mFiles; //array containing absolute paths of photos.
         public string outFolder; //folder path to save geotag photos
 
@@ -121,7 +123,7 @@ namespace EXIFGeotagger //v0._1
             selectedMarkersOverlay = new GMapOverlay("selected");
         }
 
-        #region DatabaseConnect
+        
 
         /// <summary>
         /// Creates an import data form to get the path of the access database selected by the user
@@ -151,16 +153,17 @@ namespace EXIFGeotagger //v0._1
                 Record r = new Record((string)row[1]);
                 int id = (int)row[0];
                 r.Id = id.ToString();
-                r.Latitude = (double)row[2];
-                r.Longitude = (double)row[3];
-                r.Altitude = (double)row[4];
-                r.Bearing = Convert.ToDouble(row[5]);
-                r.Velocity = Convert.ToDouble(row[6]);
-                r.Satellites = Convert.ToInt32(row[7]);
-                r.PDop = Convert.ToDouble(row[8]);
-                r.Inspector = Convert.ToString(row[9]);
-                r.TimeStamp = Convert.ToDateTime(row[11]);
-                r.GeoMark = Convert.ToBoolean(row[12]);
+
+                r.Latitude = (double)row[3];
+                r.Longitude = (double)row[4];
+                r.Altitude = (double)row[5];
+                r.Bearing = Convert.ToDouble(row[6]);
+                r.Velocity = Convert.ToDouble(row[7]);
+                r.Satellites = Convert.ToInt32(row[8]);
+                r.PDop = Convert.ToDouble(row[9]);
+                r.Inspector = Convert.ToString(row[10]);
+                r.TimeStamp = Convert.ToDateTime(row[12]);
+                r.GeoMark = Convert.ToBoolean(row[13]);
                 mRecordDict.Add(r.PhotoName, r);
             }
             catch (Exception e)
@@ -173,30 +176,25 @@ namespace EXIFGeotagger //v0._1
         {
             Serializer s = new Serializer(path);
             mRecordDict = s.deserialize();
-            plotLayer();
+            //plotLayer();
         }
-        #endregion
+       
 
         #region Plotting
         /// <summary>
         /// Called from <see cref="importAccessData(object sender, EventArgs e)"/> creates new overaly and adds it to overlays in map control
         /// Intialises new MarkerTag which sets colour and inital size of the icon and sets the bitmap for the marker
         /// </summary>
-        private void plotLayer()
+        private void plotLayer(string layer, string color)
         {
-            txtConsole.Clear();
-            txtConsole.AppendText("Colour: " + mlayerColourHex.ToString());
-            txtConsole.AppendText("ColourName: " + mlayerColour.ToString());
-
-            GMapOverlay newOverlay = new GMapOverlay(mLayer);
-            newOverlay = buildMarkers(newOverlay);
+            GMapOverlay newOverlay = new GMapOverlay(layer);
+            newOverlay = buildMarkers(newOverlay, color);
             gMap.Overlays.Add(newOverlay);
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
             mOverlayDict.Add(newOverlay.Id, markers);
             mOverlay = newOverlay;
-            //ckBoxLayers.Items.Add(overlay.Id, true);
 
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[mlayerColourHex.ToString()] + "_24px.png");
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[color.ToString()] + "_24px.png");
             Bitmap bitmap = (Bitmap)Image.FromStream(stream);
             imageList.Images.Add(bitmap);
 
@@ -220,15 +218,17 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="overlay - the intial overlay that markers will be added to"></param>
         /// <returns>the GPOverlay containing the markers</returns>
-        private GMapOverlay buildMarkers(GMapOverlay overlay)
+        private GMapOverlay buildMarkers(GMapOverlay overlay, string color)
         {
             if (mRecordDict != null)
             {
                 int id = 0;
-                Bitmap bitmap = ColorTable.getBitmap(mlayerColourHex, 4);
+                Bitmap bitmap = ColorTable.getBitmap(color, 4);
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
-                    MarkerTag tag = new MarkerTag(mlayerColourHex, id);
+                    MarkerTag tag = new MarkerTag(color, id);
+                    //tag.PhotoName = Path.GetFileName(file);
+                    //tag.Path = Path.GetFullPath(file);
                     tag.Size = 4;
                     tag.PhotoName = record.Key;
                     tag.Record = record.Value;
@@ -777,13 +777,13 @@ namespace EXIFGeotagger //v0._1
             geotagForm.writeGeoTag += writeGeoTagCallback;
         }
 
-        public void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords)
+        public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords)
         {
-            string[] files = Directory.GetFiles(inPath);
-            readFromDatabase(dbPath, allRecords);
-
-            //writeGeoTag(inPath, outPath, layer, color);
-
+            await readFromDatabase(dbPath, allRecords);
+            await writeGeoTag(inPath, outPath);
+            mRecordDict = mNewRecordDict;
+            mNewRecordDict = null;
+            plotLayer(layer, color);
         }
 
 
@@ -796,6 +796,12 @@ namespace EXIFGeotagger //v0._1
                 _cts.Cancel();
         }
 
+        /// <summary>
+        /// Reads exif data from each photo and builds markers on map
+        /// </summary>
+        /// <param name="overlay"> the overlay the markers are being added to</param>
+        /// <param name="folderPath">the location of the photos</param>
+        /// <param name="color">the color off the markers</param>
         private async void buildPhotoMarker(GMapOverlay overlay, string folderPath, string color)
         {
             string[] files = Directory.GetFiles(folderPath);
@@ -902,9 +908,10 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
-        private async void writeGeoTag(string inPath, string outPath, string layer, string color)
+        private async Task writeGeoTag(string inPath, string outPath)
         {
             ProgressForm progressForm = new ProgressForm("Writing geotags to photos...");
+            string[] _files = Directory.GetFiles(inPath);
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
@@ -922,13 +929,14 @@ namespace EXIFGeotagger //v0._1
                 await Task.Run(() =>
                 {
                     Record r;
-                    int length = mFiles.Length;
+                    int length = _files.Length;
                     geoTagCount = 0;
                     errorCount = 0;
                     stationaryCount = 0;
-                    foreach (string filePath in mFiles)
+                    mNewRecordDict = new Dictionary<string, Record>();
+                    foreach (string _file in _files)
                     {
-                        Bitmap image = new Bitmap(filePath);
+                        Bitmap image = new Bitmap(_file);
                         PropertyItem[] propItems = image.PropertyItems;
                         PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
                         PropertyItem propItemLat = image.GetPropertyItem(0x0002);
@@ -944,7 +952,7 @@ namespace EXIFGeotagger //v0._1
 
                         try
                         {
-                            r = mRecordDict[Path.GetFileNameWithoutExtension(filePath)];
+                            r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
 
                             if (r.GeoMark)
                             {
@@ -973,8 +981,24 @@ namespace EXIFGeotagger //v0._1
                                 image.SetPropertyItem(propItemPDop);
                                 image.SetPropertyItem(propItemSat);
                                 image.SetPropertyItem(propItemDateTime);
-                                string file = Path.GetFileName(filePath);
-                                image.Save(outFolder + "\\" + Path.GetFileName(filePath));
+                                r.GeoTag = true;
+                                string photoName = Path.GetFileNameWithoutExtension(_file);
+                                string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
+                                OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
+                                string photo = (string)commandGetPhoto.ExecuteScalar();
+                                r.PhotoName = photo; //new photo name 
+                                string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
+                                OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
+                                commandGeoTag.ExecuteNonQuery();
+                                string path = outPath + "\\" + photo + ".jpg";
+                                string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
+                                OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+                                commandPath.ExecuteNonQuery();
+
+                                image.Save(path);
+                                r.Path = path;
+                                r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
+                                mNewRecordDict.Add(photo, r);
                                 image.Dispose();
                                 image = null;
                             }
@@ -986,18 +1010,21 @@ namespace EXIFGeotagger //v0._1
                         catch (KeyNotFoundException ex)
                         {
                             errorCount++;
+                            image.Dispose();
+                            image = null;
                         }
+                        geoTagCount++;
+                        double percent = ((double)geoTagCount / length) * 100;
+                        int percentInt = (int)Math.Ceiling(percent);
+                        if (progressValue != null)
+                        {
+                            progressValue.Report(percentInt);
+
+                        }
+                        token.ThrowIfCancellationRequested();
                     }
                     //photoIcon.Dispose();
-                    geoTagCount++;
-                    double percent = ((double)geoTagCount / length) * 100;
-                    int percentInt = (int)Math.Ceiling(percent);
-                    if (progressValue != null)
-                    {
-                        progressValue.Report(percentInt);
-
-                    }
-                    token.ThrowIfCancellationRequested();
+                    
                 });
             }
             catch (ArgumentException ex)
@@ -1016,9 +1043,20 @@ namespace EXIFGeotagger //v0._1
                 MsgBox(messageCancel, titleCancel, buttonsCancel);
                 progressForm.Close();
             }
+            string title = "Finished";
+            string message = "Geotagging complete\n" + (geoTagCount - errorCount) + " of " + _files.Length + " photos geotagged\n"
+                + "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n";
+            MessageBoxButtons buttons = MessageBoxButtons.OK;
+            DialogResult result = MessageBox.Show(message, title, buttons);
+            if (result == DialogResult.Yes)
+            {
+                Close();
+            }
+            progressForm.Close();
+            connection.Close();
         }
 
-        private async void readFromDatabase(string path, Boolean allRecords)
+        private async Task readFromDatabase(string path, Boolean allRecords)
         {
             mRecordDict = new Dictionary<string, Record>();
             ProgressForm progressForm = new ProgressForm("Reading from database...");
@@ -1040,8 +1078,8 @@ namespace EXIFGeotagger //v0._1
                 {
                     string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                                         "Microsoft.Jet.OLEDB.4.0", path, 5);
-                    OleDbConnection connection = new OleDbConnection(connectionString);
-                    string connectionStr = connection.ConnectionString;
+                    connection = new OleDbConnection(connectionString);
+                    //string connectionStr = connection.ConnectionString;
                     string strSQL;
                     string lengthSQL; //sql count string
                     int length; //number of records to process
@@ -1054,7 +1092,7 @@ namespace EXIFGeotagger //v0._1
                     else
                     {
                         strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
-                        lengthSQL = "SELECT Count(Photo) FROM PhotoList WHERE PhotoList.GeoMark = true;";
+                        lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true;";
                     }
                     OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
                     OleDbCommand command = new OleDbCommand(strSQL, connection);
@@ -1089,6 +1127,7 @@ namespace EXIFGeotagger //v0._1
                 MessageBoxButtons buttons = MessageBoxButtons.OK;
                 MsgBox(message, title, buttons);
                 progressForm.Close();
+               
             }
             catch (ArgumentException ex)
             {

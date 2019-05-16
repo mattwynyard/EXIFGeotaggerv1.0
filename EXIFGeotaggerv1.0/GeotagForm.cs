@@ -132,5 +132,10 @@ namespace EXIFGeotagger //v0._1
             mDataPath = txtDataSource.Text;
 
         }
+
+        private void TxtLayer_TextChanged(object sender, EventArgs e)
+        {
+            mLayer = txtLayer.Text;
+        }
     }
 }

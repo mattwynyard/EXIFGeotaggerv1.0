@@ -145,6 +145,7 @@
             this.txtLayer.Name = "txtLayer";
             this.txtLayer.Size = new System.Drawing.Size(156, 20);
             this.txtLayer.TabIndex = 10;
+            this.txtLayer.TextChanged += new System.EventHandler(this.TxtLayer_TextChanged);
             // 
             // lbLayer
             // 
