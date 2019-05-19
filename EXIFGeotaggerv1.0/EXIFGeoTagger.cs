@@ -84,7 +84,7 @@ namespace EXIFGeotagger //v0._1
             InitializeComponent();
             //awsClient = new AWSConnection();
             this.menuRunGeoTag.Enabled = true;
-            //selectedMarkersOverlay = new GMapOverlay("selected");
+            
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace EXIFGeotagger //v0._1
             gMap.MaxZoom = 23;
             gMap.MinZoom = 5;
             gMap.Zoom = 10;
-            gMap.DragButton = MouseButtons.Left;
+            //gMap.DragButton = MouseButtons.Left;
             gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
             gMap.MouseMove += gMap_OnMouseMoved;
             gMap.DragButton = MouseButtons.Right;
@@ -121,6 +121,8 @@ namespace EXIFGeotagger //v0._1
             imageList = new ImageList();
             layerCount = 0;
             selectedMarkersOverlay = new GMapOverlay("selected");
+            //gMap.Overlays.Add(selectedMarkersOverlay);
+            //mOverlayDict.Add("selected", null);
         }
 
         
@@ -147,13 +149,11 @@ namespace EXIFGeotagger //v0._1
         /// <param name="row: the access record"></param>
         private void buildDictionary(int i, Object[] row)
         {
-
-            try
+           try
             {
                 Record r = new Record((string)row[1]);
                 int id = (int)row[0];
                 r.Id = id.ToString();
-
                 r.Latitude = (double)row[3];
                 r.Longitude = (double)row[4];
                 r.Altitude = (double)row[5];
@@ -261,66 +261,72 @@ namespace EXIFGeotagger //v0._1
         private void rebuildMarkers(GMapOverlay overlay, int size)
         {
             overlay.Markers.Clear();
-            GMapMarker[] markers = mOverlayDict[overlay.Id];
-            MarkerTag tag = (MarkerTag)markers[0].Tag;
-            if (tag == null)
+            try
             {
-                Bitmap redBitmap = ColorTable.getBitmap("Red", size);
-                GMapMarker[] redMarkers = mOverlayDict["selected"];
-                int redCount = redMarkers.Length;
-                for (int j = 0; j < redCount; j += 1)
+                GMapMarker[] markers = mOverlayDict[overlay.Id];
+                MarkerTag tag = (MarkerTag)markers[0].Tag;
+                if (tag == null)
                 {
-                    GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
-                    overlay.Markers.Add(newMarker);
-                }
-                
-            } else
-            {
-                markers = mOverlayDict[overlay.Id];
-                int count = markers.Length;
-                int step = getStep(size);
-                //MarkerTag tag = (MarkerTag)markers[0].Tag;
-                Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
-                for (int i = 0; i < count - 1; i += step)
-                {
-                    tag = (MarkerTag)markers[i].Tag;
-                    tag.Size = size;
-                    GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
-
-                    if (markers[i].Tag != null)
+                    Bitmap redBitmap = ColorTable.getBitmap("Red", size);
+                    GMapMarker[] redMarkers = mOverlayDict["selected"];
+                    int redCount = redMarkers.Length;
+                    for (int j = 0; j < redCount; j += 1)
                     {
-                        newMarker.Tag = markers[i].Tag;
+                        GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
+                        overlay.Markers.Add(newMarker);
                     }
-                    //setToolTip(newMarker);
-                    overlay.Markers.Add(newMarker);
+
                 }
+                else
+                {
+                    markers = mOverlayDict[overlay.Id];
+                    int count = markers.Length;
+                    int step = getStep(size);
+                    //MarkerTag tag = (MarkerTag)markers[0].Tag;
+                    Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
+                    for (int i = 0; i < count - 1; i += step)
+                    {
+                        tag = (MarkerTag)markers[i].Tag;
+                        tag.Size = size;
+                        GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
+
+                        if (markers[i].Tag != null)
+                        {
+                            newMarker.Tag = markers[i].Tag;
+                        }
+                        //setToolTip(newMarker);
+                        overlay.Markers.Add(newMarker);
+                    }
+                }
+            } catch (KeyNotFoundException ex)
+            {
+
             }
-            
         }
 
-        private void refreshUI(GMapOverlay photoOverlay, string color)
+        private void refreshUI(GMapOverlay overlay, string color)
         {
-            GMapOverlay newOverlay = new GMapOverlay(mLayer);
-            gMap.Overlays.Add(photoOverlay);
-            GMapMarker[] markers = photoOverlay.Markers.ToArray<GMapMarker>();
+            //apOverlay newOverlay = new GMapOverlay(mLayer);
+            gMap.Overlays.Add(overlay);
+            GMapMarker[] markers = overlay.Markers.ToArray<GMapMarker>();
 
-            mOverlayDict.Add(photoOverlay.Id, markers);
-            mOverlay = photoOverlay;
+            mOverlayDict.Add(overlay.Id, markers);
+            mOverlay = overlay;
 
             Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[color] + "_24px.png");
             Bitmap bitmap = (Bitmap)Image.FromStream(stream);
             imageList.Images.Add(bitmap);
 
-            ListViewItem layerItem = new ListViewItem(newOverlay.Id, layerCount);
+            ListViewItem layerItem = new ListViewItem(overlay.Id, layerCount);
             layerCount++;
 
-            layerItem.Text = newOverlay.Id;
+            layerItem.Text = overlay.Id;
             layerItem.Checked = true;
 
             listLayers.SmallImageList = imageList;
             listLayers.Items.Add(layerItem);
 
-            newOverlay.IsVisibile = true;
+            overlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
             zoomRect = new List<PointLatLng>();
 
@@ -492,8 +498,9 @@ namespace EXIFGeotagger //v0._1
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void gMap_MouseClick(object sender, MouseEventArgs e)
-        {       
-            if (mouseInBounds)
+        {
+
+            if (mouseInBounds && e.Button == MouseButtons.Left)
             {
                 if (currentMarker != null)
                 {
@@ -528,9 +535,10 @@ namespace EXIFGeotagger //v0._1
                 MarkerTag currentTag = (MarkerTag)currentMarker.Tag;
                 currentTag.IsSelected = true;
                 getPicture(currentMarker);
-            } else
+            }
+            else
             {
-                if (tag == null) 
+                if (tag == null)
                 {
                     selectedMarkersOverlay.Clear();
                     mOverlayDict.Remove("selected");
@@ -554,20 +562,21 @@ namespace EXIFGeotagger //v0._1
                         getPicture(currentMarker);
                     }
                 }
-            }   
+            }
         }
 
         private void getPicture(GMapMarker marker)
         {
             MarkerTag tag = (MarkerTag)marker.Tag;
             Bitmap bitmap = ColorTable.getBitmap("Red", tag.Size);
-            GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);        
+            GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
             newMarker.LocalPosition = marker.LocalPosition;
             newMarker.Offset = marker.Offset;
             selectedMarkersOverlay.Markers.Add(newMarker);
             gMap.Overlays.Add(selectedMarkersOverlay);
             GMapMarker[] selectedMarkers = selectedMarkersOverlay.Markers.ToArray<GMapMarker>();
             mOverlayDict.Add("selected", selectedMarkers);
+
             if (tag.Path != null)
             {
                 try
@@ -764,9 +773,8 @@ namespace EXIFGeotagger //v0._1
         /// <param name="color"></param>
         public void photoImportCallback(string folderPath, string layer, string color)
         {
-            GMapOverlay newOverlay = new GMapOverlay(mLayer);
-            GMapOverlay photoOverlay = new GMapOverlay(layer);
-            buildPhotoMarker(photoOverlay, folderPath, color);
+            GMapOverlay overlay = new GMapOverlay(layer);
+            buildPhotoMarker(overlay, folderPath, color);
         }
 
         private void menuRunGeoTag_Click(object sender, EventArgs e)
