@@ -164,6 +164,12 @@ namespace EXIFGeotagger //v0._1
                 r.Inspector = Convert.ToString(row[10]);
                 r.TimeStamp = Convert.ToDateTime(row[12]);
                 r.GeoMark = Convert.ToBoolean(row[13]);
+                r.Side = Convert.ToString(row[19]);
+                r.Road = Convert.ToInt32(row[20]);
+                r.Carriageway = Convert.ToInt32(row[21]);
+                r.ERP = Convert.ToInt32(row[22]);
+                r.FaultID = Convert.ToInt32(row[23]);
+
                 mRecordDict.Add(r.PhotoName, r);
             }
             catch (Exception e)
@@ -176,7 +182,7 @@ namespace EXIFGeotagger //v0._1
         {
             Serializer s = new Serializer(path);
             mRecordDict = s.deserialize();
-            //plotLayer();
+            plotLayer(mLayer, mlayerColourHex);
         }
        
 
@@ -282,7 +288,6 @@ namespace EXIFGeotagger //v0._1
                     markers = mOverlayDict[overlay.Id];
                     int count = markers.Length;
                     int step = getStep(size);
-                    //MarkerTag tag = (MarkerTag)markers[0].Tag;
                     Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
                     for (int i = 0; i < count - 1; i += step)
                     {
@@ -306,7 +311,6 @@ namespace EXIFGeotagger //v0._1
 
         private void refreshUI(GMapOverlay overlay, string color)
         {
-            //apOverlay newOverlay = new GMapOverlay(mLayer);
             gMap.Overlays.Add(overlay);
             GMapMarker[] markers = overlay.Markers.ToArray<GMapMarker>();
 
@@ -401,10 +405,6 @@ namespace EXIFGeotagger //v0._1
 
         private void gMap_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            txtConsole.Clear();
-            //txtConsole.AppendText("Key Code: " + e.KeyCode + Environment.NewLine);
-            //txtConsole.AppendText("Key Value: " + e.KeyValue + Environment.NewLine);
-
             switch (e.KeyCode)
             {
                 case Keys.Down:
@@ -429,14 +429,15 @@ namespace EXIFGeotagger //v0._1
             if (mZoom)
             {
                 mouseDown = true;
-            }
-            zoomOverlay = new GMapOverlay("zoom");
+                zoomOverlay = new GMapOverlay("zoom");
 
-            topLeft = gMap.FromLocalToLatLng(e.X, e.Y);
-            zoomRect = new List<PointLatLng>();
-            var point = gMap.FromLocalToLatLng(e.X, e.Y);
-            txtConsole.Clear();
-            txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
+                topLeft = gMap.FromLocalToLatLng(e.X, e.Y);
+                zoomRect = new List<PointLatLng>();
+                var point = gMap.FromLocalToLatLng(e.X, e.Y);
+                txtConsole.Clear();
+                txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
+            }
+            
         }
 
         private void gMap_MouseMove(object sender, MouseEventArgs e)
