@@ -332,6 +332,13 @@ namespace EXIFGeotagger //v0._1
 
             overlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
+            zoomToMarkers();
+
+
+        }
+
+        private void zoomToMarkers()
+        {
             zoomRect = new List<PointLatLng>();
 
             PointLatLng topLeft = new PointLatLng(max_lat, min_lng);
@@ -832,30 +839,54 @@ namespace EXIFGeotagger //v0._1
                 await Task.Run(() =>
                 {
                     int id = 0;
+                    mRecordDict = new Dictionary<string, Record>();
                     Bitmap bitmap = ColorTable.getBitmap(color, 4);
                     int length = files.Length;
                     int counter = 0;
                     foreach (string file in files)
                     {
+                        id++;
                         MarkerTag tag = new MarkerTag(color, id);
-                        tag.PhotoName = Path.GetFileName(file);
+                        string photo = Path.GetFileName(file);
+                        tag.PhotoName = photo;
                         tag.Path = Path.GetFullPath(file);
                         Image image = new Bitmap(file);
+                        Record r = new Record(photo);
+
                         PropertyItem[] propItems = image.PropertyItems;
                         PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
                         PropertyItem propItemLat = image.GetPropertyItem(0x0002);
                         PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
                         PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                        PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+                        PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+                        //PropertyItem propItemGPSTime = image.GetPropertyItem(0x0007);
+                        //PropertyItem propItemGPSSpeedRef = image.GetPropertyItem(0x000C);
+                        //PropertyItem propItemGPSSpeed = image.GetPropertyItem(0x000D);
+                        PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+
                         image.Dispose();
 
                         byte[] latBytes = propItemLat.Value;
                         byte[] latRefBytes = propItemLatRef.Value;
                         byte[] lonBytes = propItemLon.Value;
                         byte[] lonRefBytes = propItemLonRef.Value;
+                        byte[] altRefBytes = propItemAltRef.Value;
+                        byte[] altBytes = propItemAlt.Value;
+                        //byte[] gpsTimeBytes = propItemGPSTime.Value;
+                        //byte[] gpsSpeedRefBytes = propItemGPSSpeedRef.Value;
+                        //byte[] gpsSpeedBytes = propItemGPSSpeed.Value;
+                        byte[] dateTimeBytes = propItemDateTime.Value;
+
+
                         string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
                         string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
+                        string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
                         double latitude = byteToDegrees(latBytes);
                         double longitude = byteToDegrees(lonBytes);
+                        double altitude = byteToDecimal(altBytes);
+
+                        DateTime dateTime = byteToDate(dateTimeBytes);
 
                         if (latitudeRef.Equals("S\0"))
                         {
@@ -865,6 +896,19 @@ namespace EXIFGeotagger //v0._1
                         {
                             longitude = -longitude;
                         }
+                        if (!altRef.Equals("\0"))
+                        {
+                            //altitude = -altitude;
+                        }
+                        r.Latitude = latitude;
+                        r.Longitude = longitude;
+                        r.Altitude = altitude;
+                        r.TimeStamp = dateTime;
+                        r.Path = Path.GetFullPath(file);
+                        r.Id = id.ToString();
+
+                        mRecordDict.Add(photo, r);
+
                         resetMinMax();
                         setMinMax(latitude, longitude);
                         GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
@@ -1008,6 +1052,8 @@ namespace EXIFGeotagger //v0._1
                                 r.Path = path;
                                 r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
                                 mNewRecordDict.Add(photo, r);
+                                resetMinMax();
+                                setMinMax(r.Latitude, r.Longitude);
                                 image.Dispose();
                                 image = null;
                             }
@@ -1063,6 +1109,7 @@ namespace EXIFGeotagger //v0._1
             }
             progressForm.Close();
             connection.Close();
+            zoomToMarkers();
         }
 
         private async Task readFromDatabase(string path, Boolean allRecords)
@@ -1238,6 +1285,41 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
+        private DateTime byteToDate(byte[] b)
+        {
+
+            int year = byteToDateInt(b, 0, 4);
+           
+            int month = byteToDateInt(b, 5, 2);
+            int day = byteToDateInt(b, 8, 2);
+            int hour = byteToDateInt(b, 11, 2);
+            int min = byteToDateInt(b, 14, 2);
+            int sec = byteToDateInt(b, 17, 2);
+            return new DateTime(year, month, day, hour, min, sec); 
+
+        }
+        private int byteToDateInt(byte[] b, int offset, int len) 
+        {
+            byte[] a = new byte[len];
+            Array.Copy(b, offset, a, 0, len);
+            string s = ASCIIEncoding.UTF8.GetString(a);
+            try
+            {
+                int i = Int32.Parse(s);
+                return i;
+            } catch (FormatException e)
+            {
+                return -1;
+            }
+        }
+
+        private double byteToDecimal(byte[] b) //type 5
+        {
+            double numerator = BitConverter.ToInt32(b, 0);
+            double denominator = BitConverter.ToInt32(b, 4);
+
+            return Math.Round(numerator/ denominator, 2);
+        }
         private double byteToDegrees(byte[] source)
         {
             double coordinate = 0;
@@ -1252,7 +1334,7 @@ namespace EXIFGeotagger //v0._1
                 dms *= 60;
                 coordinate += Convert.ToDouble(temp) / Convert.ToDouble(multiplier);
             }
-            return coordinate;
+            return Math.Round(coordinate, 6);
         }
 
         private int getStep(int size)
