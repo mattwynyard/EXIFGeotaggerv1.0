@@ -17,8 +17,8 @@ namespace EXIFGeotagger //v0._1
  /// </summary> 
     public partial class ImportDataForm : Form
     {
-        public event layerVariablesDelegate layerVariables;
-        public delegate void layerVariablesDelegate(string filePath, string layer, string color);
+        public event ImportDataDelegate importData;
+        public delegate void ImportDataDelegate(string filePath, string layer, string color);
         private string mfilePath;
         public EXIFGeoTagger mParent;
         private OpenFileDialog openFileDialog;
@@ -124,11 +124,11 @@ namespace EXIFGeotagger //v0._1
             }
             else if (fileType.Equals("exf"))
             {
-                mParent.deSerializeData(mfilePath);
+                importData(mfilePath, mLayer, mlayerColourHex);
             }
             else if (fileType.Equals("photos"))
             {
-                layerVariables(mfilePath, mLayer, mlayerColourHex);    
+                importData(mfilePath, mLayer, mlayerColourHex);    
             }
         }
 

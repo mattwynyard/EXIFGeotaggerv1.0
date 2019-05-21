@@ -112,6 +112,7 @@
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
     <Compile Include="AWSConnection.cs" />
+    <Compile Include="LayerAttributes.cs" />
     <Compile Include="PhotoForm.cs">
       <SubType>Form</SubType>
     </Compile>

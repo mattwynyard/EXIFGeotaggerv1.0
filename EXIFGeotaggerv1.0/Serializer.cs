@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace EXIFGeotagger
 {
@@ -14,6 +12,7 @@ namespace EXIFGeotagger
         private Dictionary<string, Record> mData;
         private string mPath;
         private Stream stream;
+        private LayerAttributes mLayer;
 
         public Serializer(String path)
         {
@@ -26,14 +25,20 @@ namespace EXIFGeotagger
             mData = data;
         }
 
+        public Serializer(LayerAttributes layer)
+        {
+            mLayer = layer;
+        }
+
         public int serialize(String path)
         {
             Stream stream = null;
             try
             {
                 IFormatter formatter = new BinaryFormatter();
-                stream = new FileStream(path, FileMode.Create, FileAccess.Write);
-                formatter.Serialize(stream, mData);
+                stream = new FileStream(path, FileMode.Append, FileAccess.Write);
+
+                formatter.Serialize(stream, mLayer);
 
             } catch (IOException ex)
             {
@@ -47,11 +52,19 @@ namespace EXIFGeotagger
            return 1; 
         }
 
-        public Dictionary<string, Record> deserialize()
+        //public Dictionary<string, Record> deserialize()
+        //{
+        //    IFormatter formatter = new BinaryFormatter();
+        //    Dictionary<string, Record> dict = (Dictionary<string, Record>)formatter.Deserialize(stream);
+        //    return dict;
+        //}
+
+        public LayerAttributes deserialize()
         {
             IFormatter formatter = new BinaryFormatter();
-            Dictionary<string, Record> dict = (Dictionary<string, Record>)formatter.Deserialize(stream);
-            return dict;
+            LayerAttributes layer = (LayerAttributes)formatter.Deserialize(stream);
+            stream.Close();
+            return layer;
         }
     }
 

@@ -44,6 +44,7 @@ namespace EXIFGeotagger //v0._1
         private int mSelectedOverlayIndex;
         private Dictionary<string, Record> mRecordDict;
         private  Dictionary<string, Record> mNewRecordDict;
+        private LayerAttributes mLayerAttributes;
         public string[] mFiles; //array containing absolute paths of photos.
         public string outFolder; //folder path to save geotag photos
 
@@ -178,14 +179,6 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
-        public void deSerializeData(String path)
-        {
-            Serializer s = new Serializer(path);
-            mRecordDict = s.deserialize();
-            plotLayer(mLayer, mlayerColourHex);
-        }
-       
-
         #region Plotting
         /// <summary>
         /// Called from <see cref="importAccessData(object sender, EventArgs e)"/> creates new overaly and adds it to overlays in map control
@@ -282,7 +275,6 @@ namespace EXIFGeotagger //v0._1
                         GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
                         overlay.Markers.Add(newMarker);
                     }
-
                 }
                 else
                 {
@@ -484,7 +476,6 @@ namespace EXIFGeotagger //v0._1
             if (mouseDown && mZoom)
             {
                 zoomOverlay.Polygons.Remove(rect);
-
                 gMap.Overlays.Remove(zoomOverlay);
                 bottomRight = gMap.FromLocalToLatLng(e.X, e.Y);
                 var point = gMap.FromLocalToLatLng(e.X, e.Y);
@@ -495,7 +486,6 @@ namespace EXIFGeotagger //v0._1
                     gMap.SetZoomToFitRect(polygonToRect(zoomRect));
                 }
                 zoomRect.Clear();
-
             }
             mouseDown = false;
 
@@ -688,7 +678,7 @@ namespace EXIFGeotagger //v0._1
             mRecordDict = new Dictionary<string, Record>();
             importForm.mParent = this;
             importForm.Show();
-            importForm.layerVariables += photoImportCallback;
+            importForm.importData += photoImportCallback;
         }
 
 
@@ -736,12 +726,20 @@ namespace EXIFGeotagger //v0._1
             saveDialog.Filter = "EXIF Data|*.exf";
             saveDialog.Title = "Save an EXIF data File";
             DialogResult result = saveDialog.ShowDialog();
-
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(saveDialog.FileName))
             {
                 String inPath = saveDialog.FileName;
-                Serializer s = new Serializer(mRecordDict);
-                s.serialize(inPath);
+                //Serializer s = new Serializer(mRecordDict);
+                Serializer s = new Serializer(mLayerAttributes);
+                int saveResult = s.serialize(inPath);
+                if (saveResult == 1)
+                {
+                    string message = "File " + inPath + "\n\nSaved succesfully";
+                    MsgBox("File Saved", message, MessageBoxButtons.OK);
+                } else
+                {
+                    MsgBox("Save Error", "File failed to save" , MessageBoxButtons.OK);
+                }
             }
         }
 
@@ -766,8 +764,8 @@ namespace EXIFGeotagger //v0._1
             ImportDataForm importForm = new ImportDataForm("exf");
             mRecordDict = new Dictionary<string, Record>();
             importForm.mParent = this;
-
             importForm.Show();
+            importForm.importData += exfImportCallback;
 
         }
 
@@ -784,6 +782,18 @@ namespace EXIFGeotagger //v0._1
         {
             GMapOverlay overlay = new GMapOverlay(layer);
             buildPhotoMarker(overlay, folderPath, color);
+        }
+
+        public void exfImportCallback(string folderPath, string layer, string color)
+        {
+            Serializer s = new Serializer(folderPath);
+            mLayerAttributes = s.deserialize();
+            mRecordDict = mLayerAttributes.Data;
+            max_lat = mLayerAttributes.MaxLat;
+            min_lat = mLayerAttributes.MinLat;
+            max_lng = mLayerAttributes.MaxLng;
+            min_lng = mLayerAttributes.MinLng;
+            plotLayer(layer, color);
         }
 
         private void menuRunGeoTag_Click(object sender, EventArgs e)
@@ -862,9 +872,6 @@ namespace EXIFGeotagger //v0._1
                         PropertyItem propItemLon = image.GetPropertyItem(0x0004);
                         PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
                         PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-                        //PropertyItem propItemGPSTime = image.GetPropertyItem(0x0007);
-                        //PropertyItem propItemGPSSpeedRef = image.GetPropertyItem(0x000C);
-                        //PropertyItem propItemGPSSpeed = image.GetPropertyItem(0x000D);
                         PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
 
                         image.Dispose();
@@ -875,9 +882,6 @@ namespace EXIFGeotagger //v0._1
                         byte[] lonRefBytes = propItemLonRef.Value;
                         byte[] altRefBytes = propItemAltRef.Value;
                         byte[] altBytes = propItemAlt.Value;
-                        //byte[] gpsTimeBytes = propItemGPSTime.Value;
-                        //byte[] gpsSpeedRefBytes = propItemGPSSpeedRef.Value;
-                        //byte[] gpsSpeedBytes = propItemGPSSpeed.Value;
                         byte[] dateTimeBytes = propItemDateTime.Value;
 
 
@@ -900,7 +904,7 @@ namespace EXIFGeotagger //v0._1
                         }
                         if (!altRef.Equals("\0"))
                         {
-                            //altitude = -altitude;
+                            altitude = -altitude;
                         }
                         r.Latitude = latitude;
                         r.Longitude = longitude;
@@ -922,7 +926,6 @@ namespace EXIFGeotagger //v0._1
                         if (progressValue != null)
                         {
                             progressValue.Report(percentInt);
-
                         }
                         token.ThrowIfCancellationRequested();
                     }
@@ -933,6 +936,7 @@ namespace EXIFGeotagger //v0._1
                 MessageBoxButtons buttons = MessageBoxButtons.OK;
                 MsgBox(message, title, buttons);
                 progressForm.Close();
+                setLayerAttributes();
                 refreshUI(overlay, color);
             }
             catch (ArgumentException ex)
@@ -1111,6 +1115,7 @@ namespace EXIFGeotagger //v0._1
                 Close();
             }
             progressForm.Close();
+            setLayerAttributes();
             connection.Close();
             zoomToMarkers();
         }
@@ -1212,22 +1217,25 @@ namespace EXIFGeotagger //v0._1
 
         private void setMinMax(double lat, double lng)
         {
-            if (lat > max_lat)
-            {
+            int maxLat = lat.CompareTo(max_lat);
+            int minLat = lat.CompareTo(min_lat);
+            int maxLng = lng.CompareTo(max_lng);
+            int minLng = lng.CompareTo(min_lng);
+
+            if (maxLat > 0)
                 max_lat = lat;
-            }
-            if (lat < min_lat)
-            {
+            if (minLat < 0)
                 min_lat = lat;
-            }
-            if (lng > max_lng)
-            {
+            if (maxLng > 0)
                 max_lng = lng;
-            }
-            if (lng < min_lng)
-            {
+            if (minLng < 0)
                 min_lng = lng;
-            }
+        }
+
+        private void setLayerAttributes() {
+            mLayerAttributes = new LayerAttributes();
+            mLayerAttributes.Data = mRecordDict;
+            mLayerAttributes.setMinMax(max_lat, min_lat, max_lng, min_lng);
         }
 
         private void resetMinMax()
