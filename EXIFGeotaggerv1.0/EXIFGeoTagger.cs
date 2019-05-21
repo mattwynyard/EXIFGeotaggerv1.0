@@ -215,6 +215,7 @@ namespace EXIFGeotagger //v0._1
 
             newOverlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
+            zoomToMarkers();
         }
 
         /// <summary>
@@ -839,6 +840,7 @@ namespace EXIFGeotagger //v0._1
                 await Task.Run(() =>
                 {
                     int id = 0;
+                    resetMinMax();
                     mRecordDict = new Dictionary<string, Record>();
                     Bitmap bitmap = ColorTable.getBitmap(color, 4);
                     int length = files.Length;
@@ -909,7 +911,7 @@ namespace EXIFGeotagger //v0._1
 
                         mRecordDict.Add(photo, r);
 
-                        resetMinMax();
+                        
                         setMinMax(latitude, longitude);
                         GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
                         marker.Tag = tag;
@@ -982,6 +984,7 @@ namespace EXIFGeotagger //v0._1
                 await Task.Run(() =>
                 {
                     Record r;
+                    resetMinMax();
                     int length = _files.Length;
                     geoTagCount = 0;
                     errorCount = 0;
@@ -1052,7 +1055,7 @@ namespace EXIFGeotagger //v0._1
                                 r.Path = path;
                                 r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
                                 mNewRecordDict.Add(photo, r);
-                                resetMinMax();
+                                
                                 setMinMax(r.Latitude, r.Longitude);
                                 image.Dispose();
                                 image = null;
