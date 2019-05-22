@@ -20,6 +20,7 @@ using GMap.NET.WindowsForms.Markers;
 using System.Threading;
 using Amazon;
 using System.Net;
+using System.Collections.Concurrent;
 
 public delegate Image getAWSImage();
 
@@ -43,6 +44,7 @@ namespace EXIFGeotagger //v0._1
         //index of currently layer in checkbox
         private int mSelectedOverlayIndex;
         private Dictionary<string, Record> mRecordDict;
+        private static readonly Object obj = new Object();
         private  Dictionary<string, Record> mNewRecordDict;
         private LayerAttributes mLayerAttributes;
         public string[] mFiles; //array containing absolute paths of photos.
@@ -76,6 +78,7 @@ namespace EXIFGeotagger //v0._1
 
         private Boolean mouseInBounds;
         private CancellationTokenSource _cts;
+        private BlockingCollection<string> fileQueue;
 
         /// <summary>
         /// Class constructor to intialize form
@@ -580,6 +583,10 @@ namespace EXIFGeotagger //v0._1
             {
                 try
                 {
+                    if (pictureBox.Image != null)
+                    {
+                        pictureBox.Image.Dispose();
+                    }
                     lbPhoto.Text = tag.PhotoName;
                     pictureBox.Image = Image.FromFile(tag.Path);
                 }
@@ -728,8 +735,7 @@ namespace EXIFGeotagger //v0._1
             DialogResult result = saveDialog.ShowDialog();
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(saveDialog.FileName))
             {
-                String inPath = saveDialog.FileName;
-                //Serializer s = new Serializer(mRecordDict);
+                string inPath = saveDialog.FileName;
                 Serializer s = new Serializer(mLayerAttributes);
                 int saveResult = s.serialize(inPath);
                 if (saveResult == 1)
@@ -806,6 +812,7 @@ namespace EXIFGeotagger //v0._1
 
         public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords)
         {
+            await buildQueue(inPath);
             await readFromDatabase(dbPath, allRecords);
             await writeGeoTag(inPath, outPath);
             mRecordDict = mNewRecordDict;
@@ -813,6 +820,18 @@ namespace EXIFGeotagger //v0._1
             plotLayer(layer, color);
         }
 
+        public async Task buildQueue(string path)
+        {
+            await Task.Run(() =>
+            {
+                fileQueue = new BlockingCollection<string>();
+                string[] files = Directory.GetFiles(path);
+                foreach (string file in files)
+                {
+                    fileQueue.Add(file);
+                }
+            });
+        }
 
         #endregion
 
@@ -838,6 +857,12 @@ namespace EXIFGeotagger //v0._1
             progressForm.cancel += cancelImport;
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
+            int counter = 0;
+            int id = 0;
+            resetMinMax();
+            int length = files.Length;
+            Bitmap bitmap = ColorTable.getBitmap(color, 4);
+            mRecordDict = new Dictionary<string, Record>();
             var progressHandler1 = new Progress<int>(value =>
             {
                 progressForm.ProgressValue = value;
@@ -847,17 +872,15 @@ namespace EXIFGeotagger //v0._1
             var progressValue = progressHandler1 as IProgress<int>;
             try
             {
+                
                 await Task.Run(() =>
                 {
-                    int id = 0;
-                    resetMinMax();
-                    mRecordDict = new Dictionary<string, Record>();
-                    Bitmap bitmap = ColorTable.getBitmap(color, 4);
-                    int length = files.Length;
-                    int counter = 0;
+ 
                     foreach (string file in files)
                     {
-                        id++;
+                        lock (obj) {
+                            id++;
+                        }
                         MarkerTag tag = new MarkerTag(color, id);
                         string photo = Path.GetFileName(file);
                         tag.PhotoName = photo;
@@ -913,21 +936,23 @@ namespace EXIFGeotagger //v0._1
                         r.Path = Path.GetFullPath(file);
                         r.Id = id.ToString();
 
-                        mRecordDict.Add(photo, r);
-
-                        
-                        setMinMax(latitude, longitude);
-                        GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
-                        marker.Tag = tag;
-                        overlay.Markers.Add(marker);
-                        counter++;
-                        double percent = ((double)counter / length) * 100;
-                        int percentInt = (int)Math.Ceiling(percent);
-                        if (progressValue != null)
+                        lock (obj)
                         {
-                            progressValue.Report(percentInt);
+                            mRecordDict.Add(photo, r);
+                            counter++;
+                            setMinMax(latitude, longitude);
+                            GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
+                            marker.Tag = tag;
+                            overlay.Markers.Add(marker);
+
+                            double percent = ((double)counter / length) * 100;
+                            int percentInt = (int)Math.Ceiling(percent);
+                            if (progressValue != null)
+                            {
+                                progressValue.Report(percentInt);
+                            }
+                            token.ThrowIfCancellationRequested();
                         }
-                        token.ThrowIfCancellationRequested();
                     }
                 });
                 progressValue.Report(100);
@@ -967,15 +992,138 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
+        private void ProcessFile(object a)
+        {
+            ThreadInfo threadInfo = a as ThreadInfo;
+            string _file;
+            string outPath;
+            int length;
+            Record r;
+            lock (obj) {
+                length = threadInfo.Length;
+                outPath = threadInfo.OutPath;
+                _file = fileQueue.Take();
+            }
+            Bitmap image = new Bitmap(_file);
+            PropertyItem[] propItems = image.PropertyItems;
+            PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+            PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+            PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+            PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+            PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+            PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+            PropertyItem propItemSat = image.GetPropertyItem(0x0008);
+            PropertyItem propItemDir = image.GetPropertyItem(0x0011);
+            PropertyItem propItemVel = image.GetPropertyItem(0x000D);
+            PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
+            PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+
+            try
+            {
+                lock (obj)
+                {
+                    r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
+                }
+
+                if (r.GeoMark)
+                {
+                    RecordUtil RecordUtil = new RecordUtil(r);
+                    propItemLat = RecordUtil.getEXIFCoordinate("latitude", propItemLat);
+                    propItemLon = RecordUtil.getEXIFCoordinate("longitude", propItemLon);
+                    propItemAlt = RecordUtil.getEXIFNumber(propItemAlt, "altitude", 10);
+                    propItemLatRef = RecordUtil.getEXIFCoordinateRef("latitude", propItemLatRef);
+                    propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
+                    propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
+                    propItemAltRef = RecordUtil.getEXIFAltitudeRef(propItemAltRef);
+                    propItemDir = RecordUtil.getEXIFNumber(propItemDir, "bearing", 10);
+                    propItemVel = RecordUtil.getEXIFNumber(propItemVel, "velocity", 100);
+                    propItemPDop = RecordUtil.getEXIFNumber(propItemPDop, "pdop", 10);
+                    propItemSat = RecordUtil.getEXIFInt(propItemSat, r.Satellites);
+                    propItemDateTime = RecordUtil.getEXIFDateTime(propItemDateTime);
+                    RecordUtil = null;
+                    image.SetPropertyItem(propItemLat);
+                    image.SetPropertyItem(propItemLon);
+                    image.SetPropertyItem(propItemLatRef);
+                    image.SetPropertyItem(propItemLonRef);
+                    image.SetPropertyItem(propItemAlt);
+                    image.SetPropertyItem(propItemAltRef);
+                    image.SetPropertyItem(propItemDir);
+                    image.SetPropertyItem(propItemVel);
+                    image.SetPropertyItem(propItemPDop);
+                    image.SetPropertyItem(propItemSat);
+                    image.SetPropertyItem(propItemDateTime);
+                    r.GeoTag = true;
+                    string photoName = Path.GetFileNameWithoutExtension(_file);
+                    string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
+                    OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
+                    string photo = (string)commandGetPhoto.ExecuteScalar();
+                    r.PhotoName = photo; //new photo name 
+                    string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
+                    OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
+                    commandGeoTag.ExecuteNonQuery();
+                    string path = outPath + "\\" + photo + ".jpg";
+                    string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
+                    OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+                    commandPath.ExecuteNonQuery();
+
+                    image.Save(path);
+                    r.Path = path;
+                    lock (obj)
+                    {
+                        r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
+                        mNewRecordDict.Add(photo, r);
+                        setMinMax(r.Latitude, r.Longitude);
+                    }
+                    image.Dispose();
+                    image = null;
+                }
+                else
+                {
+                    lock (obj)
+                    {
+                        stationaryCount++;
+                    }
+                }
+            }
+            catch (KeyNotFoundException ex)
+            {
+                lock (obj)
+                {
+                    errorCount++;
+                }
+                image.Dispose();
+                image = null;
+            }
+            lock (obj)
+            {
+                geoTagCount++;
+            }
+            double percent = ((double)geoTagCount / length) * 100;
+            int percentInt = (int)Math.Ceiling(percent);
+            //if (progressForm.ProgressValue != null)
+            //{
+            //    progressValue.Report(percentInt);
+
+            //}
+            threadInfo.Token.ThrowIfCancellationRequested();
+ 
+
+    
+        }
         private async Task writeGeoTag(string inPath, string outPath)
         {
+            ThreadInfo threadInfo = new ThreadInfo();
+            threadInfo.Length = fileQueue.Count;
+            threadInfo.OutPath = outPath;
             ProgressForm progressForm = new ProgressForm("Writing geotags to photos...");
+            threadInfo.ProgressForm = progressForm;
             string[] _files = Directory.GetFiles(inPath);
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
+            threadInfo.Token = token;
             var progressHandler1 = new Progress<int>(value =>
             {
                 progressForm.ProgressValue = value;
@@ -983,112 +1131,118 @@ namespace EXIFGeotagger //v0._1
 
             });
             var progressValue = progressHandler1 as IProgress<int>;
+            threadInfo.ProgressHandler = progressValue;
+            Record r;
+            resetMinMax();
+            int length = _files.Length;
+            geoTagCount = 0;
+            errorCount = 0;
+            stationaryCount = 0;
+
+
+            mNewRecordDict = new Dictionary<string, Record>();
+
+            
             try
             {
                 await Task.Run(() =>
                 {
-                    Record r;
-                    resetMinMax();
-                    int length = _files.Length;
-                    geoTagCount = 0;
-                    errorCount = 0;
-                    stationaryCount = 0;
-                    mNewRecordDict = new Dictionary<string, Record>();
-                    foreach (string _file in _files)
-                    {
-                        Bitmap image = new Bitmap(_file);
-                        PropertyItem[] propItems = image.PropertyItems;
-                        PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                        PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                        PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                        PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                        PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
-                        PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-                        PropertyItem propItemSat = image.GetPropertyItem(0x0008);
-                        PropertyItem propItemDir = image.GetPropertyItem(0x0011);
-                        PropertyItem propItemVel = image.GetPropertyItem(0x000D);
-                        PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
-                        PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(ProcessFile), threadInfo);
+                    //    foreach (string _file in _files)
+                    //    {
+                    //        Bitmap image = new Bitmap(_file);
+                    //        PropertyItem[] propItems = image.PropertyItems;
+                    //        PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+                    //        PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+                    //        PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+                    //        PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                    //        PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+                    //        PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+                    //        PropertyItem propItemSat = image.GetPropertyItem(0x0008);
+                    //        PropertyItem propItemDir = image.GetPropertyItem(0x0011);
+                    //        PropertyItem propItemVel = image.GetPropertyItem(0x000D);
+                    //        PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
+                    //        PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
 
-                        try
-                        {
-                            r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
+                    //        try
+                    //        {
+                    //            r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
 
-                            if (r.GeoMark)
-                            {
-                                RecordUtil RecordUtil = new RecordUtil(r);
-                                propItemLat = RecordUtil.getEXIFCoordinate("latitude", propItemLat);
-                                propItemLon = RecordUtil.getEXIFCoordinate("longitude", propItemLon);
-                                propItemAlt = RecordUtil.getEXIFNumber(propItemAlt, "altitude", 10);
-                                propItemLatRef = RecordUtil.getEXIFCoordinateRef("latitude", propItemLatRef);
-                                propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
-                                propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
-                                propItemAltRef = RecordUtil.getEXIFAltitudeRef(propItemAltRef);
-                                propItemDir = RecordUtil.getEXIFNumber(propItemDir, "bearing", 10);
-                                propItemVel = RecordUtil.getEXIFNumber(propItemVel, "velocity", 100);
-                                propItemPDop = RecordUtil.getEXIFNumber(propItemPDop, "pdop", 10);
-                                propItemSat = RecordUtil.getEXIFInt(propItemSat, r.Satellites);
-                                propItemDateTime = RecordUtil.getEXIFDateTime(propItemDateTime);
-                                RecordUtil = null;
-                                image.SetPropertyItem(propItemLat);
-                                image.SetPropertyItem(propItemLon);
-                                image.SetPropertyItem(propItemLatRef);
-                                image.SetPropertyItem(propItemLonRef);
-                                image.SetPropertyItem(propItemAlt);
-                                image.SetPropertyItem(propItemAltRef);
-                                image.SetPropertyItem(propItemDir);
-                                image.SetPropertyItem(propItemVel);
-                                image.SetPropertyItem(propItemPDop);
-                                image.SetPropertyItem(propItemSat);
-                                image.SetPropertyItem(propItemDateTime);
-                                r.GeoTag = true;
-                                string photoName = Path.GetFileNameWithoutExtension(_file);
-                                string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
-                                OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
-                                string photo = (string)commandGetPhoto.ExecuteScalar();
-                                r.PhotoName = photo; //new photo name 
-                                string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
-                                OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
-                                commandGeoTag.ExecuteNonQuery();
-                                string path = outPath + "\\" + photo + ".jpg";
-                                string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
-                                OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
-                                commandPath.ExecuteNonQuery();
+                    //            if (r.GeoMark)
+                    //            {
+                    //                RecordUtil RecordUtil = new RecordUtil(r);
+                    //                propItemLat = RecordUtil.getEXIFCoordinate("latitude", propItemLat);
+                    //                propItemLon = RecordUtil.getEXIFCoordinate("longitude", propItemLon);
+                    //                propItemAlt = RecordUtil.getEXIFNumber(propItemAlt, "altitude", 10);
+                    //                propItemLatRef = RecordUtil.getEXIFCoordinateRef("latitude", propItemLatRef);
+                    //                propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
+                    //                propItemLonRef = RecordUtil.getEXIFCoordinateRef("longitude", propItemLonRef);
+                    //                propItemAltRef = RecordUtil.getEXIFAltitudeRef(propItemAltRef);
+                    //                propItemDir = RecordUtil.getEXIFNumber(propItemDir, "bearing", 10);
+                    //                propItemVel = RecordUtil.getEXIFNumber(propItemVel, "velocity", 100);
+                    //                propItemPDop = RecordUtil.getEXIFNumber(propItemPDop, "pdop", 10);
+                    //                propItemSat = RecordUtil.getEXIFInt(propItemSat, r.Satellites);
+                    //                propItemDateTime = RecordUtil.getEXIFDateTime(propItemDateTime);
+                    //                RecordUtil = null;
+                    //                image.SetPropertyItem(propItemLat);
+                    //                image.SetPropertyItem(propItemLon);
+                    //                image.SetPropertyItem(propItemLatRef);
+                    //                image.SetPropertyItem(propItemLonRef);
+                    //                image.SetPropertyItem(propItemAlt);
+                    //                image.SetPropertyItem(propItemAltRef);
+                    //                image.SetPropertyItem(propItemDir);
+                    //                image.SetPropertyItem(propItemVel);
+                    //                image.SetPropertyItem(propItemPDop);
+                    //                image.SetPropertyItem(propItemSat);
+                    //                image.SetPropertyItem(propItemDateTime);
+                    //                r.GeoTag = true;
+                    //                string photoName = Path.GetFileNameWithoutExtension(_file);
+                    //                string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
+                    //                OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
+                    //                string photo = (string)commandGetPhoto.ExecuteScalar();
+                    //                r.PhotoName = photo; //new photo name 
+                    //                string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
+                    //                OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
+                    //                commandGeoTag.ExecuteNonQuery();
+                    //                string path = outPath + "\\" + photo + ".jpg";
+                    //                string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
+                    //                OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+                    //                commandPath.ExecuteNonQuery();
 
-                                image.Save(path);
-                                r.Path = path;
-                                r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
-                                mNewRecordDict.Add(photo, r);
-                                
-                                setMinMax(r.Latitude, r.Longitude);
-                                image.Dispose();
-                                image = null;
-                            }
-                            else
-                            {
-                                stationaryCount++;
-                            }
-                        }
-                        catch (KeyNotFoundException ex)
-                        {
-                            errorCount++;
-                            image.Dispose();
-                            image = null;
-                        }
-                        geoTagCount++;
-                        double percent = ((double)geoTagCount / length) * 100;
-                        int percentInt = (int)Math.Ceiling(percent);
-                        if (progressValue != null)
-                        {
-                            progressValue.Report(percentInt);
+                    //                image.Save(path);
+                    //                r.Path = path;
+                    //                r = mRecordDict[Path.GetFileNameWithoutExtension(_file)];
+                    //                mNewRecordDict.Add(photo, r);
 
-                        }
-                        token.ThrowIfCancellationRequested();
-                    }
-                    //photoIcon.Dispose();
-                    
-                });
-            }
+                    //                setMinMax(r.Latitude, r.Longitude);
+                    //                image.Dispose();
+                    //                image = null;
+                    //            }
+                    //            else
+                    //            {
+                    //                stationaryCount++;
+                    //            }
+                    //        }
+                    //        catch (KeyNotFoundException ex)
+                    //        {
+                    //            errorCount++;
+                    //            image.Dispose();
+                    //            image = null;
+                    //        }
+                    //        geoTagCount++;
+                    //        double percent = ((double)geoTagCount / length) * 100;
+                    //        int percentInt = (int)Math.Ceiling(percent);
+                    //        if (progressValue != null)
+                    //        {
+                    //            progressValue.Report(percentInt);
+
+                    //        }
+                    //        token.ThrowIfCancellationRequested();
+                    //    }
+                    //    //photoIcon.Dispose();
+
+                    });
+                }
             catch (ArgumentException ex)
             {
 
@@ -1385,6 +1539,11 @@ namespace EXIFGeotagger //v0._1
         }
 
         private void BtnRight_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void PictureBox_Click_1(object sender, EventArgs e)
         {
 
         }
