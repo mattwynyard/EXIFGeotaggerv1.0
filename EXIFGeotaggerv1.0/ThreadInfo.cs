@@ -10,21 +10,19 @@ namespace EXIFGeotagger
 {
     class ThreadInfo
     {
-        //private ProgressForm progressForm;
         public ThreadInfo()
         {
 
         }
 
-        public ConcurrentQueue<string> JobQueue { get; set; }
-
+        public string File { get; set; }
         public string OutPath { get; set; }
 
         public int Length { get; set; }
 
-        public ProgressForm ProgressForm { get; set; }
+        public Record Record { get; set; }
 
-        public CancellationToken Token { get; set; }
+        //public ProgressForm ProgressForm { get; set; }
 
         public IProgress<int> ProgressHandler { get; set; }
 
