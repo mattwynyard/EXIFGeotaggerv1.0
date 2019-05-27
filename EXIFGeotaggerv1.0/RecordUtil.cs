@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Drawing.Imaging;
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -81,7 +81,10 @@ namespace EXIFGeotagger
 
         public PropertyItem getEXIFDateTime(PropertyItem item)
         {
-            byte[] bytes = ASCIIEncoding.ASCII.GetBytes(record.TimeStamp.ToString());
+            //string dateTime = record.TimeStamp.ToString();
+            DateTime date = Convert.ToDateTime(record.TimeStamp.ToString());
+            string dateTime = date.ToString("yyyy:MM:dd HH:mm:ss") + "\0";
+            byte[] bytes = Encoding.ASCII.GetBytes(dateTime);
             item.Value = bytes;
             return item;
         }

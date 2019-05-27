@@ -28,12 +28,15 @@ namespace EXIFGeotagger //v0._1
 {
     public partial class EXIFGeoTagger : Form
     {
- 
+
+        public delegate Task<GMapOverlay> ReadGeoTagDelegate(string folderPath, string layer, string color);
+
         private Image image; //photo in photo viewer
         public string mDBPath;
         public string mLayer; //imported layer
         public Color mlayerColour;
         public String mlayerColourHex;
+        private int id;
 
         private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
@@ -290,7 +293,7 @@ namespace EXIFGeotagger //v0._1
                     int count = markers.Length;
                     int step = getStep(size);
                     Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
-                    for (int i = 0; i < count - 1; i += step)
+                    for (int i = 0; i < count; i += step)
                     {
                         tag = (MarkerTag)markers[i].Tag;
                         tag.Size = size;
@@ -690,7 +693,7 @@ namespace EXIFGeotagger //v0._1
             mRecordDict = new Dictionary<string, Record>();
             importForm.mParent = this;
             importForm.Show();
-            importForm.importData += photoImportCallback;
+            importForm.importData += readGeoTagCallback;
         }
 
 
@@ -789,11 +792,7 @@ namespace EXIFGeotagger //v0._1
         /// <param name="folderPath"></param>
         /// <param name="layer"></param>
         /// <param name="color"></param>
-        public void photoImportCallback(string folderPath, string layer, string color)
-        {
-            GMapOverlay overlay = new GMapOverlay(layer);
-            buildPhotoMarker(overlay, folderPath, color);
-        }
+        
 
         public void exfImportCallback(string folderPath, string layer, string color)
         {
@@ -820,7 +819,6 @@ namespace EXIFGeotagger //v0._1
             await buildQueue(inPath);
             await readFromDatabase(dbPath, allRecords);
             await writeGeoTag(inPath, outPath);
-
             await geoTagComplete(layer, color);
             progressForm.Close();
             setLayerAttributes();
@@ -829,6 +827,18 @@ namespace EXIFGeotagger //v0._1
             mRecordDict = mNewRecordDict;
             mNewRecordDict = null;
             plotLayer(layer, color);
+        }
+
+        public async void readGeoTagCallback(string folderPath, string layer, string color)
+        {
+            await buildQueue(folderPath);
+            GMapOverlay overlay = new GMapOverlay(layer);
+            overlay = await readGeoTag(folderPath, layer, color);
+            progressForm.Close();
+            setLayerAttributes();
+            zoomToMarkers();
+            //plotLayer(layer, color);
+            refreshUI(overlay, color);
         }
 
         public async Task geoTagComplete(string layer, string color)
@@ -843,9 +853,7 @@ namespace EXIFGeotagger //v0._1
                 if (result == DialogResult.Yes)
                 {
                     Close();
-                }
-                
-                
+                }     
             });
         }
 
@@ -871,23 +879,19 @@ namespace EXIFGeotagger //v0._1
                 _cts.Cancel();
         }
 
-        /// <summary>
-        /// Reads exif data from each photo and builds markers on map
-        /// </summary>
-        /// <param name="overlay"> the overlay the markers are being added to</param>
-        /// <param name="folderPath">the location of the photos</param>
-        /// <param name="color">the color off the markers</param>
-        private async void buildPhotoMarker(GMapOverlay overlay, string folderPath, string color)
+        private async Task<GMapOverlay> readGeoTag(string folderPath, string layer, string color)
         {
+            mQueueSize = fileQueue.Count;
             string[] files = Directory.GetFiles(folderPath);
-            ProgressForm progressForm = new ProgressForm("Importing Photos...");
+            GMapOverlay overlay = new GMapOverlay(layer);
+            progressForm = new ProgressForm("Importing Photos...");
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
-            int counter = 0;
-            int id = 0;
+            geoTagCount = 0;
+            id = 0;
             resetMinMax();
             int length = files.Length;
             Bitmap bitmap = ColorTable.getBitmap(color, 4);
@@ -899,117 +903,128 @@ namespace EXIFGeotagger //v0._1
 
             });
             var progressValue = progressHandler1 as IProgress<int>;
-            try
+            await Task.Run(() =>
             {
-                
-                await Task.Run(() =>
+                try
                 {
- 
-                    foreach (string file in files)
+                    while (fileQueue.Count != 0)
                     {
-                        lock (obj) {
-                            id++;
-                        }
+                        ThreadInfo threadInfo = new ThreadInfo();
+                        threadInfo.Length = mQueueSize;
+                        threadInfo.ProgressHandler = progressHandler1;
+                        threadInfo.File = fileQueue.Take();
+                        Func<ThreadInfo, Record> method = readData;
+                        IAsyncResult read = method.BeginInvoke(threadInfo, null, null);
+                        Record r = method.EndInvoke(read);
                         MarkerTag tag = new MarkerTag(color, id);
-                        string photo = Path.GetFileName(file);
-                        tag.PhotoName = photo;
-                        tag.Path = Path.GetFullPath(file);
-                        Image image = new Bitmap(file);
-                        Record r = new Record(photo);
-
-                        PropertyItem[] propItems = image.PropertyItems;
-                        PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                        PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                        PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                        PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                        PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
-                        PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-                        PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
-
-                        image.Dispose();
-
-                        byte[] latBytes = propItemLat.Value;
-                        byte[] latRefBytes = propItemLatRef.Value;
-                        byte[] lonBytes = propItemLon.Value;
-                        byte[] lonRefBytes = propItemLonRef.Value;
-                        byte[] altRefBytes = propItemAltRef.Value;
-                        byte[] altBytes = propItemAlt.Value;
-                        byte[] dateTimeBytes = propItemDateTime.Value;
-
-
-                        string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
-                        string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
-                        string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
-                        double latitude = byteToDegrees(latBytes);
-                        double longitude = byteToDegrees(lonBytes);
-                        double altitude = byteToDecimal(altBytes);
-
-                        DateTime dateTime = byteToDate(dateTimeBytes);
-
-                        if (latitudeRef.Equals("S\0"))
-                        {
-                            latitude = -latitude;
-                        }
-                        if (longitudeRef.Equals("W\0"))
-                        {
-                            longitude = -longitude;
-                        }
-                        if (!altRef.Equals("\0"))
-                        {
-                            altitude = -altitude;
-                        }
-                        r.Latitude = latitude;
-                        r.Longitude = longitude;
-                        r.Altitude = altitude;
-                        r.TimeStamp = dateTime;
-                        r.Path = Path.GetFullPath(file);
-                        r.Id = id.ToString();
-
-                        lock (obj)
-                        {
-                            mRecordDict.Add(photo, r);
-                            counter++;
-                            setMinMax(latitude, longitude);
-                            GMapMarker marker = new GMarkerGoogle(new PointLatLng(latitude, longitude), bitmap);
-                            marker.Tag = tag;
-                            overlay.Markers.Add(marker);
-
-                            double percent = ((double)counter / length) * 100;
-                            int percentInt = (int)Math.Ceiling(percent);
-                            if (progressValue != null)
-                            {
-                                progressValue.Report(percentInt);
-                            }
-                            token.ThrowIfCancellationRequested();
-                        }
+                        GMapMarker marker = new GMarkerGoogle(new PointLatLng(r.Latitude, r.Longitude), bitmap);
+                        marker.Tag = tag;
+                        tag.Size = 4;
+                        tag.PhotoName = r.PhotoName;
+                        tag.Path = Path.GetFullPath(r.Path);
+                        overlay.Markers.Add(marker);
                     }
-                });
-                progressValue.Report(100);
-                string title = "Importing complete";
-                string message = "Complete";
-                MessageBoxButtons buttons = MessageBoxButtons.OK;
-                MsgBox(message, title, buttons);
-                progressForm.Close();
-                setLayerAttributes();
-                refreshUI(overlay, color);
-            }
-            catch (ArgumentException ex)
-            {
+                }
+                catch (OperationCanceledException)
+                {
+                    string titleCancel = "Cancelled";
+                    string messageCancel = "Import cancelled";
+                    MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
+                    MsgBox(messageCancel, titleCancel, buttonsCancel);
+                    progressForm.Close();
+                }
+            });
+            return overlay;
 
-            }
-            catch (NullReferenceException ex)
+        }
+
+        /// <summary>
+        /// Reads exif data from each photo and builds markers on map
+        /// </summary>
+        /// <param name="threadInfo> </param>
+        private Record readData(ThreadInfo threadInfo)
+        {
+            var progressValue = threadInfo.ProgressHandler as IProgress<int>;
+            string outPath = threadInfo.OutPath;
+            int length = threadInfo.Length;
+            Record r;
+            string file = Path.GetFullPath(threadInfo.File);
+            lock (obj)
             {
-                txtConsole.AppendText(ex.StackTrace);
+                id++;
             }
-            catch (OperationCanceledException)
+            string photo = file;
+            Image image = new Bitmap(file);
+            r = new Record(photo);
+
+            PropertyItem[] propItems = image.PropertyItems;
+            PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+            PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+            PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+            PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+            PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+            PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+            PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+
+            image.Dispose();
+
+            byte[] latBytes = propItemLat.Value;
+            byte[] latRefBytes = propItemLatRef.Value;
+            byte[] lonBytes = propItemLon.Value;
+            byte[] lonRefBytes = propItemLonRef.Value;
+            byte[] altRefBytes = propItemAltRef.Value;
+            byte[] altBytes = propItemAlt.Value;
+            byte[] dateTimeBytes = propItemDateTime.Value;
+
+
+            string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
+            string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
+            string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
+            double latitude = byteToDegrees(latBytes);
+            double longitude = byteToDegrees(lonBytes);
+            double altitude = byteToDecimal(altBytes);
+
+            DateTime dateTime = byteToDate(dateTimeBytes);
+
+            if (latitudeRef.Equals("S\0"))
             {
-                string titleCancel = "Cancelled";
-                string messageCancel = "Import cancelled";
-                MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
-                MsgBox(messageCancel, titleCancel, buttonsCancel);
-                progressForm.Close();
+                latitude = -latitude;
+            }
+            if (longitudeRef.Equals("W\0"))
+            {
+                longitude = -longitude;
+            }
+            if (!altRef.Equals("\0"))
+            {
+                altitude = -altitude;
+            }
+            r.Latitude = latitude;
+            r.Longitude = longitude;
+            r.Altitude = altitude;
+            r.TimeStamp = dateTime;
+            r.Path = Path.GetFullPath(file);
+            r.Id = id.ToString();
+
+            lock (obj)
+            {
+                mRecordDict.Add(photo, r);
+                geoTagCount++;
+                setMinMax(latitude, longitude);
+
+
+                double percent = ((double)geoTagCount / length) * 100;
+                int percentInt = (int)Math.Ceiling(percent);
+                if (progressValue != null)
+                {
+                    progressValue = threadInfo.ProgressHandler;
+                    progressForm.Invoke(
+                        new MethodInvoker(() => progressValue.Report(percentInt)
+                    ));
+                }
+                //token.ThrowIfCancellationRequested();
             }
 
+            return r;
         }
 
         private void MsgBox(string title, string message, MessageBoxButtons buttons)
@@ -1100,6 +1115,27 @@ namespace EXIFGeotagger //v0._1
             image = null;
         }
 
+        private async void incrementGeoTagError(object a)
+        {
+            string s = a as string;
+            await Task.Run(() =>
+            {
+                if (s.Equals("nokey"))
+            {
+                    lock (obj)
+                    {
+                        errorCount++;
+                    }
+                } else
+            {
+                    lock (obj)
+                    {
+                        stationaryCount++;
+                    }
+                }
+            });
+        }
+
         private async Task saveFile(Image image, string path)
         {
             await Task.Run(() =>
@@ -1131,19 +1167,15 @@ namespace EXIFGeotagger //v0._1
             geoTagCount = 0;
             errorCount = 0;
             stationaryCount = 0;
-
-
             mNewRecordDict = new Dictionary<string, Record>();
 
             int processors = Environment.ProcessorCount;
-
-
             int minWorkerThreads = processors;
             int minIOThreads = processors;
             int maxWorkerThreads = processors;
             int maxIOThreads = processors;
 
-            ThreadPool.SetMinThreads(minWorkerThreads, minIOThreads);
+            //ThreadPool.SetMinThreads(minWorkerThreads, minIOThreads);
             ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
 
             token.ThrowIfCancellationRequested();
@@ -1168,12 +1200,14 @@ namespace EXIFGeotagger //v0._1
                                 ThreadPool.QueueUserWorkItem(new WaitCallback(ProcessFile), threadInfo);
                             } else
                             {
-                                stationaryCount++;
+                                object a = "nogps";
+                                ThreadPool.QueueUserWorkItem(new WaitCallback(incrementGeoTagError), a);
                             }
                         }
                         catch (KeyNotFoundException ex)
                         {
-                            errorCount++;
+                            object a = "nokey";
+                            ThreadPool.QueueUserWorkItem(new WaitCallback(incrementGeoTagError), a);
                         }
                     }
                 }
@@ -1368,7 +1402,7 @@ namespace EXIFGeotagger //v0._1
         {
 
             int year = byteToDateInt(b, 0, 4);
-           
+            string dateTime = Encoding.UTF8.GetString(b);
             int month = byteToDateInt(b, 5, 2);
             int day = byteToDateInt(b, 8, 2);
             int hour = byteToDateInt(b, 11, 2);
