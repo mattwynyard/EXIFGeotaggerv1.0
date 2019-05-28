@@ -34,6 +34,7 @@ namespace EXIFGeotagger
         int errorCount;
         int stationaryCount;
         int id;
+        CancellationTokenSource cts;
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -200,8 +201,8 @@ namespace EXIFGeotagger
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
-            //_cts = new CancellationTokenSource();
-            //var token = _cts.Token;
+            cts = new CancellationTokenSource();
+            var token = cts.Token;
             geoTagCount = 0;
             id = 0;
             
@@ -215,12 +216,20 @@ namespace EXIFGeotagger
 
             });
             var progressValue = progressHandler1 as IProgress<int>;
-            await Task.Run(() =>
+            await Task.Factory.StartNew(() =>
             {
+               
                 try
                 {
+                    
                     while (fileQueue.Count != 0)
                     {
+                        if (token.IsCancellationRequested)
+                        {
+
+                            token.ThrowIfCancellationRequested();
+
+                        }
                         Parallel.Invoke(
                             () =>
                             {
@@ -250,7 +259,7 @@ namespace EXIFGeotagger
                     //MsgBox(messageCancel, titleCancel, buttonsCancel);
                     //progressForm.Close();
                 }
-            });
+            }, cts.Token);
             progressForm.Close();
             return overlay;
 
@@ -258,87 +267,90 @@ namespace EXIFGeotagger
 
         private Record readData(ThreadInfo threadInfo)
         {
-            var progressValue = threadInfo.ProgressHandler as IProgress<int>;
+            Record r;
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
-            Record r;
+
             string file = Path.GetFullPath(threadInfo.File);
-            lock (obj)
-            {
-                id++;
-            }
             string photo = file;
             Image image = new Bitmap(file);
             r = new Record(photo);
 
-            PropertyItem[] propItems = image.PropertyItems;
-            PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-            PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-            PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-            PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-            PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
-            PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-            PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+                var progressValue = threadInfo.ProgressHandler as IProgress<int>;
 
-            image.Dispose();
-
-            byte[] latBytes = propItemLat.Value;
-            byte[] latRefBytes = propItemLatRef.Value;
-            byte[] lonBytes = propItemLon.Value;
-            byte[] lonRefBytes = propItemLonRef.Value;
-            byte[] altRefBytes = propItemAltRef.Value;
-            byte[] altBytes = propItemAlt.Value;
-            byte[] dateTimeBytes = propItemDateTime.Value;
-
-
-            string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
-            string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
-            string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
-            double latitude = byteToDegrees(latBytes);
-            double longitude = byteToDegrees(lonBytes);
-            double altitude = byteToDecimal(altBytes);
-
-            DateTime dateTime = byteToDate(dateTimeBytes);
-
-            if (latitudeRef.Equals("S\0"))
-            {
-                latitude = -latitude;
-            }
-            if (longitudeRef.Equals("W\0"))
-            {
-                longitude = -longitude;
-            }
-            if (!altRef.Equals("\0"))
-            {
-                altitude = -altitude;
-            }
-            r.Latitude = latitude;
-            r.Longitude = longitude;
-            r.Altitude = altitude;
-            r.TimeStamp = dateTime;
-            r.Path = Path.GetFullPath(file);
-            r.Id = id.ToString();
-
-            lock (obj)
-            {
-                //mRecordDict.Add(photo, r);
-                addRecord(photo, r);
-                geoTagCount++;
-                setMinMax(latitude, longitude);
-
-
-                double percent = ((double)geoTagCount / length) * 100;
-                int percentInt = (int)(Math.Round(percent));
-                if (progressValue != null)
+                lock (obj)
                 {
-                    progressValue = threadInfo.ProgressHandler;
-                    progressForm.Invoke(
-                        new MethodInvoker(() => progressValue.Report(percentInt)
-                    ));
+                    id++;
                 }
 
-                //token.ThrowIfCancellationRequested();
-            }
+
+                PropertyItem[] propItems = image.PropertyItems;
+                PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+                PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+                PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+                PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+                PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+                PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+                PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+
+                image.Dispose();
+
+                byte[] latBytes = propItemLat.Value;
+                byte[] latRefBytes = propItemLatRef.Value;
+                byte[] lonBytes = propItemLon.Value;
+                byte[] lonRefBytes = propItemLonRef.Value;
+                byte[] altRefBytes = propItemAltRef.Value;
+                byte[] altBytes = propItemAlt.Value;
+                byte[] dateTimeBytes = propItemDateTime.Value;
+
+
+                string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
+                string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
+                string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
+                double latitude = byteToDegrees(latBytes);
+                double longitude = byteToDegrees(lonBytes);
+                double altitude = byteToDecimal(altBytes);
+
+                DateTime dateTime = byteToDate(dateTimeBytes);
+
+                if (latitudeRef.Equals("S\0"))
+                {
+                    latitude = -latitude;
+                }
+                if (longitudeRef.Equals("W\0"))
+                {
+                    longitude = -longitude;
+                }
+                if (!altRef.Equals("\0"))
+                {
+                    altitude = -altitude;
+                }
+                r.Latitude = latitude;
+                r.Longitude = longitude;
+                r.Altitude = altitude;
+                r.TimeStamp = dateTime;
+                r.Path = Path.GetFullPath(file);
+                r.Id = id.ToString();
+
+                lock (obj)
+                {
+                    //mRecordDict.Add(photo, r);
+                    addRecord(photo, r);
+                    geoTagCount++;
+                    setMinMax(latitude, longitude);
+
+
+                    double percent = ((double)geoTagCount / length) * 100;
+                    int percentInt = (int)(Math.Round(percent));
+                    if (progressValue != null)
+                    {
+                        progressValue = threadInfo.ProgressHandler;
+                        progressForm.Invoke(
+                            new MethodInvoker(() => progressValue.Report(percentInt)
+                        ));
+                    }
+
+                }
             return r;
         }
 
@@ -351,8 +363,8 @@ namespace EXIFGeotagger
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
-            //_cts = new CancellationTokenSource();
-            //var token = _cts.Token;
+            cts = new CancellationTokenSource();
+            var token = cts.Token;
             var progressHandler1 = new Progress<int>(value =>
             {
                 progressForm.ProgressValue = value;
@@ -376,16 +388,20 @@ namespace EXIFGeotagger
 
             //ThreadPool.SetMinThreads(minWorkerThreads, minIOThreads);
             ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
-
-            //token.ThrowIfCancellationRequested();
-
-            await Task.Run(() =>
+            await Task.Factory.StartNew(() =>
             {
+                token.ThrowIfCancellationRequested();
                 try
                 {
                     while (fileQueue.Count != 0)
                     {
-                        Parallel.Invoke(
+                        if (token.IsCancellationRequested)
+                        {
+
+                            token.ThrowIfCancellationRequested();
+                            
+                        }
+                        Parallel.Invoke (
                             () =>
                             {
                                 ThreadInfo threadInfo = new ThreadInfo();
@@ -421,27 +437,49 @@ namespace EXIFGeotagger
                 }
                 catch (OperationCanceledException)
                 {
-                    //string titleCancel = "Cancelled";
-                    //string messageCancel = "Import cancelled";
+                    cts.Dispose();
+                    //cts.Cancel();
+                    //progressForm.Close();
+                    //string titleCancel = "Geotagging cancelled";
+                    //string messageCancel = "Cancelled";
                     //MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
                     //MsgBox(messageCancel, titleCancel, buttonsCancel);
                     //progressForm.Close();
+                    //return newRecordDict;
                 }
                 
-            });
+            }, cts.Token);
             progressForm.enableOK();
             progressForm.disableCancel();
-            //await geoTagComplete(geoTagCount, stationaryCount, errorCount);
             return newRecordDict;
+        }
+
+        private void MsgBox(string title, string message, MessageBoxButtons buttons)
+        {
+            DialogResult result = MessageBox.Show(message, title, buttons);
+            if (result == DialogResult.OK)
+            {
+               
+            }
+        }
+
+        private void cancelImport(object sender, EventArgs e)
+        {
+            if (cts != null)
+                cts.Cancel();
         }
 
         private async Task<Record> ProcessFile(object a)
         {
             ThreadInfo threadInfo = a as ThreadInfo;
+            Record r = threadInfo.Record;
+            await Task.Factory.StartNew(async () =>
+            {
+                
             var progressValue = threadInfo.ProgressHandler as IProgress<int>;
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
-            Record r = threadInfo.Record;
+            
             string photo;
             string path;
             Bitmap image = new Bitmap(threadInfo.File);
@@ -483,8 +521,7 @@ namespace EXIFGeotagger
             image.SetPropertyItem(propItemSat);
             image.SetPropertyItem(propItemDateTime);
             r.GeoTag = true;
-            await Task.Run(async () =>
-            {
+            
                 string photoName = Path.GetFileNameWithoutExtension(threadInfo.File);
                 string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
                 OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
@@ -514,11 +551,13 @@ namespace EXIFGeotagger
                         new MethodInvoker(() => progressValue.Report(percentInt)
                     ));
                 }
+                
                 await saveFile(image, path);
                 image.Dispose();
                 image = null;
+               
             });
-            
+
             return r;
         }
 
@@ -550,11 +589,6 @@ namespace EXIFGeotagger
             {
                 image.Save(path);
             });
-        }
-        private void cancelImport(object sender, EventArgs e)
-        {
-            //if (_cts != null)
-            //    _cts.Cancel();
         }
 
         private DateTime byteToDate(byte[] b)

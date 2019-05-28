@@ -57,16 +57,11 @@ namespace EXIFGeotagger //v0._1
         public string outFolder; //folder path to save geotag photos
 
         public Boolean allRecords;
-        private int importLength;
+
         //Tools
         private Boolean mZoom = false;
         private Boolean mArrow = true;
-        //FORMS
-        private ProgressForm progress;
 
-        private int geoTagCount;
-        private int errorCount;
-        private int stationaryCount;
         private int layerCount;
         private ImageList imageList;
 
@@ -83,12 +78,9 @@ namespace EXIFGeotagger //v0._1
         private static double max_lng;
 
         private Boolean mouseInBounds;
-        private CancellationTokenSource _cts;
+       
         private BlockingCollection<string> fileQueue;
-        private int mQueueSize;
-        private string mOutPath;
-        private ProgressForm progressForm;
-        private CountdownEvent countdownEvent;
+        
 
 
         /// <summary>
@@ -156,42 +148,7 @@ namespace EXIFGeotagger //v0._1
             importForm.Show();
         }
 
-        ///// <summary>
-        ///// Intialises a new Record and adds data extracted from access to each relevant field.
-        ///// The record is then added to the Record Dictionary.
-        ///// </summary>
-        ///// <param name="i: the number of records read"></param>
-        ///// <param name="row: the access record"></param>
-        //private void buildDictionary(int i, Object[] row)
-        //{
-        //   try
-        //    {
-        //        Record r = new Record((string)row[1]);
-        //        int id = (int)row[0];
-        //        r.Id = id.ToString();
-        //        r.Latitude = (double)row[3];
-        //        r.Longitude = (double)row[4];
-        //        r.Altitude = (double)row[5];
-        //        r.Bearing = Convert.ToDouble(row[6]);
-        //        r.Velocity = Convert.ToDouble(row[7]);
-        //        r.Satellites = Convert.ToInt32(row[8]);
-        //        r.PDop = Convert.ToDouble(row[9]);
-        //        r.Inspector = Convert.ToString(row[10]);
-        //        r.TimeStamp = Convert.ToDateTime(row[12]);
-        //        r.GeoMark = Convert.ToBoolean(row[13]);
-        //        r.Side = Convert.ToString(row[19]);
-        //        r.Road = Convert.ToInt32(row[20]);
-        //        r.Carriageway = Convert.ToInt32(row[21]);
-        //        r.ERP = Convert.ToInt32(row[22]);
-        //        r.FaultID = Convert.ToInt32(row[23]);
-
-        //        mRecordDict.Add(r.PhotoName, r);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Console.WriteLine(e.StackTrace);
-        //    }
-        //}
+       
 
         #region Plotting
         /// <summary>
@@ -871,11 +828,7 @@ namespace EXIFGeotagger //v0._1
         #endregion
 
         #region Threading
-        private void cancelImport(object sender, EventArgs e)
-        {
-            if (_cts != null)
-                _cts.Cancel();
-        }
+        
 
        
 
