@@ -18,11 +18,22 @@ namespace EXIFGeotagger //v0._1
         {
             InitializeComponent();
             lbMessage.Text = label;
+            btnOK.Enabled = false;
         }
 
         public string Message
         {
             set { lbMessage.Text = value; }
+        }
+
+        public void enableOK()
+        {
+            btnOK.Enabled = true; ;
+        }
+
+        public void disableCancel()
+        {
+            btnCancel.Enabled = false;
         }
 
         public int ProgressValue
@@ -45,6 +56,11 @@ namespace EXIFGeotagger //v0._1
         {
             this.BringToFront();
             this.TopMost = true;
+        }
+
+        private void BtnOK_Click(object sender, EventArgs e)
+        {
+            Close(); ;
         }
     }
 }
