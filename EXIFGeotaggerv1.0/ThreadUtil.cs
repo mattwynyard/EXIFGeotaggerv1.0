@@ -20,13 +20,14 @@ namespace EXIFGeotagger
 {
     class ThreadUtil
     {
+        //delegates
         public event SetMinMaxDelegate setMinMax;
         public delegate void SetMinMaxDelegate(double lat, double lng);
         public event AddRecordDelegate addRecord;
         public delegate void AddRecordDelegate(string photo, Record record);
         public event GeoTagCompleteDelegate geoTagComplete;
         public delegate void GeoTagCompleteDelegate(int geotagCount, int stationaryCount, int errorCount);
-
+        //properties
         private OleDbConnection connection;
         private static readonly Object obj = new Object();
         private ProgressForm progressForm;
@@ -35,14 +36,19 @@ namespace EXIFGeotagger
         int stationaryCount;
         int id;
         CancellationTokenSource cts;
+
         /// <summary>
         /// Default constructor
         /// </summary>
         public ThreadUtil()
         {
-
         }
 
+        /// <summary>
+        /// Builds a queue containing all the file path to process
+        /// </summary>
+        /// <param name="path"> the full path of the folder containing the files</param>
+        /// <returns>the queue</returns>
         public async Task<BlockingCollection<string>> buildQueue(string path)
         {
             BlockingCollection<string> mFileQueue = new BlockingCollection<string>();
@@ -59,6 +65,12 @@ namespace EXIFGeotagger
             return mFileQueue;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="allRecords"></param>
+        /// <returns></returns>
         public async Task<Dictionary<string, Record>> readFromDatabase(string path, Boolean allRecords)
         {
             Dictionary<string, Record> recordDict = new Dictionary<string, Record>();
@@ -66,8 +78,8 @@ namespace EXIFGeotagger
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
-            //_cts = new CancellationTokenSource();
-            //var token = _cts.Token;
+            cts = new CancellationTokenSource();
+            var token = cts.Token;
             var progressHandler1 = new Progress<int>(value =>
             {
                 progressForm.ProgressValue = value;
@@ -79,6 +91,10 @@ namespace EXIFGeotagger
             {
                 await Task.Run(() =>
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        token.ThrowIfCancellationRequested();
+                    }
                     string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                                         "Microsoft.Jet.OLEDB.4.0", path, 5);
                     connection = new OleDbConnection(connectionString);
@@ -124,7 +140,7 @@ namespace EXIFGeotagger
                         }
                     }
 
-                });
+                }, cts.Token);
 
             }
             catch (ArgumentException ex)
@@ -137,6 +153,7 @@ namespace EXIFGeotagger
             }
             catch (OperationCanceledException)
             {
+                cts.Dispose();
                 //string titleCancel = "Cancelled";
                 //string messageCancel = "Read cancelled";
                 //MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
@@ -157,11 +174,9 @@ namespace EXIFGeotagger
         {
             Record r = new Record((string)row[1]);
             await Task.Run(() =>
-            {
-                
+            {             
                 try
                 {
-                    //r = new Record((string)row[1]);
                     int id = (int)row[0];
                     r.Id = id.ToString();
                     r.Latitude = (double)row[3];
@@ -179,21 +194,17 @@ namespace EXIFGeotagger
                     r.Carriageway = Convert.ToInt32(row[21]);
                     r.ERP = Convert.ToInt32(row[22]);
                     r.FaultID = Convert.ToInt32(row[23]);
-
-
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.StackTrace);
-                }
-                
+                }     
             });
             return r;
         }
 
         public async Task<GMapOverlay> readGeoTag(BlockingCollection<string> fileQueue, string folderPath, string layer, string color)
         {
-            //BlockingCollection<string> fileQueue;
             int mQueueSize = fileQueue.Count;
             string[] files = Directory.GetFiles(folderPath);
             GMapOverlay overlay = new GMapOverlay(layer);
@@ -212,23 +223,20 @@ namespace EXIFGeotagger
             var progressHandler1 = new Progress<int>(value =>
             {
                 progressForm.ProgressValue = value;
-                progressForm.Message = "Import in progress, please wait... " + value.ToString() + "% completed";
+                progressForm.Message = "Import in progress, please wait... " + value.ToString() + "% completed\n" +
+                geoTagCount + " of " + mQueueSize + " photos geotagged";
 
             });
             var progressValue = progressHandler1 as IProgress<int>;
             await Task.Factory.StartNew(() =>
-            {
-               
+            {            
                 try
-                {
-                    
+                {                 
                     while (fileQueue.Count != 0)
                     {
                         if (token.IsCancellationRequested)
                         {
-
                             token.ThrowIfCancellationRequested();
-
                         }
                         Parallel.Invoke(
                             () =>
@@ -253,6 +261,8 @@ namespace EXIFGeotagger
                 }
                 catch (OperationCanceledException)
                 {
+                    //overlay = new GMapOverlay(layer);
+                    cts.Dispose();
                     //string titleCancel = "Cancelled";
                     //string messageCancel = "Import cancelled";
                     //MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
@@ -262,7 +272,6 @@ namespace EXIFGeotagger
             }, cts.Token);
             progressForm.Close();
             return overlay;
-
         }
 
         private Record readData(ThreadInfo threadInfo)
@@ -270,20 +279,16 @@ namespace EXIFGeotagger
             Record r;
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
-
             string file = Path.GetFullPath(threadInfo.File);
             string photo = file;
             Image image = new Bitmap(file);
             r = new Record(photo);
-
                 var progressValue = threadInfo.ProgressHandler as IProgress<int>;
 
                 lock (obj)
                 {
                     id++;
                 }
-
-
                 PropertyItem[] propItems = image.PropertyItems;
                 PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
                 PropertyItem propItemLat = image.GetPropertyItem(0x0002);
@@ -294,7 +299,6 @@ namespace EXIFGeotagger
                 PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
 
                 image.Dispose();
-
                 byte[] latBytes = propItemLat.Value;
                 byte[] latRefBytes = propItemLatRef.Value;
                 byte[] lonBytes = propItemLon.Value;
@@ -302,15 +306,12 @@ namespace EXIFGeotagger
                 byte[] altRefBytes = propItemAltRef.Value;
                 byte[] altBytes = propItemAlt.Value;
                 byte[] dateTimeBytes = propItemDateTime.Value;
-
-
                 string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
                 string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
                 string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
                 double latitude = byteToDegrees(latBytes);
                 double longitude = byteToDegrees(lonBytes);
                 double altitude = byteToDecimal(altBytes);
-
                 DateTime dateTime = byteToDate(dateTimeBytes);
 
                 if (latitudeRef.Equals("S\0"))
@@ -334,12 +335,9 @@ namespace EXIFGeotagger
 
                 lock (obj)
                 {
-                    //mRecordDict.Add(photo, r);
                     addRecord(photo, r);
                     geoTagCount++;
                     setMinMax(latitude, longitude);
-
-
                     double percent = ((double)geoTagCount / length) * 100;
                     int percentInt = (int)(Math.Round(percent));
                     if (progressValue != null)
@@ -349,7 +347,6 @@ namespace EXIFGeotagger
                             new MethodInvoker(() => progressValue.Report(percentInt)
                         ));
                     }
-
                 }
             return r;
         }
@@ -373,8 +370,6 @@ namespace EXIFGeotagger
                "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n";
             });
             var progressValue = progressHandler1 as IProgress<int>;
-            
-            //int length = _files.Length;
             geoTagCount = 0;
             errorCount = 0;
             stationaryCount = 0;
@@ -387,10 +382,9 @@ namespace EXIFGeotagger
             int maxIOThreads = processors;
 
             //ThreadPool.SetMinThreads(minWorkerThreads, minIOThreads);
-            ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
+            //ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
             await Task.Factory.StartNew(() =>
             {
-                token.ThrowIfCancellationRequested();
                 try
                 {
                     while (fileQueue.Count != 0)
@@ -431,7 +425,6 @@ namespace EXIFGeotagger
                                     object a = "nokey";
                                     incrementGeoTagError(a);
                                 }
-
                             });
                     }
                 }
@@ -449,6 +442,9 @@ namespace EXIFGeotagger
                 }
                 
             }, cts.Token);
+            progressForm.Invoke(
+                        new MethodInvoker(() => progressValue.Report(100)
+                    ));
             progressForm.enableOK();
             progressForm.disableCancel();
             return newRecordDict;
@@ -545,19 +541,16 @@ namespace EXIFGeotagger
                     setMinMax(r.Latitude, r.Longitude);
                     int totalCount = geoTagCount + errorCount;
                     double percent = ((double)totalCount / length) * 100;
-                    int percentInt = (int)Math.Ceiling(percent);
+                    int percentInt = (int)Math.Floor(percent);
                     progressValue = threadInfo.ProgressHandler;
                     progressForm.Invoke(
                         new MethodInvoker(() => progressValue.Report(percentInt)
                     ));
-                }
-                
+                }               
                 await saveFile(image, path);
                 image.Dispose();
                 image = null;
-               
             });
-
             return r;
         }
 
@@ -594,14 +587,21 @@ namespace EXIFGeotagger
         private DateTime byteToDate(byte[] b)
         {
 
-            int year = byteToDateInt(b, 0, 4);
-            string dateTime = Encoding.UTF8.GetString(b);
-            int month = byteToDateInt(b, 5, 2);
-            int day = byteToDateInt(b, 8, 2);
-            int hour = byteToDateInt(b, 11, 2);
-            int min = byteToDateInt(b, 14, 2);
-            int sec = byteToDateInt(b, 17, 2);
-            return new DateTime(year, month, day, hour, min, sec);
+            try
+            {
+                int year = byteToDateInt(b, 0, 4);
+                string dateTime = Encoding.UTF8.GetString(b);
+                int month = byteToDateInt(b, 5, 2);
+                int day = byteToDateInt(b, 8, 2);
+                int hour = byteToDateInt(b, 11, 2);
+                int min = byteToDateInt(b, 14, 2);
+                int sec = byteToDateInt(b, 17, 2);
+                return new DateTime(year, month, day, hour, min, sec);
+            } catch (ArgumentOutOfRangeException ex)
+            {
+                return new DateTime();
+            }
+            
 
         }
         private int byteToDateInt(byte[] b, int offset, int len)

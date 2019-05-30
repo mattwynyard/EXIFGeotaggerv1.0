@@ -39,7 +39,6 @@ namespace EXIFGeotagger //v0._1
         public string mLayer; //imported layer
         public Color mlayerColour;
         public String mlayerColourHex;
-        private int id;
 
         private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
@@ -51,7 +50,6 @@ namespace EXIFGeotagger //v0._1
         private int mSelectedOverlayIndex;
         private Dictionary<string, Record> mRecordDict;
         private static readonly Object obj = new Object();
-        private  Dictionary<string, Record> mNewRecordDict;
         private LayerAttributes mLayerAttributes;
         public string[] mFiles; //array containing absolute paths of photos.
         public string outFolder; //folder path to save geotag photos
@@ -251,7 +249,15 @@ namespace EXIFGeotagger //v0._1
                 {
                     markers = mOverlayDict[overlay.Id];
                     int count = markers.Length;
-                    int step = getStep(size);
+                    int step;
+                    if (count > 2000)
+                    {
+                        step = getStep(size);
+                    }
+                    else
+                    {
+                        step = 1;
+                    }
                     Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
                     for (int i = 0; i < count; i += step)
                     {
@@ -717,11 +723,6 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
-        private void EXIFGeoTagger_Load(object sender, EventArgs e)
-        {
-
-        }
-
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AboutBox1 AboutBox = new AboutBox1();
@@ -1028,6 +1029,26 @@ namespace EXIFGeotagger //v0._1
         }
 
         private void PictureBox_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void LbPosition_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void EXIFGeoTagger_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Panel5_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void Label1_Click(object sender, EventArgs e)
         {
 
         }
