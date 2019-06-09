@@ -650,9 +650,6 @@ namespace EXIFGeotagger //v0._1
 
         }
 
-       
-
-
         #endregion
 
         #region Form Events
@@ -693,33 +690,38 @@ namespace EXIFGeotagger //v0._1
         private void listLayers_MouseClick(object sender, MouseEventArgs e)
         {
             ListView ls = sender as ListView;
-
-            if (e.Button == MouseButtons.Right)
+            if (currentListItem != null)
             {
-                if (currentListItem != null)
+                if (e.Button == MouseButtons.Right)
                 {
+
                     txtConsole.Text = "Right\n";
                     ContextMenu contextMenu = new ContextMenu();
                     var itemDelete = contextMenu.MenuItems.Add("Delete Layer");
                     var itemZoom = contextMenu.MenuItems.Add("Zoom to Layer");
                     listLayers.ContextMenu = contextMenu;
-                    itemDelete.Click += contextMenu_ItemClick;
+                    itemDelete.Click += contextMenu_ItemDelete;
+
 
                 }
-            }
-            if (e.Button == MouseButtons.Left)
-            {
-                txtConsole.Text = "Left\n";
-                currentListItem = ls.FocusedItem;
-                //mSelectedLayer = ls.SelectedItems;
-                txtConsole.Text = ls.FocusedItem.Text;
-                mSelectedOverlay = gMap.Overlays.ElementAt(mSelectedOverlayIndex);
+                if (e.Button == MouseButtons.Left)
+                {
+                    txtConsole.Text = currentListItem.Text + "\n";
+                    txtConsole.Text = currentListItem.Index.ToString();
+                }
             }
         }
 
-        private void contextMenu_ItemClick(object sender, EventArgs e)
+        private void contextMenu_ItemDelete(object sender, EventArgs e)
         {
-
+            if (currentListItem.Focused && currentListItem.Selected)
+            {
+                mOverlayDict.Remove(mSelectedOverlay.Id);
+                gMap.Overlays.Remove(mSelectedOverlay);
+                currentListItem.Remove();
+                gMap.Refresh();
+            }
+            
         }
 
         private void listLayers_ItemActivate(object sender, EventArgs e)
@@ -731,10 +733,18 @@ namespace EXIFGeotagger //v0._1
         {
             ListView ls = sender as ListView;
             currentListItem = ls.FocusedItem;
-            currentListItem.Focused = true;
-            if (ls.FocusedItem.Checked) {
+            mSelectedOverlayIndex = currentListItem.Index;
+            try
+            {
+                mSelectedOverlay = gMap.Overlays.ElementAt(mSelectedOverlayIndex);
+            } catch (ArgumentOutOfRangeException ex)
+            {
 
-               
+            }
+            if (ls.FocusedItem.Checked)
+            {
+
+
             }
         }
 
@@ -744,15 +754,9 @@ namespace EXIFGeotagger //v0._1
             
             ListView ls = sender as ListView;
             currentListItem = ls.FocusedItem;
-            if (currentListItem.Focused)
-            {
-                txtConsole.Text = "focused";
-            }
-            if (currentListItem.Selected)
-            {
-                txtConsole.Text = "selected";
-            }
-            txtConsole.Text = currentListItem.Text;
+            mSelectedLayer = currentListItem.Text;           
+           
+           
         }
 
         private void listLayers_ItemCheck(object sender, ItemCheckEventArgs e)
