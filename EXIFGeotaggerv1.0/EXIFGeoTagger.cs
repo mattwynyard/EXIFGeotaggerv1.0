@@ -48,6 +48,8 @@ namespace EXIFGeotagger //v0._1
         private GMapOverlay mSelectedOverlay;
         //index of currently layer in checkbox
         private int mSelectedOverlayIndex;
+        private string mSelectedLayer;
+        private Boolean isLayerSelected = false;
         private Dictionary<string, Record> mRecordDict;
         private static readonly Object obj = new Object();
         private LayerAttributes mLayerAttributes;
@@ -56,6 +58,8 @@ namespace EXIFGeotagger //v0._1
 
         public Boolean allRecords;
 
+        private ListViewItem currentListItem;
+        private Boolean listIsFocused;
         //Tools
         private Boolean mZoom = false;
         private Boolean mArrow = true;
@@ -475,7 +479,6 @@ namespace EXIFGeotagger //v0._1
         /// <param name="e"></param>
         private void gMap_MouseClick(object sender, MouseEventArgs e)
         {
-
             if (mouseInBounds && e.Button == MouseButtons.Left)
             {
                 if (currentMarker != null)
@@ -487,6 +490,7 @@ namespace EXIFGeotagger //v0._1
                     currentMarker = null;
                 }
             }
+            
         }
 
         private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
@@ -671,13 +675,84 @@ namespace EXIFGeotagger //v0._1
         {
         }
 
+        private void listLayers_MouseEnter(object sender, EventArgs e)
+        {
+            listIsFocused = true;
+        }
+
+        private void listLayers_MouseLeave(object sender, EventArgs e)
+        {
+            listIsFocused = false;
+        }
+
+        private void listLayers_ItemMouseHover(object sender, ListViewItemMouseHoverEventArgs e)
+        {
+            Boolean itemIsHover = true;
+        }
+
+        private void listLayers_MouseClick(object sender, MouseEventArgs e)
+        {
+            ListView ls = sender as ListView;
+
+            if (e.Button == MouseButtons.Right)
+            {
+                if (currentListItem != null)
+                {
+                    txtConsole.Text = "Right\n";
+                    ContextMenu contextMenu = new ContextMenu();
+                    var itemDelete = contextMenu.MenuItems.Add("Delete Layer");
+                    var itemZoom = contextMenu.MenuItems.Add("Zoom to Layer");
+                    listLayers.ContextMenu = contextMenu;
+                    itemDelete.Click += contextMenu_ItemClick;
+
+                }
+            }
+            if (e.Button == MouseButtons.Left)
+            {
+                txtConsole.Text = "Left\n";
+                currentListItem = ls.FocusedItem;
+                //mSelectedLayer = ls.SelectedItems;
+                txtConsole.Text = ls.FocusedItem.Text;
+                mSelectedOverlay = gMap.Overlays.ElementAt(mSelectedOverlayIndex);
+            }
+        }
+
+        private void contextMenu_ItemClick(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listLayers_ItemActivate(object sender, EventArgs e)
+        {
+            txtConsole.Text = "ïtemActivate\n";
+        }
+
         private void listLayers_SelectedIndexChanged(object sender, EventArgs e)
         {
             ListView ls = sender as ListView;
+            currentListItem = ls.FocusedItem;
+            currentListItem.Focused = true;
             if (ls.FocusedItem.Checked) {
-                string overlayName = ls.FocusedItem.Text;
-                //GMapOverlay overlay = gMap.Overlays
+
+               
             }
+        }
+
+
+        private void listLayers_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            
+            ListView ls = sender as ListView;
+            currentListItem = ls.FocusedItem;
+            if (currentListItem.Focused)
+            {
+                txtConsole.Text = "focused";
+            }
+            if (currentListItem.Selected)
+            {
+                txtConsole.Text = "selected";
+            }
+            txtConsole.Text = currentListItem.Text;
         }
 
         private void listLayers_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -1027,30 +1102,11 @@ namespace EXIFGeotagger //v0._1
         {
 
         }
-
-        private void PictureBox_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void LbPosition_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void EXIFGeoTagger_Load(object sender, EventArgs e)
         {
 
         }
 
-        private void Panel5_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void Label1_Click(object sender, EventArgs e)
-        {
-
-        }
+        
     } //end class   
 } //end namespace

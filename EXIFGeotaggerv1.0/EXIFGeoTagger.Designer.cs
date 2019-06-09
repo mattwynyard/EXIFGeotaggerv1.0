@@ -30,16 +30,24 @@ namespace EXIFGeotagger
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.txtConsole = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.lbScale = new System.Windows.Forms.Label();
             this.lbPosition = new System.Windows.Forms.Label();
             this.listLayers = new System.Windows.Forms.ListView();
-            this.btnLeft = new System.Windows.Forms.Button();
+            this.panel5 = new System.Windows.Forms.Panel();
+            this.panel6 = new System.Windows.Forms.Panel();
             this.btnRight = new System.Windows.Forms.Button();
-            this.lbPhoto = new System.Windows.Forms.Label();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.btnLeft = new System.Windows.Forms.Button();
+            this.panel4 = new System.Windows.Forms.Panel();
             this.pictureBox = new System.Windows.Forms.PictureBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.lbPhoto = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuNew = new System.Windows.Forms.ToolStripMenuItem();
@@ -66,31 +74,27 @@ namespace EXIFGeotagger
             this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.panel4 = new System.Windows.Forms.Panel();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.panel5 = new System.Windows.Forms.Panel();
-            this.panel6 = new System.Windows.Forms.Panel();
             this.btnArrow = new System.Windows.Forms.Button();
             this.btnZoom = new System.Windows.Forms.Button();
             this.panel7 = new System.Windows.Forms.Panel();
             this.panel8 = new System.Windows.Forms.Panel();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.deleteLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
-            this.menuStrip1.SuspendLayout();
             this.panel3.SuspendLayout();
-            this.panel4.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.panel5.SuspendLayout();
             this.panel6.SuspendLayout();
+            this.panel2.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.panel4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
+            this.menuStrip1.SuspendLayout();
             this.panel7.SuspendLayout();
             this.panel8.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // gMap
@@ -130,10 +134,10 @@ namespace EXIFGeotagger
             // txtConsole
             // 
             this.txtConsole.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.txtConsole.Location = new System.Drawing.Point(26, 279);
+            this.txtConsole.Location = new System.Drawing.Point(3, 195);
             this.txtConsole.Multiline = true;
             this.txtConsole.Name = "txtConsole";
-            this.txtConsole.Size = new System.Drawing.Size(50, 73);
+            this.txtConsole.Size = new System.Drawing.Size(123, 73);
             this.txtConsole.TabIndex = 4;
             // 
             // splitContainer1
@@ -146,7 +150,6 @@ namespace EXIFGeotagger
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.label1);
             this.splitContainer1.Panel1.Controls.Add(this.panel3);
             this.splitContainer1.Panel1.Controls.Add(this.listLayers);
             this.splitContainer1.Panel1.Controls.Add(this.txtConsole);
@@ -159,6 +162,19 @@ namespace EXIFGeotagger
             this.splitContainer1.Size = new System.Drawing.Size(1484, 598);
             this.splitContainer1.SplitterDistance = 690;
             this.splitContainer1.TabIndex = 6;
+            // 
+            // panel3
+            // 
+            this.panel3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel3.Controls.Add(this.lbScale);
+            this.panel3.Controls.Add(this.lbPosition);
+            this.panel3.Controls.Add(this.gMap);
+            this.panel3.Location = new System.Drawing.Point(135, 5);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(552, 590);
+            this.panel3.TabIndex = 14;
             // 
             // lbScale
             // 
@@ -186,25 +202,41 @@ namespace EXIFGeotagger
             // 
             this.listLayers.CheckBoxes = true;
             this.listLayers.GridLines = true;
-            this.listLayers.Location = new System.Drawing.Point(0, 21);
+            this.listLayers.Location = new System.Drawing.Point(6, 5);
             this.listLayers.Name = "listLayers";
             this.listLayers.Size = new System.Drawing.Size(126, 189);
             this.listLayers.TabIndex = 6;
             this.listLayers.UseCompatibleStateImageBehavior = false;
             this.listLayers.View = System.Windows.Forms.View.List;
+            this.listLayers.ItemActivate += new System.EventHandler(this.listLayers_ItemActivate);
             this.listLayers.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listLayers_ItemCheck);
+            this.listLayers.ItemMouseHover += new System.Windows.Forms.ListViewItemMouseHoverEventHandler(this.listLayers_ItemMouseHover);
+            this.listLayers.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listLayers_ItemSelectionChanged);
             this.listLayers.SelectedIndexChanged += new System.EventHandler(this.listLayers_SelectedIndexChanged);
+            this.listLayers.MouseClick += new System.Windows.Forms.MouseEventHandler(this.listLayers_MouseClick);
+            this.listLayers.MouseEnter += new System.EventHandler(this.listLayers_MouseEnter);
+            this.listLayers.MouseLeave += new System.EventHandler(this.listLayers_MouseLeave);
             // 
-            // btnLeft
+            // panel5
             // 
-            this.btnLeft.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnLeft.Image = global::EXIFGeotagger.Properties.Resources.left_36;
-            this.btnLeft.Location = new System.Drawing.Point(0, -1);
-            this.btnLeft.Name = "btnLeft";
-            this.btnLeft.Size = new System.Drawing.Size(27, 31);
-            this.btnLeft.TabIndex = 12;
-            this.btnLeft.UseVisualStyleBackColor = true;
-            this.btnLeft.Click += new System.EventHandler(this.BtnLeft_Click);
+            this.panel5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel5.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panel5.Controls.Add(this.panel6);
+            this.panel5.Location = new System.Drawing.Point(735, 6);
+            this.panel5.Name = "panel5";
+            this.panel5.Size = new System.Drawing.Size(50, 589);
+            this.panel5.TabIndex = 19;
+            // 
+            // panel6
+            // 
+            this.panel6.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.panel6.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panel6.Controls.Add(this.btnRight);
+            this.panel6.Location = new System.Drawing.Point(3, 262);
+            this.panel6.Name = "panel6";
+            this.panel6.Size = new System.Drawing.Size(31, 30);
+            this.panel6.TabIndex = 16;
             // 
             // btnRight
             // 
@@ -218,16 +250,48 @@ namespace EXIFGeotagger
             this.btnRight.UseVisualStyleBackColor = true;
             this.btnRight.Click += new System.EventHandler(this.BtnRight_Click);
             // 
-            // lbPhoto
+            // panel2
             // 
-            this.lbPhoto.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.lbPhoto.AutoSize = true;
-            this.lbPhoto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbPhoto.Location = new System.Drawing.Point(3, 6);
-            this.lbPhoto.Name = "lbPhoto";
-            this.lbPhoto.Size = new System.Drawing.Size(45, 16);
-            this.lbPhoto.TabIndex = 10;
-            this.lbPhoto.Text = "label1";
+            this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.panel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panel2.Controls.Add(this.panel1);
+            this.panel2.Location = new System.Drawing.Point(4, 5);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(57, 590);
+            this.panel2.TabIndex = 16;
+            // 
+            // panel1
+            // 
+            this.panel1.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panel1.Controls.Add(this.btnLeft);
+            this.panel1.Location = new System.Drawing.Point(23, 263);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(31, 30);
+            this.panel1.TabIndex = 16;
+            // 
+            // btnLeft
+            // 
+            this.btnLeft.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnLeft.Image = global::EXIFGeotagger.Properties.Resources.left_36;
+            this.btnLeft.Location = new System.Drawing.Point(0, -1);
+            this.btnLeft.Name = "btnLeft";
+            this.btnLeft.Size = new System.Drawing.Size(27, 31);
+            this.btnLeft.TabIndex = 12;
+            this.btnLeft.UseVisualStyleBackColor = true;
+            this.btnLeft.Click += new System.EventHandler(this.BtnLeft_Click);
+            // 
+            // panel4
+            // 
+            this.panel4.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel4.Controls.Add(this.pictureBox);
+            this.panel4.Location = new System.Drawing.Point(64, 2);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(668, 593);
+            this.panel4.TabIndex = 15;
             // 
             // pictureBox
             // 
@@ -242,7 +306,29 @@ namespace EXIFGeotagger
             this.pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox.TabIndex = 8;
             this.pictureBox.TabStop = false;
-            this.pictureBox.Click += new System.EventHandler(this.PictureBox_Click_1);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(31, 47);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(49, 16);
+            this.label1.TabIndex = 18;
+            this.label1.Text = "Layers";
+            // 
+            // lbPhoto
+            // 
+            this.lbPhoto.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbPhoto.AutoSize = true;
+            this.lbPhoto.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbPhoto.Location = new System.Drawing.Point(3, 3);
+            this.lbPhoto.Name = "lbPhoto";
+            this.lbPhoto.Size = new System.Drawing.Size(45, 16);
+            this.lbPhoto.TabIndex = 10;
+            this.lbPhoto.Text = "label1";
             // 
             // menuStrip1
             // 
@@ -454,88 +540,11 @@ namespace EXIFGeotagger
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // panel3
-            // 
-            this.panel3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel3.Controls.Add(this.lbScale);
-            this.panel3.Controls.Add(this.lbPosition);
-            this.panel3.Controls.Add(this.gMap);
-            this.panel3.Location = new System.Drawing.Point(135, 5);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(552, 590);
-            this.panel3.TabIndex = 14;
-            // 
-            // panel4
-            // 
-            this.panel4.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel4.Controls.Add(this.pictureBox);
-            this.panel4.Location = new System.Drawing.Point(64, 2);
-            this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(668, 593);
-            this.panel4.TabIndex = 15;
-            // 
-            // panel1
-            // 
-            this.panel1.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel1.Controls.Add(this.btnLeft);
-            this.panel1.Location = new System.Drawing.Point(23, 263);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(31, 30);
-            this.panel1.TabIndex = 16;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(3, 5);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(49, 16);
-            this.label1.TabIndex = 18;
-            this.label1.Text = "Layers";
-            this.label1.Click += new System.EventHandler(this.Label1_Click);
-            // 
-            // panel2
-            // 
-            this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.panel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel2.Controls.Add(this.panel1);
-            this.panel2.Location = new System.Drawing.Point(4, 5);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(57, 590);
-            this.panel2.TabIndex = 16;
-            // 
-            // panel5
-            // 
-            this.panel5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel5.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel5.Controls.Add(this.panel6);
-            this.panel5.Location = new System.Drawing.Point(735, 6);
-            this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(50, 589);
-            this.panel5.TabIndex = 19;
-            // 
-            // panel6
-            // 
-            this.panel6.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.panel6.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel6.Controls.Add(this.btnRight);
-            this.panel6.Location = new System.Drawing.Point(3, 262);
-            this.panel6.Name = "panel6";
-            this.panel6.Size = new System.Drawing.Size(31, 30);
-            this.panel6.TabIndex = 16;
-            // 
             // btnArrow
             // 
             this.btnArrow.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btnArrow.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnArrow.Location = new System.Drawing.Point(31, 3);
+            this.btnArrow.Location = new System.Drawing.Point(31, 0);
             this.btnArrow.Name = "btnArrow";
             this.btnArrow.Size = new System.Drawing.Size(23, 20);
             this.btnArrow.TabIndex = 8;
@@ -546,7 +555,7 @@ namespace EXIFGeotagger
             // 
             this.btnZoom.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.btnZoom.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnZoom.Location = new System.Drawing.Point(3, 3);
+            this.btnZoom.Location = new System.Drawing.Point(3, 0);
             this.btnZoom.Name = "btnZoom";
             this.btnZoom.Size = new System.Drawing.Size(22, 20);
             this.btnZoom.TabIndex = 7;
@@ -557,24 +566,44 @@ namespace EXIFGeotagger
             // 
             this.panel7.Controls.Add(this.btnArrow);
             this.panel7.Controls.Add(this.btnZoom);
-            this.panel7.Location = new System.Drawing.Point(3, 27);
+            this.panel7.Location = new System.Drawing.Point(3, 24);
             this.panel7.Name = "panel7";
-            this.panel7.Size = new System.Drawing.Size(684, 29);
+            this.panel7.Size = new System.Drawing.Size(684, 23);
             this.panel7.TabIndex = 19;
             // 
             // panel8
             // 
+            this.panel8.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel8.AutoSize = true;
+            this.panel8.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panel8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel8.Controls.Add(this.lbPhoto);
             this.panel8.Location = new System.Drawing.Point(761, 28);
             this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(684, 29);
+            this.panel8.Size = new System.Drawing.Size(667, 31);
             this.panel8.TabIndex = 20;
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.deleteLayerToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(139, 26);
+            // 
+            // deleteLayerToolStripMenuItem
+            // 
+            this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
+            this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.deleteLayerToolStripMenuItem.Text = "Delete Layer";
             // 
             // EXIFGeoTagger
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1484, 661);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.panel8);
             this.Controls.Add(this.panel7);
             this.Controls.Add(this.splitContainer1);
@@ -590,19 +619,20 @@ namespace EXIFGeotagger
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
+            this.panel5.ResumeLayout(false);
+            this.panel6.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.panel3.ResumeLayout(false);
-            this.panel3.PerformLayout();
-            this.panel4.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel2.ResumeLayout(false);
-            this.panel5.ResumeLayout(false);
-            this.panel6.ResumeLayout(false);
             this.panel7.ResumeLayout(false);
             this.panel8.ResumeLayout(false);
             this.panel8.PerformLayout();
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -657,6 +687,8 @@ namespace EXIFGeotagger
         private System.Windows.Forms.Button btnZoom;
         private System.Windows.Forms.Panel panel7;
         private System.Windows.Forms.Panel panel8;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem deleteLayerToolStripMenuItem;
     }
 }
 

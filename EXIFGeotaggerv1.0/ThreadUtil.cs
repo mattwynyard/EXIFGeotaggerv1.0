@@ -276,13 +276,12 @@ namespace EXIFGeotagger
 
         private Record readData(ThreadInfo threadInfo)
         {
-            Record r;
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
             string file = Path.GetFullPath(threadInfo.File);
             string photo = file;
             Image image = new Bitmap(file);
-            r = new Record(photo);
+            Record r = new Record(photo);
                 var progressValue = threadInfo.ProgressHandler as IProgress<int>;
 
                 lock (obj)
@@ -382,7 +381,7 @@ namespace EXIFGeotagger
             int maxIOThreads = processors;
 
             //ThreadPool.SetMinThreads(minWorkerThreads, minIOThreads);
-            //ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
+            ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
             await Task.Factory.StartNew(() =>
             {
                 try
@@ -431,14 +430,6 @@ namespace EXIFGeotagger
                 catch (OperationCanceledException)
                 {
                     cts.Dispose();
-                    //cts.Cancel();
-                    //progressForm.Close();
-                    //string titleCancel = "Geotagging cancelled";
-                    //string messageCancel = "Cancelled";
-                    //MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
-                    //MsgBox(messageCancel, titleCancel, buttonsCancel);
-                    //progressForm.Close();
-                    //return newRecordDict;
                 }
                 
             }, cts.Token);
