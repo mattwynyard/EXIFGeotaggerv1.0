@@ -19,6 +19,7 @@ namespace EXIFGeotagger //v0._1
     {
         public event ImportDataDelegate importData;
         public delegate void ImportDataDelegate(string filePath, string layer, string color);
+       
         private string mfilePath;
         public EXIFGeoTagger mParent;
         private OpenFileDialog openFileDialog;
@@ -30,30 +31,49 @@ namespace EXIFGeotagger //v0._1
 
         public ImportDataForm(string fileType)
         {
-            InitializeComponent();
             this.fileType = fileType;
+            intialize();
+        }
+
+        public ImportDataForm(Form sender, string fileType)
+        {
+            mParent = sender as EXIFGeoTagger;
+            this.fileType = fileType;
+            intialize();
+        }
+
+        private void intialize()
+        {
+            InitializeComponent();
+            
             if (fileType.Equals("access"))
             {
                 Text = "Import Access Database";
-                filter = "mdb files|*.mdb";
+                filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
             }
             else if (fileType.Equals("exf"))
             {
                 Text = "Open Data File";
                 filter = "exf files|*.exf";
-            } else if (fileType.Equals("photos"))
+            }
+            else if (fileType.Equals("photos"))
             {
                 Text = "Import photo data";
                 filter = "jpg files|*.jpg";
             }
+            else if (fileType.Equals("shape"))
+            {
+                Text = "Import shapefile";
+                filter = "ESRI shapefiles|*.shp";
+            }
         }
 
-        /// <summary>
-        /// Bring form to the top
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ImportDataForm_Load(object sender, EventArgs e)
+            /// <summary>
+            /// Bring form to the top
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            private void ImportDataForm_Load(object sender, EventArgs e)
         {
             BringToFront();
             TopMost = true;
@@ -73,7 +93,7 @@ namespace EXIFGeotagger //v0._1
                 openFileDialog.FilterIndex = 2;
                 openFileDialog.Title = "Browse Files";
                 openFileDialog.RestoreDirectory = true;
-                openFileDialog.DefaultExt = "mdb";
+                openFileDialog.DefaultExt = "mdb | accdb";
             }
             else if (fileType.Equals("exf"))
             {
@@ -97,6 +117,15 @@ namespace EXIFGeotagger //v0._1
                     Close();
                     mParent.BringToFront();
                 }
+            }
+            else if (fileType.Equals("shape"))
+            {
+                openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = filter;
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.Title = "Browse Files";
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.DefaultExt = "shp";
             }
 
             //TODO temp hack to handle folder dialog vs file dialog
@@ -122,13 +151,9 @@ namespace EXIFGeotagger //v0._1
             {
                 //mParent.startWorker(sender, e);
             }
-            else if (fileType.Equals("exf"))
+            else
             {
                 importData(mfilePath, mLayer, mlayerColourHex);
-            }
-            else if (fileType.Equals("photos"))
-            {
-                importData(mfilePath, mLayer, mlayerColourHex);    
             }
         }
 
@@ -138,27 +163,27 @@ namespace EXIFGeotagger //v0._1
             {
                 btnColour.BackColor = colorDialog1.Color;
                 mlayerColourHex = colorDialog1.Color.Name;
-                mParent.mlayerColourHex = colorDialog1.Color.Name;
-                mParent.mlayerColour = colorDialog1.Color;
+                //mParent.mlayerColourHex = colorDialog1.Color.Name;
+                //mParent.mlayerColour = colorDialog1.Color;
             }
         }
 
         private void txtLayer_TextChanged(object sender, EventArgs e)
         {
-            mParent.mDBPath = mfilePath;
-            mParent.mLayer = txtLayer.Text;
+            //mParent.mDBPath = mfilePath;
+            //mParent.mLayer = txtLayer.Text;
             mLayer = txtLayer.Text;
         }
 
-        private void ckBoxGeomark_CheckedChanged(object sender, EventArgs e)
-        {
-            if (ckBoxGeomark.Checked)
-            {
-                mParent.allRecords = true;
-            } else
-            {
-                mParent.allRecords = false;
-            }
-        }
+        //private void ckBoxGeomark_CheckedChanged(object sender, EventArgs e)
+        //{
+        //    if (ckBoxGeomark.Checked)
+        //    {
+        //        mParent.allRecords = true;
+        //    } else
+        //    {
+        //        mParent.allRecords = false;
+        //    }
+        //}
     }
 }

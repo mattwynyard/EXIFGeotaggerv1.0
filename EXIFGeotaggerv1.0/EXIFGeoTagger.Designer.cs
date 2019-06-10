@@ -80,6 +80,7 @@ namespace EXIFGeotagger
             this.panel8 = new System.Windows.Forms.Panel();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.eSRIShapefileshpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -409,17 +410,19 @@ namespace EXIFGeotagger
             // importToolStripMenuItem
             // 
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.accessmdbToolStripMenuItem});
+            this.accessmdbToolStripMenuItem,
+            this.eSRIShapefileshpToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.importToolStripMenuItem.Text = "Import";
             this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess_Click);
             // 
             // accessmdbToolStripMenuItem
             // 
             this.accessmdbToolStripMenuItem.Name = "accessmdbToolStripMenuItem";
-            this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.accessmdbToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.accessmdbToolStripMenuItem.Text = "Access (.mdb)";
+          
             // 
             // exportToolStripMenuItem
             // 
@@ -598,6 +601,13 @@ namespace EXIFGeotagger
             this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.deleteLayerToolStripMenuItem.Text = "Delete Layer";
             // 
+            // eSRIShapefileshpToolStripMenuItem
+            // 
+            this.eSRIShapefileshpToolStripMenuItem.Name = "eSRIShapefileshpToolStripMenuItem";
+            this.eSRIShapefileshpToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.eSRIShapefileshpToolStripMenuItem.Text = "ESRI Shapefile (.shp)";
+            this.eSRIShapefileshpToolStripMenuItem.Click += new System.EventHandler(this.ESRIShapefileshpToolStripMenuItem_Click);
+            // 
             // EXIFGeoTagger
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -689,6 +699,7 @@ namespace EXIFGeotagger
         private System.Windows.Forms.Panel panel8;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem deleteLayerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem eSRIShapefileshpToolStripMenuItem;
     }
 }
 

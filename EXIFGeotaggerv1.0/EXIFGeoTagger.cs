@@ -826,14 +826,24 @@ namespace EXIFGeotagger //v0._1
         #endregion
 
         #region Callbacks
+
+        public void importShapeCallback(string path, string layer, string color)
+        {
+            ShapeReader shape = new ShapeReader(path);
+            shape.errorHandler += errorHandlerCallback;
+            shape.read();
+        }
+
+        public void errorHandlerCallback(string error, string message)
+        {
+            MessageBox.Show(message, error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
         /// <summary>
         /// 
         /// </summary>
         /// <param name="folderPath"></param>
         /// <param name="layer"></param>
         /// <param name="color"></param>
-        
-
         public void exfImportCallback(string folderPath, string layer, string color)
         {
             Serializer s = new Serializer(folderPath);
@@ -1111,6 +1121,14 @@ namespace EXIFGeotagger //v0._1
 
         }
 
-        
+        private void ESRIShapefileshpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ImportDataForm importForm = new ImportDataForm(this, "shape");
+            importForm.Show();
+
+            importForm.importData += importShapeCallback;
+            
+        }
+
     } //end class   
 } //end namespace
