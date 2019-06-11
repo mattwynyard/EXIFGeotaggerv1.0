@@ -30,7 +30,35 @@ namespace ShapeFile
         public double xMin;
         public double yMin;
         public double xMax;
+        public double zMin;
+        public double mMin;
         public double yMax;
+        public double zMax;
+        public double mMax;
+
+    }
+
+    /// <summary>
+    ///Box - The Bounding Box for the PolyLine stored in the order Xmin, Ymin, Xmax, Ymax.
+    ///NumParts - The number of parts in the PolyLine. NumPoints The total number of points for all parts.
+    ///Parts - An array of length NumParts. Stores, for each PolyLine, the index of its first point in the 
+    ///         points array.Array indexes are with respect to 0.
+    ///Points - An array of length NumPoints. The points for each part in the PolyLine are stored end to end.
+    ///         The points for Part 2 follow the points for Part 1, and so on.The parts array holds the array 
+    ///         index of the starting point for each part. There is no delimiter in the points array between parts.
+    /// </summary>
+    public struct PolyLineZ
+    {
+        public double[] box;
+        public int numParts;
+        public int numPoints;
+        public int[] parts;
+        public Point[] points;
+        public double[] zRange;
+        public double[] zArray;
+        public double[] mRange;
+        public double[] mArray;
+
 
     }
     class ShapeReader
@@ -69,16 +97,23 @@ namespace ShapeFile
             Int32 type = byteToInt32(b);
             offset += 4;
             s.ShapeType = type;
+            //bounding box
             b = new byte[8];
-            Array.Copy(shpData, offset, b, 0, 8);
+            Array.Copy(shpData, offset, b, 0, 8); //xMin
             offset += 8;
-            double xMin = byteToDouble(b);
-            Array.Copy(shpData, offset, b, 0, 8);
+            double xMin = byteToDouble(b); 
+            Array.Copy(shpData, offset, b, 0, 8); //yMin
             offset += 8;
             double yMin = byteToDouble(b);
+
+            Array.Copy(shpData, offset, b, 0, 8); //zMin
+            offset += 8;
+            double zMin = byteToDouble(b);
+            Array.Copy(shpData, offset, b, 0, 8); //mMin
+            offset += 8;
+            double mMin = byteToDouble(b);
+
             Point pMin = NZTMtoLatLong(yMin, xMin);
-
-
 
             Array.Copy(shpData, offset, b, 0, 8);
             offset += 8;
@@ -105,17 +140,20 @@ namespace ShapeFile
             //{
             while (offset < size * 2)
             { 
+                //record numer
                 Array.Copy(shpData, offset, b, 0, 4);
                 int record = byteToInt32(b);
                 UInt32 record_uint32 = littleEndiantoBigEndian((UInt32)record);
                 record = (int)record_uint32;
                 offset += 4;
 
+                //data length 16bit words
                 Array.Copy(shpData, offset, b, 0, 4);
                 offset += 4;
                 int length = byteToInt32(b); //16 bit words
                 UInt32 length_uint32 = littleEndiantoBigEndian((UInt32)length);
                 length = (int)length_uint32;
+                //shape type
                 Array.Copy(shpData, 108, b, 0, 4);
                 int shapeType = byteToInt32(b);
                 offset += 4;
@@ -123,28 +161,8 @@ namespace ShapeFile
                 if (shapeType == 8) //multipoint
                 {
                     MultiPoint mPoint = new MultiPoint();
-                    double[] multiBox = new double[4];
-                    //bounding box
-                    b = new byte[8];
-                    Array.Copy(shpData, offset, b, 0, 8);
-                    multiBox[0] = byteToDouble(b); //xMin
-                    offset += 8;
-                    Array.Copy(shpData, offset, b, 0, 8);
-                    multiBox[1] = byteToDouble(b); //yMin
-                    offset += 8;
-                    Array.Copy(shpData, offset, b, 0, 8);
-                    multiBox[2] = byteToDouble(b); //xMax
-                    offset += 8;
-                    Array.Copy(shpData, offset, b, 0, 8);
-                    multiBox[3] = byteToDouble(b); //yMax
-                    offset += 8;
-                    Point min = NZTMtoLatLong(multiBox[1], multiBox[0]);
-                    Point max = NZTMtoLatLong(multiBox[3], multiBox[2]);
-                    multiBox[0] = min.x;
-                    multiBox[1] = min.y;
-                    multiBox[2] = max.x;
-                    multiBox[3] = max.y;
-                    mPoint.box = multiBox;
+                    //bounding box 
+                    mPoint.box = getBoundingBox(shpData, ref offset);
                     //num points
                     b = new byte[4];
                     Array.Copy(shpData, offset, b, 0, 4);
@@ -152,17 +170,74 @@ namespace ShapeFile
                     int numPoints = byteToInt32(b);
                     mPoint.num = numPoints;
                     //Points
-                    Point[] points = processMultiPoint(shpData, offset, numPoints);
-                    offset += 16 * numPoints;
+                    Point[] points = processMultiPoint(shpData, ref offset, numPoints);
+                    //offset += 16 * numPoints;
                     mPoint.points = points;
                     mpointList.Add(mPoint);
+                   
                 }
-                else if(shapeType == 13) //ploylineZ
+                else if (shapeType == 13) //polylineZ
                 {
-                    MultiPoint mPoint = new MultiPoint();
-                }
+                    PolyLineZ pl = new PolyLineZ();
+                    pl.box = getBoundingBox(shpData, ref offset);
+                    b = new byte[4];
+                    Array.Copy(shpData, offset, b, 0, 4);
+                    offset += 4;
+                    pl.numParts = byteToInt32(b); //number of parts
+                    b = new byte[4];
+                    Array.Copy(shpData, offset, b, 0, 4);
+                    offset += 4;
+                    pl.numPoints = byteToInt32(b); //number of points
+                    pl.parts = getnumParts(shpData, ref offset, pl.numParts); //parts
+                    pl.points = processMultiPoint(shpData, ref offset, pl.numPoints);
+                }             
             }
-            s.MultiPoint = mpointList.ToArray();
+            
+        }
+
+        public Point[] getPolyLineZPoints(byte[] source, ref int offset, int n)
+        {
+            Point[] p = new Point[n];
+            return p;
+        }
+
+        public int[] getnumParts(byte[] source, ref int offset, int n)
+        {
+            int[] dest = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                byte[] b = new byte[4];
+                Array.Copy(shpData, offset, b, 0, 4);
+                dest[i] = byteToInt32(b);
+                offset += 4;
+            }
+
+            return dest;
+        }
+
+        public double[] getBoundingBox(byte[] source, ref int offset)
+        {
+            byte[] b = new byte[8];
+            double[] dest = new double[4];
+            Array.Copy(shpData, offset, b, 0, 8);
+            dest[0] = byteToDouble(b); //xMin
+            offset += 8;
+            Array.Copy(shpData, offset, b, 0, 8);
+            dest[1] = byteToDouble(b); //yMin
+            offset += 8;
+            Array.Copy(shpData, offset, b, 0, 8);
+            dest[2] = byteToDouble(b); //xMax
+            offset += 8;
+            Array.Copy(shpData, offset, b, 0, 8);
+            dest[3] = byteToDouble(b); //yMax
+            offset += 8;
+            Point min = NZTMtoLatLong(dest[1], dest[0]);
+            Point max = NZTMtoLatLong(dest[3], dest[2]);
+            dest[0] = min.x;
+            dest[1] = min.y;
+            dest[2] = max.x;
+            dest[3] = max.y;
+            return dest;
         }
 
         public void readDBF()
@@ -201,7 +276,7 @@ namespace ShapeFile
         /// <param name="offset">shapefile read cursor</param>
         /// <param name="numPoints">the number of points to process</param>
         /// <returns> a array of points</returns>
-        private Point[] processMultiPoint(byte[] source, int offset, int numPoints)
+        private Point[] processMultiPoint(byte[] source, ref int offset, int numPoints)
         {
             Point[] mp = new Point[numPoints];
             byte[] dest = new byte[numPoints * 8];

@@ -18,5 +18,7 @@ namespace ShapeFile
 
         public MultiPoint[] MultiPoint { get; set; }
 
-}
+        public PolyLineZ[] PolyLineZ { get; set; }
+
+    }
 }
