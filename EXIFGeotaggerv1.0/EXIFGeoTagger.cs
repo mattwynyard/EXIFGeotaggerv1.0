@@ -22,6 +22,7 @@ using System.Threading;
 using Amazon;
 using System.Net;
 using System.Collections.Concurrent;
+using ShapeFile;
 
 public delegate Image getAWSImage();
 
@@ -832,6 +833,7 @@ namespace EXIFGeotagger //v0._1
             ShapeReader shape = new ShapeReader(path);
             shape.errorHandler += errorHandlerCallback;
             shape.read();
+            //shape.readDBF();
         }
 
         public void errorHandlerCallback(string error, string message)
