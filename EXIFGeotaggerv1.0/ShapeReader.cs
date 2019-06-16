@@ -75,6 +75,9 @@ namespace ShapeFile
         public void read()
         {
             double lat, lng;
+            int errorCount = 0;
+            int numRecords = 0;
+            int recordNumber;
             ShapeFile s = new ShapeFile();
             shpData = File.ReadAllBytes(path);
             byte[] b = new byte[4];
@@ -135,16 +138,19 @@ namespace ShapeFile
             b = new byte[4];
             offset = 100;
             List<MultiPoint> mpointList = new List<MultiPoint>();
-            int numRecords = 100000;
+            List<PolyLineZ> polyZList = new List<PolyLineZ>();
+            
             //for (int i = 0; i < numRecords; i++)
             //{
             while (offset < size * 2)
-            { 
+            {
+                
                 //record numer
                 Array.Copy(shpData, offset, b, 0, 4);
                 int record = byteToInt32(b);
                 UInt32 record_uint32 = littleEndiantoBigEndian((UInt32)record);
                 record = (int)record_uint32;
+                recordNumber = record;
                 offset += 4;
 
                 //data length 16bit words
@@ -157,44 +163,95 @@ namespace ShapeFile
                 Array.Copy(shpData, 108, b, 0, 4);
                 int shapeType = byteToInt32(b);
                 offset += 4;
+                if (length > 2) //handle empty shape
+                {
 
-                if (shapeType == 8) //multipoint
-                {
-                    MultiPoint mPoint = new MultiPoint();
-                    //bounding box 
-                    mPoint.box = getBoundingBox(shpData, ref offset);
-                    //num points
-                    b = new byte[4];
-                    Array.Copy(shpData, offset, b, 0, 4);
-                    offset += 4;
-                    int numPoints = byteToInt32(b);
-                    mPoint.num = numPoints;
-                    //Points
-                    Point[] points = processMultiPoint(shpData, ref offset, numPoints);
-                    //offset += 16 * numPoints;
-                    mPoint.points = points;
-                    mpointList.Add(mPoint);
-                   
+
+                    if (shapeType == 8) //multipoint
+                    {
+                        MultiPoint mPoint = new MultiPoint();
+                        //bounding box 
+                        mPoint.box = getBoundingBox(shpData, ref offset);
+                        //num points
+                        b = new byte[4];
+                        Array.Copy(shpData, offset, b, 0, 4);
+                        offset += 4;
+                        int numPoints = byteToInt32(b);
+                        mPoint.num = numPoints;
+                        //Points
+                        Point[] points = processMultiPoint(shpData, ref offset, numPoints);
+                        //offset += 16 * numPoints;
+                        mPoint.points = points;
+                        mpointList.Add(mPoint);
+
+                    }
+                    else if (shapeType == 13) //polylineZ
+                    {
+                        PolyLineZ pl = new PolyLineZ();
+                        pl.box = getBoundingBox(shpData, ref offset);
+                        b = new byte[4];
+                        Array.Copy(shpData, offset, b, 0, 4);
+                        offset += 4;
+                        pl.numParts = byteToInt32(b); //number of parts
+                        b = new byte[4];
+                        Array.Copy(shpData, offset, b, 0, 4);
+                        offset += 4;
+                        pl.numPoints = byteToInt32(b); //number of points
+                        pl.parts = getnumParts(shpData, ref offset, pl.numParts); //parts
+                                                                                  //try
+                                                                                  //{
+                        pl.points = processMultiPoint(shpData, ref offset, pl.numPoints);
+                        //} catch (OutOfMemoryException ex)
+                        //{
+                        //    string m = ex.StackTrace;
+                        //}
+
+
+                        b = new byte[8];
+                        Array.Copy(shpData, offset, b, 0, 8);
+                        offset += 8;
+                        double _zMin = byteToDouble(b);
+                        b = new byte[8];
+                        Array.Copy(shpData, offset, b, 0, 8);
+                        offset += 8;
+                        double _zMax = byteToDouble(b);
+
+                        pl.zArray = getZArray(shpData, ref offset, pl.numPoints);
+
+
+                        polyZList.Add(pl);
+                        numRecords++;
+                    }
+                    
                 }
-                else if (shapeType == 13) //polylineZ
+                else
                 {
-                    PolyLineZ pl = new PolyLineZ();
-                    pl.box = getBoundingBox(shpData, ref offset);
-                    b = new byte[4];
-                    Array.Copy(shpData, offset, b, 0, 4);
-                    offset += 4;
-                    pl.numParts = byteToInt32(b); //number of parts
-                    b = new byte[4];
-                    Array.Copy(shpData, offset, b, 0, 4);
-                    offset += 4;
-                    pl.numPoints = byteToInt32(b); //number of points
-                    pl.parts = getnumParts(shpData, ref offset, pl.numParts); //parts
-                    pl.points = processMultiPoint(shpData, ref offset, pl.numPoints);
-                }             
+                    errorCount++;
+                }
             }
-            
+            s.MultiPoint = mpointList.ToArray();
+            s.PolyLineZ = polyZList.ToArray();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source">the shapefile byte data</param>
+        /// <param name="offset">current read position of cursor (passed by reference)</param>
+        /// <param name="n">the number of points for all parts</param>
+        /// <returns></returns>
+        public double[] getZArray(byte[] source, ref int offset, int n)
+        {
+            double[] zArray = new double[n];
+            byte[] b = new byte[8];
+            for (int i = 0; i < n; i++)
+            {
+                Array.Copy(shpData, offset, b, 0, 8);
+                zArray[i] = byteToDouble(b);
+                offset += 8;
+            }
+            return zArray;
+        }
         public Point[] getPolyLineZPoints(byte[] source, ref int offset, int n)
         {
             Point[] p = new Point[n];
@@ -249,7 +306,8 @@ namespace ShapeFile
 
             using (OleDbConnection con = new OleDbConnection(constr))
             {
-                var sql = "SELECT * FROM " + "data.dbf";
+                //var sql = "SELECT * FROM " + "dat_a.dbf";
+                var sql = "SELECT * FROM " + dbPath + fileName;
                 OleDbCommand cmd = new OleDbCommand(sql, con);
                 con.Open();
                 DataTable dt = new DataTable();
@@ -332,7 +390,7 @@ namespace ShapeFile
   
         private void invalidFile(string hex)
         {
-            errorHandler("Error Reading File", "Invalid Shape File\n" + "Bytes read = " + hex);
+            errorHandler("Error Reading File", "Invalid Shape File\n" + "Bytes number read = " + hex);
         }
 
     }

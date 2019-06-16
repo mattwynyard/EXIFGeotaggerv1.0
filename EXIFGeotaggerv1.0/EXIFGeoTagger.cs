@@ -833,7 +833,7 @@ namespace EXIFGeotagger //v0._1
             ShapeReader shape = new ShapeReader(path);
             shape.errorHandler += errorHandlerCallback;
             shape.read();
-            //shape.readDBF();
+            shape.readDBF();
         }
 
         public void errorHandlerCallback(string error, string message)
