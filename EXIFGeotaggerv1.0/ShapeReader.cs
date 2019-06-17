@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
+using GMap.NET;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace ShapeFile
     {
         public double[] box;
         public int num;
-        public Point[] points;
+        public PointLatLng[] points;
     }
 
     public struct BoundingBox
@@ -53,7 +54,7 @@ namespace ShapeFile
         public int numParts;
         public int numPoints;
         public int[] parts;
-        public Point[] points;
+        public PointLatLng[] points;
         public double[] zRange;
         public double[] zArray;
         public double[] mRange;
@@ -61,12 +62,15 @@ namespace ShapeFile
 
 
     }
+
+    
     class ShapeReader
     {
         public event ErrorDelegate errorHandler;
         public delegate void ErrorDelegate(string error, string  message);
-        String path;
-        byte[] shpData;
+        private String path;
+        private byte[] shpData;
+        private ESRIShapeFile s;
         public ShapeReader(string path)
         {
             this.path = path;
@@ -78,7 +82,7 @@ namespace ShapeFile
             int errorCount = 0;
             int numRecords = 0;
             int recordNumber;
-            ShapeFile s = new ShapeFile();
+            s = new ESRIShapeFile();
             shpData = File.ReadAllBytes(path);
             byte[] b = new byte[4];
             int offset = 0;
@@ -116,7 +120,7 @@ namespace ShapeFile
             offset += 8;
             double mMin = byteToDouble(b);
 
-            Point pMin = NZTMtoLatLong(yMin, xMin);
+            PointLatLng pMin = NZTMtoLatLong(yMin, xMin);
 
             Array.Copy(shpData, offset, b, 0, 8);
             offset += 8;
@@ -124,13 +128,13 @@ namespace ShapeFile
             Array.Copy(shpData, offset, b, 0, 8);
             offset += 8;
             double yMax = byteToDouble(b);
-            Point pMax = NZTMtoLatLong(yMin, xMin);
+            PointLatLng pMax = NZTMtoLatLong(yMin, xMin);
             BoundingBox box = new BoundingBox();
             
-            box.xMin = pMin.x;
-            box.yMin = pMin.y;
-            box.xMax = pMax.x;
-            box.yMax = pMax.y;
+            box.xMin = pMin.Lng;
+            box.yMin = pMin.Lat;
+            box.xMax = pMax.Lng;
+            box.yMax = pMax.Lat;
             s.Box = box;
 
             //body of file
@@ -179,7 +183,7 @@ namespace ShapeFile
                         int numPoints = byteToInt32(b);
                         mPoint.num = numPoints;
                         //Points
-                        Point[] points = processMultiPoint(shpData, ref offset, numPoints);
+                        PointLatLng[] points = processMultiPoint(shpData, ref offset, numPoints);
                         //offset += 16 * numPoints;
                         mPoint.points = points;
                         mpointList.Add(mPoint);
@@ -201,12 +205,6 @@ namespace ShapeFile
                                                                                   //try
                                                                                   //{
                         pl.points = processMultiPoint(shpData, ref offset, pl.numPoints);
-                        //} catch (OutOfMemoryException ex)
-                        //{
-                        //    string m = ex.StackTrace;
-                        //}
-
-
                         b = new byte[8];
                         Array.Copy(shpData, offset, b, 0, 8);
                         offset += 8;
@@ -217,8 +215,6 @@ namespace ShapeFile
                         double _zMax = byteToDouble(b);
 
                         pl.zArray = getZArray(shpData, ref offset, pl.numPoints);
-
-
                         polyZList.Add(pl);
                         numRecords++;
                     }
@@ -231,6 +227,11 @@ namespace ShapeFile
             }
             s.MultiPoint = mpointList.ToArray();
             s.PolyLineZ = polyZList.ToArray();
+        }
+
+        public ESRIShapeFile getShape()
+        {
+            return s;
         }
 
         /// <summary>
@@ -288,12 +289,12 @@ namespace ShapeFile
             Array.Copy(shpData, offset, b, 0, 8);
             dest[3] = byteToDouble(b); //yMax
             offset += 8;
-            Point min = NZTMtoLatLong(dest[1], dest[0]);
-            Point max = NZTMtoLatLong(dest[3], dest[2]);
-            dest[0] = min.x;
-            dest[1] = min.y;
-            dest[2] = max.x;
-            dest[3] = max.y;
+            PointLatLng min = NZTMtoLatLong(dest[1], dest[0]);
+            PointLatLng max = NZTMtoLatLong(dest[3], dest[2]);
+            dest[0] = min.Lng;
+            dest[1] = min.Lat;
+            dest[2] = max.Lng;
+            dest[3] = max.Lat;
             return dest;
         }
 
@@ -334,9 +335,9 @@ namespace ShapeFile
         /// <param name="offset">shapefile read cursor</param>
         /// <param name="numPoints">the number of points to process</param>
         /// <returns> a array of points</returns>
-        private Point[] processMultiPoint(byte[] source, ref int offset, int numPoints)
+        private PointLatLng[] processMultiPoint(byte[] source, ref int offset, int numPoints)
         {
-            Point[] mp = new Point[numPoints];
+            PointLatLng[] mp = new PointLatLng[numPoints];
             byte[] dest = new byte[numPoints * 8];
             for (int i = 0; i < numPoints; i++)
             {
@@ -344,13 +345,13 @@ namespace ShapeFile
                 double x = byteToDouble(dest);
                 Array.Copy(source, offset + 8, dest, 0, 8);
                 double y = byteToDouble(dest);
-                Point p = NZTMtoLatLong(y, x);
+                PointLatLng p = NZTMtoLatLong(y, x);
                 mp[i] = p;
                 offset += 16;
             }
             return mp;
         }
-        private Point NZTMtoLatLong(double y, double x)
+        private PointLatLng NZTMtoLatLong(double y, double x)
         {
             double lat, lng;
             unsafe
@@ -359,9 +360,9 @@ namespace ShapeFile
             }
             lat = lat * Transformation.rad2deg;
             lng = lng * Transformation.rad2deg;
-            Point p = new Point();
-            p.x = lng;
-            p.y = lat;
+            PointLatLng p = new PointLatLng();
+            p.Lng = lng;
+            p.Lat = lat;
             return p;
         }
 

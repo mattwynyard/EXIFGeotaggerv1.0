@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ShapeFile
 {
-    class ShapeFile
+    class ESRIShapeFile
     {
         public int Size { get; set; }
 

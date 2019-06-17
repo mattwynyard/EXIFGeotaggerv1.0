@@ -522,6 +522,7 @@ namespace EXIFGeotagger //v0._1
                 if (tag == null)
                 {
                     selectedMarkersOverlay.Clear();
+                    gMap.Overlays.Remove(selectedMarkersOverlay);
                     mOverlayDict.Remove("selected");
                 }
                 else
@@ -529,6 +530,7 @@ namespace EXIFGeotagger //v0._1
                     if (tag.IsSelected == true) //deselects marker
                     {
                         selectedMarkersOverlay.Clear();
+                        gMap.Overlays.Remove(selectedMarkersOverlay);
                         mOverlayDict.Remove("selected");
                         tag.IsSelected = false;
                         currentMarker = null;
@@ -536,6 +538,7 @@ namespace EXIFGeotagger //v0._1
                     else
                     {
                         selectedMarkersOverlay.Clear(); //selects a new marker
+                        gMap.Overlays.Remove(selectedMarkersOverlay);
                         mOverlayDict.Remove("selected");
                         currentMarker = marker;
                         MarkerTag currentTag = (MarkerTag)currentMarker.Tag;
@@ -830,10 +833,24 @@ namespace EXIFGeotagger //v0._1
 
         public void importShapeCallback(string path, string layer, string color)
         {
+            GMapRoute line_layer;
+            GMapOverlay line_overlay = new GMapOverlay("lines");
             ShapeReader shape = new ShapeReader(path);
+            gMap.Overlays.Add(line_overlay);
             shape.errorHandler += errorHandlerCallback;
             shape.read();
-            shape.readDBF();
+            ESRIShapeFile s = shape.getShape();
+            PolyLineZ[] polyLines = s.PolyLineZ;
+            foreach (PolyLineZ polyLine in polyLines) {
+                PointLatLng[] points = polyLine.points;
+                
+                line_layer = new GMapRoute(points, "lines");
+                line_layer.Stroke = new Pen(Brushes.Black, 1);
+                line_overlay.Routes.Add(line_layer);
+            }
+
+            
+            //shape.readDBF();
         }
 
         public void errorHandlerCallback(string error, string message)
