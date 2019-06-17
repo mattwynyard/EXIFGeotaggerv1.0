@@ -59,9 +59,17 @@ namespace ShapeFile
         public double[] zArray;
         public double[] mRange;
         public double[] mArray;
-
-
     }
+
+    public struct PolyLine
+    {
+        public double[] box;
+        public int numParts;
+        public int numPoints;
+        public int[] parts;
+        public PointLatLng[] points;
+    }
+
 
     
     class ShapeReader
@@ -84,6 +92,7 @@ namespace ShapeFile
             int recordNumber;
             s = new ESRIShapeFile();
             shpData = File.ReadAllBytes(path);
+            string prj = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + ".prj";
             byte[] b = new byte[4];
             int offset = 0;
             Array.Copy(shpData, offset, b, 0, 4);
@@ -143,9 +152,7 @@ namespace ShapeFile
             offset = 100;
             List<MultiPoint> mpointList = new List<MultiPoint>();
             List<PolyLineZ> polyZList = new List<PolyLineZ>();
-            
-            //for (int i = 0; i < numRecords; i++)
-            //{
+
             while (offset < size * 2)
             {
                 
@@ -169,9 +176,18 @@ namespace ShapeFile
                 offset += 4;
                 if (length > 2) //handle empty shape
                 {
+                    if (shapeType == 3) //multipoint
+                    {
+                        PolyLineZ pl = new PolyLineZ();
+                        pl.box = getBoundingBox(shpData, ref offset);
+                        b = new byte[4];
+                        Array.Copy(shpData, offset, b, 0, 4);
+                        offset += 4;
+                        pl.numParts = byteToInt32(b); //number of parts
+                    }
 
 
-                    if (shapeType == 8) //multipoint
+                    else if (shapeType == 8) //multipoint
                     {
                         MultiPoint mPoint = new MultiPoint();
                         //bounding box 

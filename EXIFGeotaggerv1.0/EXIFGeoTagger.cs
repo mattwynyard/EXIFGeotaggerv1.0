@@ -112,7 +112,6 @@ namespace EXIFGeotagger //v0._1
             gMap.MaxZoom = 23;
             gMap.MinZoom = 5;
             gMap.Zoom = 10;
-            //gMap.DragButton = MouseButtons.Left;
             gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
             gMap.MouseMove += gMap_OnMouseMoved;
             gMap.DragButton = MouseButtons.Right;
@@ -131,8 +130,7 @@ namespace EXIFGeotagger //v0._1
             imageList = new ImageList();
             layerCount = 0;
             selectedMarkersOverlay = new GMapOverlay("selected");
-            //gMap.Overlays.Add(selectedMarkersOverlay);
-            //mOverlayDict.Add("selected", null);
+
         }
 
         
@@ -150,8 +148,6 @@ namespace EXIFGeotagger //v0._1
             importForm.mParent = this;
             importForm.Show();
         }
-
-       
 
         #region Plotting
         /// <summary>
@@ -221,8 +217,7 @@ namespace EXIFGeotagger //v0._1
 
         private GMapMarker setToolTip(GMapMarker marker)
         {
-            MarkerTag tag = (MarkerTag)marker.Tag;
-            
+            MarkerTag tag = (MarkerTag)marker.Tag;         
             marker.ToolTipText = '\n' + tag.ToString();
             marker.ToolTip.Fill = Brushes.White;
             marker.ToolTip.Foreground = Brushes.Black;
@@ -705,8 +700,6 @@ namespace EXIFGeotagger //v0._1
                     var itemZoom = contextMenu.MenuItems.Add("Zoom to Layer");
                     listLayers.ContextMenu = contextMenu;
                     itemDelete.Click += contextMenu_ItemDelete;
-
-
                 }
                 if (e.Button == MouseButtons.Left)
                 {
@@ -824,7 +817,6 @@ namespace EXIFGeotagger //v0._1
             importForm.mParent = this;
             importForm.Show();
             importForm.importData += exfImportCallback;
-
         }
 
         #endregion
