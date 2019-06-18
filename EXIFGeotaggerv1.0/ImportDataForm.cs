@@ -18,7 +18,7 @@ namespace EXIFGeotagger //v0._1
     public partial class ImportDataForm : Form
     {
         public event ImportDataDelegate importData;
-        public delegate void ImportDataDelegate(string filePath, string layer, string color);
+        public delegate void ImportDataDelegate(string filePath, string layer, Color color);
        
         private string mfilePath;
         public EXIFGeoTagger mParent;
@@ -26,7 +26,7 @@ namespace EXIFGeotagger //v0._1
         private FolderBrowserDialog browseFolderDialog;
         private string fileType;
         private string filter;
-        private string mlayerColourHex;
+        private Color mColor;
         private string mLayer;
 
         public ImportDataForm(string fileType)
@@ -153,7 +153,7 @@ namespace EXIFGeotagger //v0._1
             }
             else
             {
-                importData(mfilePath, mLayer, mlayerColourHex);
+                importData(mfilePath, mLayer, mColor);
             }
         }
 
@@ -162,7 +162,7 @@ namespace EXIFGeotagger //v0._1
             if (colorDialog1.ShowDialog() == DialogResult.OK)
             {
                 btnColour.BackColor = colorDialog1.Color;
-                mlayerColourHex = colorDialog1.Color.Name;
+                mColor = colorDialog1.Color;
                 //mParent.mlayerColourHex = colorDialog1.Color.Name;
                 //mParent.mlayerColour = colorDialog1.Color;
             }

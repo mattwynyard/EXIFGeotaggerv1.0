@@ -23,6 +23,7 @@ using Amazon;
 using System.Net;
 using System.Collections.Concurrent;
 using ShapeFile;
+using System.Globalization;
 
 public delegate Image getAWSImage();
 
@@ -31,7 +32,7 @@ namespace EXIFGeotagger //v0._1
     public partial class EXIFGeoTagger : Form
     {
 
-        public delegate Task<GMapOverlay> ReadGeoTagDelegate(string folderPath, string layer, string color);
+        public delegate Task<GMapOverlay> ReadGeoTagDelegate(string folderPath, string layer, Color color);
 
         private string connectionString;
 
@@ -232,6 +233,8 @@ namespace EXIFGeotagger //v0._1
             overlay.Markers.Clear();
             try
             {
+                //GMapImage image = new GMapImage();
+
                 GMapMarker[] markers = mOverlayDict[overlay.Id];
                 MarkerTag tag = (MarkerTag)markers[0].Tag;
                 if (tag == null)
@@ -250,7 +253,7 @@ namespace EXIFGeotagger //v0._1
                     markers = mOverlayDict[overlay.Id];
                     int count = markers.Length;
                     int step;
-                    if (count > 2000)
+                    if (count > 5000)
                     {
                         step = getStep(size);
                     }
@@ -823,25 +826,68 @@ namespace EXIFGeotagger //v0._1
 
         #region Callbacks
 
-        public void importShapeCallback(string path, string layer, string color)
+        public void importShapeCallback(string path, string layer, Color color)
         {
-            GMapRoute line_layer;
-            GMapOverlay line_overlay = new GMapOverlay("lines");
+            
             ShapeReader shape = new ShapeReader(path);
-            gMap.Overlays.Add(line_overlay);
+            
             shape.errorHandler += errorHandlerCallback;
             shape.read();
             ESRIShapeFile s = shape.getShape();
-            PolyLineZ[] polyLines = s.PolyLineZ;
-            foreach (PolyLineZ polyLine in polyLines) {
-                PointLatLng[] points = polyLine.points;
-                
-                line_layer = new GMapRoute(points, "lines");
-                line_layer.Stroke = new Pen(Brushes.Black, 1);
-                line_overlay.Routes.Add(line_layer);
+            if (s.ShapeType == 3 || s.ShapeType == 13)
+            {
+                GMapRoute line_layer;
+                GMapOverlay line_overlay = new GMapOverlay(layer);
+                gMap.Overlays.Add(line_overlay);
+                PolyLineZ[] polyLines = s.PolyLineZ;
+                foreach (PolyLineZ polyLine in polyLines)
+                {
+                    PointLatLng[] points = polyLine.points;
+                    line_layer = new GMapRoute(points, "lines"); //TODO get carriage number
+                    line_layer.Stroke = new Pen(color, 1);
+                    line_overlay.Routes.Add(line_layer);
+                }
             }
+            else if (s.ShapeType == 1)
+            {
+                ShapeFile.Point[] points = s.Point;
+                GMapOverlay markers = new GMapOverlay(layer);
+                gMap.Overlays.Add(markers);
+                Bitmap bitmap = ColorTable.getBitmap(color.Name, 4);
+                int id = 0;
+                foreach (ShapeFile.Point point in points)
+                {
+                    PointLatLng pointLatLng = new PointLatLng(point.y, point.x);
+                    MarkerTag tag = new MarkerTag(color.Name, id);
+                    GMapMarker marker = new GMarkerGoogle(pointLatLng, bitmap);
+                    marker.Tag = tag;
+                    markers.Markers.Add(marker);
+                    id++;
+                }
+                GMapMarker[] markersArr = markers.Markers.ToArray<GMapMarker>();
+                mOverlayDict.Add(layer, markersArr);
 
-            
+            } else if (s.ShapeType == 8) {
+                MultiPoint[] points = s.MultiPoint;
+                GMapOverlay markers = new GMapOverlay(layer);
+                gMap.Overlays.Add(markers);
+                Bitmap bitmap = ColorTable.getBitmap(color.Name, 4);
+                int id = 0;
+                foreach (MultiPoint point in points)
+                {
+                    PointLatLng[] pointsLatLng = point.points;
+                    foreach (PointLatLng p in pointsLatLng)
+                    {
+                        MarkerTag tag = new MarkerTag(color.Name, id);
+                        GMapMarker marker = new GMarkerGoogle(p, bitmap);
+                        marker.Tag = tag;
+                        markers.Markers.Add(marker);
+                        id++;
+                    }
+                }
+                GMapMarker[] markersArr = markers.Markers.ToArray<GMapMarker>();
+                mOverlayDict.Add(layer, markersArr);
+            }           
             //shape.readDBF();
         }
 
@@ -855,7 +901,7 @@ namespace EXIFGeotagger //v0._1
         /// <param name="folderPath"></param>
         /// <param name="layer"></param>
         /// <param name="color"></param>
-        public void exfImportCallback(string folderPath, string layer, string color)
+        public void exfImportCallback(string folderPath, string layer, Color color)
         {
             Serializer s = new Serializer(folderPath);
             mLayerAttributes = s.deserialize();
@@ -864,7 +910,7 @@ namespace EXIFGeotagger //v0._1
             min_lat = mLayerAttributes.MinLat;
             max_lng = mLayerAttributes.MaxLng;
             min_lng = mLayerAttributes.MinLng;
-            plotLayer(layer, color);
+            plotLayer(layer, color.Name);
         }
 
         private void menuRunGeoTag_Click(object sender, EventArgs e)
@@ -894,8 +940,9 @@ namespace EXIFGeotagger //v0._1
             connection.Close();
         }
 
-        public async void readGeoTagCallback(string inPath, string layer, string color)
+        public async void readGeoTagCallback(string inPath, string layer, Color color)
         {
+            
             ThreadUtil t = new ThreadUtil();
             t.setMinMax += setMinMax;
             t.addRecord += addRecord;
@@ -903,11 +950,11 @@ namespace EXIFGeotagger //v0._1
             fileQueue = await t.buildQueue(inPath);
             GMapOverlay overlay = new GMapOverlay(layer);
             resetMinMax();
-            overlay = await t.readGeoTag(fileQueue, inPath, layer, color);
+            overlay = await t.readGeoTag(fileQueue, inPath, layer, color.Name);
             
             setLayerAttributes();
             zoomToMarkers();
-            refreshUI(overlay, color);
+            refreshUI(overlay, color.Name);
         }
 
         public async void geoTagComplete(int geotagCount, int stationaryCount, int errorCount)
