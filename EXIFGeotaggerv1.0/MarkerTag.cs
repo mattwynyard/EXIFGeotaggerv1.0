@@ -35,7 +35,9 @@ namespace EXIFGeotagger //v0._1
 
         public string Path { get; set; }
 
-        public Boolean IsSelected { get; set; } 
+        public Boolean IsSelected { get; set; }
+
+        public Dictionary<string, string> Dictionary { get; set; }
 
         public override string ToString()
         {

@@ -203,6 +203,7 @@ namespace EXIFGeotagger //v0._1
                     tag.Size = 4;
                     tag.PhotoName = record.Key;
                     tag.Record = record.Value;
+                    //tag.Bitmap = bitmap;
                     Double lat = record.Value.Latitude;
                     Double lon = record.Value.Longitude;
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
@@ -233,8 +234,6 @@ namespace EXIFGeotagger //v0._1
             overlay.Markers.Clear();
             try
             {
-                //GMapImage image = new GMapImage();
-
                 GMapMarker[] markers = mOverlayDict[overlay.Id];
                 MarkerTag tag = (MarkerTag)markers[0].Tag;
                 if (tag == null)
@@ -261,7 +260,17 @@ namespace EXIFGeotagger //v0._1
                     {
                         step = 1;
                     }
-                    Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
+                    //Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
+                    
+                    Dictionary<string, string> dict = tag.Dictionary;
+                    Bitmap bitmap = null;
+                    if (dict == null)
+                    {
+                        bitmap = ColorTable.getBitmap(tag.Color, size);
+                    } else
+                    {
+                        bitmap = ColorTable.getBitmap(dict, tag.Color, size);
+                    }
                     for (int i = 0; i < count; i += step)
                     {
                         tag = (MarkerTag)markers[i].Tag;
@@ -290,7 +299,13 @@ namespace EXIFGeotagger //v0._1
             mOverlayDict.Add(overlay.Id, markers);
             mOverlay = overlay;
 
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[color] + "_24px.png");
+            addListItem(ColorTable.ColorTableDict, overlay, color);
+            zoomToMarkers();
+        }
+
+        private void addListItem(IDictionary dictionary, GMapOverlay overlay, string color)
+        {
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(dictionary[color] + "_24px.png");
             Bitmap bitmap = (Bitmap)Image.FromStream(stream);
             imageList.Images.Add(bitmap);
 
@@ -305,9 +320,6 @@ namespace EXIFGeotagger //v0._1
 
             overlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
-            zoomToMarkers();
-
-
         }
 
         private void zoomToMarkers()
@@ -828,50 +840,46 @@ namespace EXIFGeotagger //v0._1
 
         public void importShapeCallback(string path, string layer, Color color)
         {
-            
+            Bitmap bitmap = null;
             ShapeReader shape = new ShapeReader(path);
-            
+            GMapOverlay overlay = new GMapOverlay(layer);
+            gMap.Overlays.Add(overlay);
             shape.errorHandler += errorHandlerCallback;
             shape.read();
             ESRIShapeFile s = shape.getShape();
             if (s.ShapeType == 3 || s.ShapeType == 13)
             {
                 GMapRoute line_layer;
-                GMapOverlay line_overlay = new GMapOverlay(layer);
-                gMap.Overlays.Add(line_overlay);
                 PolyLineZ[] polyLines = s.PolyLineZ;
                 foreach (PolyLineZ polyLine in polyLines)
                 {
                     PointLatLng[] points = polyLine.points;
                     line_layer = new GMapRoute(points, "lines"); //TODO get carriage number
                     line_layer.Stroke = new Pen(color, 1);
-                    line_overlay.Routes.Add(line_layer);
+                    overlay.Routes.Add(line_layer);
                 }
             }
             else if (s.ShapeType == 1)
             {
                 ShapeFile.Point[] points = s.Point;
-                GMapOverlay markers = new GMapOverlay(layer);
-                gMap.Overlays.Add(markers);
-                Bitmap bitmap = ColorTable.getBitmap(color.Name, 4);
+                bitmap = ColorTable.getBitmap(ColorTable.ColorCrossDict, color.Name, 4);
                 int id = 0;
                 foreach (ShapeFile.Point point in points)
                 {
                     PointLatLng pointLatLng = new PointLatLng(point.y, point.x);
                     MarkerTag tag = new MarkerTag(color.Name, id);
+                    tag.Dictionary = ColorTable.ColorCrossDict;
                     GMapMarker marker = new GMarkerGoogle(pointLatLng, bitmap);
                     marker.Tag = tag;
-                    markers.Markers.Add(marker);
+                    overlay.Markers.Add(marker);
                     id++;
                 }
-                GMapMarker[] markersArr = markers.Markers.ToArray<GMapMarker>();
+                GMapMarker[] markersArr = overlay.Markers.ToArray<GMapMarker>();
                 mOverlayDict.Add(layer, markersArr);
 
             } else if (s.ShapeType == 8) {
                 MultiPoint[] points = s.MultiPoint;
-                GMapOverlay markers = new GMapOverlay(layer);
-                gMap.Overlays.Add(markers);
-                Bitmap bitmap = ColorTable.getBitmap(color.Name, 4);
+                bitmap = ColorTable.getBitmap(ColorTable.ColorCrossDict, color.Name, 4);
                 int id = 0;
                 foreach (MultiPoint point in points)
                 {
@@ -879,16 +887,33 @@ namespace EXIFGeotagger //v0._1
                     foreach (PointLatLng p in pointsLatLng)
                     {
                         MarkerTag tag = new MarkerTag(color.Name, id);
+                        tag.Dictionary = ColorTable.ColorCrossDict;
                         GMapMarker marker = new GMarkerGoogle(p, bitmap);
                         marker.Tag = tag;
-                        markers.Markers.Add(marker);
+                        overlay.Markers.Add(marker);
                         id++;
                     }
                 }
-                GMapMarker[] markersArr = markers.Markers.ToArray<GMapMarker>();
+                GMapMarker[] markersArr = overlay.Markers.ToArray<GMapMarker>();
                 mOverlayDict.Add(layer, markersArr);
-            }           
-            //shape.readDBF();
+            }
+            addListItem(ColorTable.ColorCrossDict, overlay, color.Name);
+            //if (bitmap != null)
+            //{
+            //    imageList.Images.Add(bitmap);
+            //}
+            //ListViewItem layerItem = new ListViewItem(overlay.Id, layerCount);
+            //layerCount++;
+
+            //layerItem.Text = overlay.Id;
+            //layerItem.Checked = true;
+            //mOverlay = overlay;
+            //listLayers.SmallImageList = imageList;
+            //listLayers.Items.Add(layerItem);
+            ////addListItem(ColorTable.ColorCrossDict, overlay, color.Name);
+            //overlay.IsVisibile = true;
+            //mOverlay.IsVisibile = true;
+            ////shape.readDBF();
         }
 
         public void errorHandlerCallback(string error, string message)
@@ -1188,5 +1213,33 @@ namespace EXIFGeotagger //v0._1
             
         }
 
+        private void TextcsvToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            DelimitedText importForm = new DelimitedText();
+            importForm.Show();
+            //string csv = "C:\\Onsite\\Kaikoura\\Onsite Developments Kaikoura Sumps 7-Jun-19.csv";
+            //StreamReader sr = new StreamReader(csv);
+            //string line = sr.ReadLine();
+            //string[] value = line.Split(',');
+            //DataTable dt = new DataTable();
+            //DataRow row;
+            //foreach (string dc in value)
+            //{
+
+            //    dt.Columns.Add(new DataColumn(dc));
+            //}
+
+            //while (!sr.EndOfStream)
+            //{
+            //    value = sr.ReadLine().Split(',');
+            //    if (value.Length == dt.Columns.Count)
+            //    {
+            //        row = dt.NewRow();
+            //        row.ItemArray = value;
+            //        dt.Rows.Add(row);
+            //    }
+            //}
+        }
     } //end class   
 } //end namespace

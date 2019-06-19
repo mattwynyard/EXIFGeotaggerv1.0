@@ -113,6 +113,12 @@
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
     <Compile Include="AWSConnection.cs" />
+    <Compile Include="DelimitedText.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DelimitedText.Designer.cs">
+      <DependentUpon>DelimitedText.cs</DependentUpon>
+    </Compile>
     <Compile Include="LayerAttributes.cs" />
     <Compile Include="PhotoForm.cs">
       <SubType>Form</SubType>
@@ -159,6 +165,9 @@
     <Compile Include="Transformation.cs" />
     <EmbeddedResource Include="AboutBox1.resx">
       <DependentUpon>AboutBox1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DelimitedText.resx">
+      <DependentUpon>DelimitedText.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EXIFGeoTagger.resx">
       <DependentUpon>EXIFGeoTagger.cs</DependentUpon>
@@ -287,6 +296,12 @@
     <EmbeddedResource Include="BitMap\Cursors\magnify.cur" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="BitMap\Crossff8080_12px.png" />
+    <EmbeddedResource Include="BitMap\Crossff8080_16px.png" />
+    <EmbeddedResource Include="BitMap\Crossff8080_20px.png" />
+    <EmbeddedResource Include="BitMap\Crossff8080_24px.png" />
+    <EmbeddedResource Include="BitMap\Crossff8080_4px.png" />
+    <EmbeddedResource Include="BitMap\Crossff8080_8px.png" />
     <Content Include="BitMap\Cursors\Cursor1.cur" />
     <None Include="images\left-36.png" />
     <None Include="images\right-36.png" />

@@ -12,6 +12,7 @@ using System.Drawing.Imaging;
 using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Soap;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Data;
 
 namespace EXIFGeotagger
 {
@@ -33,6 +34,7 @@ namespace EXIFGeotagger
         protected bool geotag;
         protected bool uploaded;
         protected string path;
+        protected DataRow dataRow;
 
         public Record()
         {
@@ -203,5 +205,7 @@ namespace EXIFGeotagger
         public int ERP { get; set; }
 
         public int FaultID { get; set; }
+
+        public DataRow DataRow { get; set; }
     }
 }
