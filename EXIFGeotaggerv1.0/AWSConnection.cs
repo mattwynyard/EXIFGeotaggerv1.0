@@ -12,7 +12,6 @@ using System.Text;
 using System.Windows.Forms;
 using Amazon;
 
-
 namespace Amazon
 {
 
@@ -23,11 +22,67 @@ namespace Amazon
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast2;
         private static AmazonS3Client mClient;
         private Image mImage;
+        private static readonly string ACCESS_KEY = "AKIA4KM3GYVLI5DLPWA7";
+        private static readonly string SECRET_KEY = "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";
+        private static readonly string BUCKET = "onsitetest";
+        private List<S3Bucket> clientBuckets;
 
-        //public AWSConnection()
+        //public event BucketDelegate getBuckets;
+        //public delegate void BucketDelegate(List<S3Bucket> buckets);
+
+        public AWSConnection()
+        {
+            mClient = new AmazonS3Client(
+                    ACCESS_KEY, SECRET_KEY, bucketRegion);
+
+            //if (mClient != null)
+            //{
+            //    List<S3Bucket> buckets = requestBuckets().Result;
+            //    //getObjects.Wait();
+            //}
+        }
+
+        public void getObjects()
+        {
+            foreach (S3Bucket bucket in clientBuckets)
+            {
+                try
+                {
+
+                
+                var items = mClient.ListObjects(bucket.BucketName);
+                }
+                catch (AmazonS3Exception ex)
+                {
+
+                }
+            }
+        }
+        public async Task<List<S3Bucket>> requestBuckets()
+        {
+            clientBuckets = new List<S3Bucket>();
+            await Task.Run(() => {
+                ListBucketsResponse response = mClient.ListBuckets();         
+                foreach (S3Bucket b in response.Buckets)
+                {
+                    string bucket = b.BucketName;
+                    DateTime dt = new DateTime(2019, 6, 1);
+                    if (b.CreationDate >= dt)
+                    {
+                        clientBuckets.Add(b);
+                    }
+                }
+                
+            });
+            return clientBuckets;
+
+
+        }
+
+        //public async List<S3Bucket> getBuckets()
         //{
-        //    mClient = new AmazonS3Client(
-        //            accessKey, secretKey, bucketRegion);
+        //    List<S3Bucket> buckets = await requestBuckets();
+        //    return buckets;
         //}
 
         public AWSConnection(string bucket, string photo)

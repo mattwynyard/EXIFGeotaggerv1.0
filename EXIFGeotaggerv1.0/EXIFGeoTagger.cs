@@ -20,6 +20,7 @@ using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
 using System.Threading;
 using Amazon;
+using Amazon.S3.Model;
 using System.Net;
 using System.Collections.Concurrent;
 using ShapeFile;
@@ -1213,11 +1214,15 @@ namespace EXIFGeotagger //v0._1
             
         }
 
+        //private void importTextCallback()
+
         private void TextcsvToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
             DelimitedText importForm = new DelimitedText();
             importForm.Show();
+
+            //importForm.importData += importTextCallback;
             //string csv = "C:\\Onsite\\Kaikoura\\Onsite Developments Kaikoura Sumps 7-Jun-19.csv";
             //StreamReader sr = new StreamReader(csv);
             //string line = sr.ReadLine();
@@ -1240,6 +1245,32 @@ namespace EXIFGeotagger //v0._1
             //        dt.Rows.Add(row);
             //    }
             //}
+        }
+
+        private void ExcelDataMenu_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private async void ConnectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AWSConnection client = new AWSConnection();
+            List<S3Bucket> buckets;
+            if (client != null)
+            {
+
+            }
+            buckets = await client.requestBuckets();
+            client.getObjects();
+            foreach (S3Bucket bucket in buckets)
+            {
+                treeBuckets.Nodes.Add(bucket.BucketName);
+            }
+        }
+
+        private void ListView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     } //end class   
 } //end namespace

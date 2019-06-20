@@ -17,10 +17,21 @@ namespace EXIFGeotagger
         private Color mColor;
         private OpenFileDialog openFileDialog;
         private string mfilePath;
+        DataTable dt;
+        string header;
+        List<string> cbList;
+
+        public event ImportDataDelegate importData;
+        public delegate void ImportDataDelegate(DataTable table, string layer, Color color);
+
         public DelimitedText()
         {
             InitializeComponent();
             rdComma.Checked = true;
+            cbList = new List<string>();
+            cbID.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbXField.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbYField.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -36,29 +47,27 @@ namespace EXIFGeotagger
                     string path = mfilePath;
                     StreamReader sr = new StreamReader(path);
                     Regex csvSplit = new Regex("(?:^|,)(\"(?:[^\"])*\"|[^,]*)", RegexOptions.Compiled);
-
-
-
-                    string line = sr.ReadLine();
-                    string curr = null;
-                    
-                    string[] value = line.Split(',');
-                    DataTable dt = new DataTable();
+                    header = sr.ReadLine();
+                    string curr = null;                  
+                    string[] values = header.Split(',');
+                    dt = new DataTable();
                     DataRow row;
                     List<string> list = new List<string>();
-                    foreach (string dc in value)
+                    foreach (string value in values)
                     {
 
-                        dt.Columns.Add(new DataColumn(dc));
+                        dt.Columns.Add(new DataColumn(value));
+                        cbList.Add(value);
                     }
 
+                    cbXField.DataSource = cbList.ToList();
+                    cbYField.DataSource = cbList.ToList();
+                    cbID.DataSource = cbList.ToList();
                     while (!sr.EndOfStream)
                     {
-                        line = sr.ReadLine();
-
+                        string line = sr.ReadLine();
                         foreach (Match match in csvSplit.Matches(line))
                         {
-
                             curr = match.Value;
                             if (0 == curr.Length)
                             {
@@ -73,15 +82,12 @@ namespace EXIFGeotagger
                         if (lineArr.Length == dt.Columns.Count)
                         {
                             row = dt.NewRow();
-                            //row.ItemArray = value;
                             row.ItemArray = lineArr;
                             list.Clear();
                             dt.Rows.Add(row);
                         }
                     }
 
-                    
-                    int count = dt.Rows.Count;
                     dataGridView1.DataSource = dt;
                 } catch (IOException ex )
                 {

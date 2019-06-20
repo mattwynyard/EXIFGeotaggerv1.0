@@ -49,6 +49,8 @@
             this.lbXField = new System.Windows.Forms.Label();
             this.cbYField = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.cbID = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -206,7 +208,7 @@
             // cbXField
             // 
             this.cbXField.FormattingEnabled = true;
-            this.cbXField.Location = new System.Drawing.Point(87, 184);
+            this.cbXField.Location = new System.Drawing.Point(204, 184);
             this.cbXField.Name = "cbXField";
             this.cbXField.Size = new System.Drawing.Size(175, 21);
             this.cbXField.TabIndex = 25;
@@ -226,7 +228,7 @@
             // lbXField
             // 
             this.lbXField.AutoSize = true;
-            this.lbXField.Location = new System.Drawing.Point(42, 187);
+            this.lbXField.Location = new System.Drawing.Point(159, 187);
             this.lbXField.Name = "lbXField";
             this.lbXField.Size = new System.Drawing.Size(39, 13);
             this.lbXField.TabIndex = 27;
@@ -235,7 +237,7 @@
             // cbYField
             // 
             this.cbYField.FormattingEnabled = true;
-            this.cbYField.Location = new System.Drawing.Point(350, 184);
+            this.cbYField.Location = new System.Drawing.Point(444, 184);
             this.cbYField.Name = "cbYField";
             this.cbYField.Size = new System.Drawing.Size(175, 21);
             this.cbYField.TabIndex = 28;
@@ -243,17 +245,36 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(305, 187);
+            this.label1.Location = new System.Drawing.Point(399, 187);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(39, 13);
             this.label1.TabIndex = 29;
             this.label1.Text = "Y Field";
+            // 
+            // cbID
+            // 
+            this.cbID.FormattingEnabled = true;
+            this.cbID.Location = new System.Drawing.Point(66, 184);
+            this.cbID.Name = "cbID";
+            this.cbID.Size = new System.Drawing.Size(73, 21);
+            this.cbID.TabIndex = 30;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(42, 187);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(18, 13);
+            this.label3.TabIndex = 31;
+            this.label3.Text = "ID";
             // 
             // DelimitedText
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(977, 536);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.cbID);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cbYField);
             this.Controls.Add(this.lbXField);
@@ -305,5 +326,7 @@
         private System.Windows.Forms.Label lbXField;
         private System.Windows.Forms.ComboBox cbYField;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox cbID;
+        private System.Windows.Forms.Label label3;
     }
 }
