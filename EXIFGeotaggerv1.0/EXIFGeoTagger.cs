@@ -1254,6 +1254,7 @@ namespace EXIFGeotagger //v0._1
 
         private async void ConnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            TreeNode rootNode;
             AWSConnection client = new AWSConnection();
             List<S3Bucket> buckets;
             if (client != null)
@@ -1261,14 +1262,63 @@ namespace EXIFGeotagger //v0._1
 
             }
             buckets = await client.requestBuckets();
-            client.getObjects();
-            foreach (S3Bucket bucket in buckets)
+            Dictionary<string, List<string>> folderDict = await client.getObjectsAsync();
+            DirectoryInfo dir;
+            foreach (KeyValuePair<string, List<string>> entry in folderDict)
             {
-                treeBuckets.Nodes.Add(bucket.BucketName);
+                //string[] dirArr;
+                rootNode = new TreeNode(entry.Key);
+                if (entry.Value.Count == 0)
+                {
+                    treeBuckets.Nodes.Add(entry.Key.ToString());
+                }
+                else
+                {
+                    List<string> values = entry.Value;
+                    string flag = values.ElementAt(0).Substring(0, values.ElementAt(0).Length - 1);
+                    values.RemoveAt(0);
+                    string path = null;
+                    List<string> subdirectories = new List<string>();
+                    foreach (string s in values)
+                    {
+                        string[] nodes = s.Split('/');
+                        if (nodes[0] == flag)
+                        {
+                            path = s;
+                        } else
+                        {
+                            subdirectories.Add(path);
+                           //string[] dirArr = subdirectories.ToArray();
+                            GetDirectories(subdirectories.ToArray(), rootNode);
+                            flag = nodes[0];
+                        }
+                    }
+                    subdirectories.Add(path);
+                    //dirs = subdirectories.ToArray(); 
+                    GetDirectories(subdirectories.ToArray(), rootNode);
+                }
             }
         }
 
-        private void ListView1_SelectedIndexChanged(object sender, EventArgs e)
+        private void GetDirectories(string[] subDirs, TreeNode nodeToAddTo)
+        {
+            TreeNode aNode;
+            string[] subSubDirs;
+            foreach (string[] subDir in subDirs)
+            {
+                aNode = new TreeNode(subDir[0], 0, 0);
+                aNode.Tag = subDir;
+                aNode.ImageKey = "folder";
+                subSubDirs = subDir;
+                if (subSubDirs.Length != 0)
+                {
+                    GetDirectories(subSubDirs, aNode);
+                }
+                nodeToAddTo.Nodes.Add(aNode);
+            }
+        }
+
+            private void ListView1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }

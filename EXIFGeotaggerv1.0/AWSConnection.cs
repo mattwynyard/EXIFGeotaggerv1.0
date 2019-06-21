@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Amazon;
+using System.Reflection;
 
 namespace Amazon
 {
@@ -22,75 +23,109 @@ namespace Amazon
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast2;
         private static AmazonS3Client mClient;
         private Image mImage;
-        private static readonly string ACCESS_KEY = "AKIA4KM3GYVLI5DLPWA7";
-        private static readonly string SECRET_KEY = "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";
+        private static readonly string ACCESS_KEY;
+        private static readonly string SECRET_KEY;
         private static readonly string BUCKET = "onsitetest";
         private List<S3Bucket> clientBuckets;
+
+        private static readonly Object obj = new Object();
 
         //public event BucketDelegate getBuckets;
         //public delegate void BucketDelegate(List<S3Bucket> buckets);
 
         public AWSConnection()
         {
-            mClient = new AmazonS3Client(
-                    ACCESS_KEY, SECRET_KEY, bucketRegion);
-
-            //if (mClient != null)
-            //{
-            //    List<S3Bucket> buckets = requestBuckets().Result;
-            //    //getObjects.Wait();
-            //}
-        }
-
-        public void getObjects()
-        {
-            foreach (S3Bucket bucket in clientBuckets)
+            try
             {
-                try
-                {
+                mClient = new AmazonS3Client(
+                    ACCESS_KEY, SECRET_KEY, bucketRegion);
+            } 
+            catch (TargetInvocationException ex) //TODO exception catch not working
+            {
+                string title = "Amazon S3 Exception";
+                string message = ex.Message;
+                MessageBoxButtons buttons = MessageBoxButtons.OK;
 
-                
-                var items = mClient.ListObjects(bucket.BucketName);
-                }
-                catch (AmazonS3Exception ex)
+                DialogResult result = MessageBox.Show(message, title, buttons, MessageBoxIcon.Error);
+                if (result == DialogResult.Yes)
                 {
-
+                    //Close();
                 }
             }
+        }
+
+        public async Task<Dictionary<string, List<string>>> getObjectsAsync()
+        { 
+            Dictionary<string, List<string>> folderDict = new Dictionary<string, List<string>>();
+            foreach (S3Bucket bucket in clientBuckets)
+            {
+                await Task.Factory.StartNew(() => 
+                { 
+                    List<string> folders = new List<string>();
+                    folderDict.Add(bucket.BucketName, folders);
+                    ListObjectsRequest request = new ListObjectsRequest();
+                    request.BucketName = bucket.BucketName;
+                    try
+                    {
+                        ListObjectsResponse response;
+                        do
+                        {
+                            response = mClient.ListObjects(request);
+                            IEnumerable<S3Object> f = response.S3Objects.Where(x =>
+                                                                x.Key.EndsWith(@"/") && x.Size == 0);
+
+                            foreach (S3Object x in f)
+                            {
+                                folders.Add(x.Key);                                
+                            }
+                            if (response.IsTruncated)
+                            {
+                                request.Marker = response.NextMarker;
+                            }
+                            else
+                            {
+                                request = null;
+                            }
+                        } while (request != null);
+                        
+                    }
+                    catch (AmazonS3Exception exAWS)
+                    {
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+
+                folderDict[bucket.BucketName] = folders;
+                });
+
+            }
+            //Task.WaitAll();
+            return folderDict;
         }
         public async Task<List<S3Bucket>> requestBuckets()
         {
             clientBuckets = new List<S3Bucket>();
             await Task.Run(() => {
-                ListBucketsResponse response = mClient.ListBuckets();         
-                foreach (S3Bucket b in response.Buckets)
-                {
-                    string bucket = b.BucketName;
-                    DateTime dt = new DateTime(2019, 6, 1);
-                    if (b.CreationDate >= dt)
+                ListBucketsResponse response = mClient.ListBuckets();
+
+                    foreach (S3Bucket b in response.Buckets)
                     {
-                        clientBuckets.Add(b);
+                        string bucket = b.BucketName;
+                        DateTime dt = new DateTime(2019, 6, 1);
+                        if (b.CreationDate >= dt)
+                        {
+                            clientBuckets.Add(b);
+                        }
                     }
-                }
+
                 
             });
             return clientBuckets;
 
 
-        }
-
-        //public async List<S3Bucket> getBuckets()
-        //{
-        //    List<S3Bucket> buckets = await requestBuckets();
-        //    return buckets;
-        //}
-
-        public AWSConnection(string bucket, string photo)
-        {
-            mBucket = bucket;
-            mKey = photo;
-            mClient = new AmazonS3Client(bucketRegion);
-            ReadObjectDataAsync().Wait();
         }
 
         private async Task ReadObjectDataAsync()
@@ -116,11 +151,11 @@ namespace Amazon
             }
             catch (AmazonS3Exception e)
             {
-                Console.WriteLine("Error encountered ***. Message:'{0}' when writing an object", e.Message);
+                //Console.WriteLine("Error encountered ***. Message:'{0}' when writing an object", e.Message);
             }
             catch (Exception e)
             {
-                Console.WriteLine("Unknown encountered on server. Message:'{0}' when writing an object", e.Message);
+                //Console.WriteLine("Unknown encountered on server. Message:'{0}' when writing an object", e.Message);
             }
         }
     }
