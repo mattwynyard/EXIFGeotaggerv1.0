@@ -1304,23 +1304,29 @@ namespace EXIFGeotagger //v0._1
         {
             TreeNode aNode;
             string[] subSubDirs;
-            foreach (string[] subDir in subDirs)
-            {
-                aNode = new TreeNode(subDir[0], 0, 0);
-                aNode.Tag = subDir;
-                aNode.ImageKey = "folder";
-                subSubDirs = subDir;
-                if (subSubDirs.Length != 0)
-                {
-                    GetDirectories(subSubDirs, aNode);
-                }
-                nodeToAddTo.Nodes.Add(aNode);
-            }
+            //foreach (string[] subDir in subDirs)
+            //{
+            //    aNode = new TreeNode(subDir[0], 0, 0);
+            //    aNode.Tag = subDir;
+            //    aNode.ImageKey = "folder";
+            //    subSubDirs = subDir;
+            //    if (subSubDirs.Length != 0)
+            //    {
+            //        GetDirectories(subSubDirs, aNode);
+            //    }
+            //    nodeToAddTo.Nodes.Add(aNode);
+            //}
         }
 
             private void ListView1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void SettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AWSSecurityForm importForm = new AWSSecurityForm();
+            importForm.Show();
         }
     } //end class   
 } //end namespace

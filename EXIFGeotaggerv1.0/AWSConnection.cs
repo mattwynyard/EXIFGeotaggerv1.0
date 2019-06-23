@@ -12,6 +12,8 @@ using System.Text;
 using System.Windows.Forms;
 using Amazon;
 using System.Reflection;
+using Amazon.Runtime.CredentialManagement;
+using Amazon.Runtime;
 
 namespace Amazon
 {
@@ -37,8 +39,12 @@ namespace Amazon
         {
             try
             {
-                mClient = new AmazonS3Client(
-                    ACCESS_KEY, SECRET_KEY, bucketRegion);
+                var chain = new CredentialProfileStoreChain();
+                AWSCredentials awsCredentials;
+                if (chain.TryGetAWSCredentials("shared_profile", out awsCredentials))
+                {
+                    mClient = new AmazonS3Client(awsCredentials, bucketRegion);
+                }  
             } 
             catch (TargetInvocationException ex) //TODO exception catch not working
             {

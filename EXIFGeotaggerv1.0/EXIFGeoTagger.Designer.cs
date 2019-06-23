@@ -34,6 +34,8 @@ namespace EXIFGeotagger
             this.gMap = new GMap.NET.WindowsForms.GMapControl();
             this.txtConsole = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.treeBuckets = new System.Windows.Forms.TreeView();
+            this.label1 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
             this.lbScale = new System.Windows.Forms.Label();
             this.lbPosition = new System.Windows.Forms.Label();
@@ -83,8 +85,6 @@ namespace EXIFGeotagger
             this.panel8 = new System.Windows.Forms.Panel();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.label1 = new System.Windows.Forms.Label();
-            this.treeBuckets = new System.Windows.Forms.TreeView();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -169,6 +169,23 @@ namespace EXIFGeotagger
             this.splitContainer1.Size = new System.Drawing.Size(1484, 598);
             this.splitContainer1.SplitterDistance = 690;
             this.splitContainer1.TabIndex = 6;
+            // 
+            // treeBuckets
+            // 
+            this.treeBuckets.Location = new System.Drawing.Point(6, 22);
+            this.treeBuckets.Name = "treeBuckets";
+            this.treeBuckets.Size = new System.Drawing.Size(121, 217);
+            this.treeBuckets.TabIndex = 20;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(41, 242);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(49, 16);
+            this.label1.TabIndex = 19;
+            this.label1.Text = "Layers";
             // 
             // panel3
             // 
@@ -538,6 +555,7 @@ namespace EXIFGeotagger
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
+            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.SettingsToolStripMenuItem_Click);
             // 
             // geotagToolStripMenuItem
             // 
@@ -550,7 +568,7 @@ namespace EXIFGeotagger
             // menuRunGeoTag
             // 
             this.menuRunGeoTag.Name = "menuRunGeoTag";
-            this.menuRunGeoTag.Size = new System.Drawing.Size(112, 22);
+            this.menuRunGeoTag.Size = new System.Drawing.Size(180, 22);
             this.menuRunGeoTag.Text = "Geotag";
             this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
             // 
@@ -626,23 +644,6 @@ namespace EXIFGeotagger
             this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
             this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.deleteLayerToolStripMenuItem.Text = "Delete Layer";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(41, 242);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(49, 16);
-            this.label1.TabIndex = 19;
-            this.label1.Text = "Layers";
-            // 
-            // treeBuckets
-            // 
-            this.treeBuckets.Location = new System.Drawing.Point(6, 22);
-            this.treeBuckets.Name = "treeBuckets";
-            this.treeBuckets.Size = new System.Drawing.Size(121, 217);
-            this.treeBuckets.TabIndex = 20;
             // 
             // EXIFGeoTagger
             // 

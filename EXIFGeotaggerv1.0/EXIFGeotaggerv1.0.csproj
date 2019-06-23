@@ -113,6 +113,12 @@
       <DependentUpon>AboutBox1.cs</DependentUpon>
     </Compile>
     <Compile Include="AWSConnection.cs" />
+    <Compile Include="AWSSecurityForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AWSSecurityForm.Designer.cs">
+      <DependentUpon>AWSSecurityForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DelimitedText.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -165,6 +171,9 @@
     <Compile Include="Transformation.cs" />
     <EmbeddedResource Include="AboutBox1.resx">
       <DependentUpon>AboutBox1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AWSSecurityForm.resx">
+      <DependentUpon>AWSSecurityForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DelimitedText.resx">
       <DependentUpon>DelimitedText.cs</DependentUpon>
