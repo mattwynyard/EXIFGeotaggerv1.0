@@ -25,8 +25,6 @@ namespace Amazon
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast2;
         private static AmazonS3Client mClient;
         private Image mImage;
-        private static readonly string ACCESS_KEY;
-        private static readonly string SECRET_KEY;
         private static readonly string BUCKET = "onsitetest";
         private List<S3Bucket> clientBuckets;
 
@@ -77,6 +75,8 @@ namespace Amazon
                         do
                         {
                             response = mClient.ListObjects(request);
+                            response.Prefix = bucket.BucketName;
+                            response.Delimiter = "/";
                             IEnumerable<S3Object> f = response.S3Objects.Where(x =>
                                                                 x.Key.EndsWith(@"/") && x.Size == 0);
 
@@ -108,7 +108,6 @@ namespace Amazon
                 });
 
             }
-            //Task.WaitAll();
             return folderDict;
         }
         public async Task<List<S3Bucket>> requestBuckets()

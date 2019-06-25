@@ -85,7 +85,8 @@ namespace EXIFGeotagger //v0._1
         private Boolean mouseInBounds;
        
         private BlockingCollection<string> fileQueue;
-        
+        TreeNode rootNode;
+
 
 
         /// <summary>
@@ -959,7 +960,7 @@ namespace EXIFGeotagger //v0._1
             mRecordDict = await t.readFromDatabase(dbPath, allRecords);
             
             mRecordDict = await t.writeGeoTag(mRecordDict, fileQueue, inPath, outPath);
-            //await geoTagComplete(layer, color);
+            
             setLayerAttributes();
             zoomToMarkers();
             plotLayer(layer, color);
@@ -1254,7 +1255,6 @@ namespace EXIFGeotagger //v0._1
 
         private async void ConnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TreeNode rootNode;
             AWSConnection client = new AWSConnection();
             List<S3Bucket> buckets;
             if (client != null)
@@ -1263,62 +1263,48 @@ namespace EXIFGeotagger //v0._1
             }
             buckets = await client.requestBuckets();
             Dictionary<string, List<string>> folderDict = await client.getObjectsAsync();
-            DirectoryInfo dir;
+            List<string> paths = new List<string>();
             foreach (KeyValuePair<string, List<string>> entry in folderDict)
             {
-                //string[] dirArr;
+                string[] dirArr;
+                paths = entry.Value;
+                paths = paths.Where(path => !paths.Any(p => p != path && p.StartsWith(path))).ToList();
+
                 rootNode = new TreeNode(entry.Key);
                 if (entry.Value.Count == 0)
                 {
-                    treeBuckets.Nodes.Add(entry.Key.ToString());
+                    treeBuckets.Nodes.Add(rootNode);
                 }
                 else
                 {
-                    List<string> values = entry.Value;
-                    string flag = values.ElementAt(0).Substring(0, values.ElementAt(0).Length - 1);
-                    values.RemoveAt(0);
-                    string path = null;
-                    List<string> subdirectories = new List<string>();
-                    foreach (string s in values)
+                    List<string> newPaths = new List<string>();
+                    foreach (string path in paths)
                     {
-                        string[] nodes = s.Split('/');
-                        if (nodes[0] == flag)
-                        {
-                            path = s;
-                        } else
-                        {
-                            subdirectories.Add(path);
-                           //string[] dirArr = subdirectories.ToArray();
-                            GetDirectories(subdirectories.ToArray(), rootNode);
-                            flag = nodes[0];
-                        }
+                        newPaths.Add(path.Remove(path.Length - 1));
                     }
-                    subdirectories.Add(path);
-                    //dirs = subdirectories.ToArray(); 
-                    GetDirectories(subdirectories.ToArray(), rootNode);
+                    treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode.Text, '/'));
                 }
+                
             }
         }
 
-        private void GetDirectories(string[] subDirs, TreeNode nodeToAddTo)
+        public TreeNode MakeTreeFromPaths(List<string> paths, string rootNodeName = "", char separator = '/')
         {
-            TreeNode aNode;
-            string[] subSubDirs;
-            //foreach (string[] subDir in subDirs)
-            //{
-            //    aNode = new TreeNode(subDir[0], 0, 0);
-            //    aNode.Tag = subDir;
-            //    aNode.ImageKey = "folder";
-            //    subSubDirs = subDir;
-            //    if (subSubDirs.Length != 0)
-            //    {
-            //        GetDirectories(subSubDirs, aNode);
-            //    }
-            //    nodeToAddTo.Nodes.Add(aNode);
-            //}
+            var rootNode = new TreeNode(rootNodeName);
+            foreach (var path in paths.Where(x => !string.IsNullOrEmpty(x.Trim())))
+            {
+                var currentNode = rootNode;
+                var pathItems = path.Split(separator);
+                foreach (var item in pathItems)
+                {
+                    var tmp = currentNode.Nodes.Cast<TreeNode>().Where(x => x.Text.Equals(item));
+                    currentNode = tmp.Count() > 0 ? tmp.Single() : currentNode.Nodes.Add(item);
+                }
+            }
+            return rootNode;
         }
 
-            private void ListView1_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListView1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
@@ -1327,6 +1313,21 @@ namespace EXIFGeotagger //v0._1
         {
             AWSSecurityForm importForm = new AWSSecurityForm();
             importForm.Show();
+        }
+
+        private void tr(object sender, MouseEventArgs e)
+        {
+
+        }
+
+        private void TreeView__NodeMouseDoubleClick(object sender, EventArgs e)
+        {
+            var menuItem = treeBuckets.SelectedNode; //as MyProject.MenuItem;
+          
+            if (menuItem != null)
+            {
+                MessageBox.Show(menuItem.FullPath);
+            }
         }
     } //end class   
 } //end namespace

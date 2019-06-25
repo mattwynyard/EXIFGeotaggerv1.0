@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -75,6 +76,7 @@ namespace EXIFGeotagger
         {
             Dictionary<string, Record> recordDict = new Dictionary<string, Record>();
             ProgressForm progressForm = new ProgressForm("Reading from database...");
+            DataTable table = new DataTable();
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
@@ -102,7 +104,7 @@ namespace EXIFGeotagger
                     string strSQL;
                     string lengthSQL; //sql count string
                     int length; //number of records to process
-                    //double percent;
+                    
                     if (allRecords)
                     {
                         strSQL = "SELECT * FROM PhotoList";
@@ -115,11 +117,22 @@ namespace EXIFGeotagger
                     }
                     OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
                     OleDbCommand command = new OleDbCommand(strSQL, connection);
-
                     connection.Open();
+
+                    OleDbDataReader readerColumn = command.ExecuteReader(CommandBehavior.KeyInfo);
+                    DataTable schemaTable = readerColumn.GetSchemaTable();
+
+                    foreach(DataRow col in schemaTable.Rows) {
+
+                        string c = col.Field<String>("ColumnName");
+                        table.Columns.Add(c);
+                    }
+
+                    readerColumn.Close();
                     length = (Int32)commandLength.ExecuteScalar();
                     using (OleDbDataReader reader = command.ExecuteReader())
                     {
+                        
                         int i = 0;
                         while (reader.Read())
                         {
@@ -127,6 +140,7 @@ namespace EXIFGeotagger
                             reader.GetValues(row);
                             String photo = (string)row[1];
                             Record r = buildDictionary(i, row).Result;
+                            //Record r = buildDictionary(ref table, row);
                             recordDict.Add(r.PhotoName, r);
                             i++;
                             double percent = ((double)i / length) * 100;
@@ -154,23 +168,46 @@ namespace EXIFGeotagger
             catch (OperationCanceledException)
             {
                 cts.Dispose();
-                //string titleCancel = "Cancelled";
-                //string messageCancel = "Read cancelled";
-                //MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
-                //MsgBox(messageCancel, titleCancel, buttonsCancel);
-                //progressForm.Close();
+
             }
+            connection.Close();
             progressForm.Close();
             return recordDict;
         }
 
-        /// <summary>
-        /// Intialises a new Record and adds data extracted from access to each relevant field.
-        /// The record is then added to the Record Dictionary.
-        /// </summary>
-        /// <param name="i: the number of records read"></param>
-        /// <param name="row: the access record"></param>
-        private async Task<Record> buildDictionary(int i, Object[] row)
+        private Record buildDictionary(ref DataTable table, Object[] row)
+        {
+            Record r = new Record((string)row[1]);
+            try
+            {
+                int id = (int)row[0];
+                r.Id = id.ToString();
+                r.Latitude = (double)row[3];
+                r.Longitude = (double)row[4];
+                DataRow dRow = table.NewRow();
+                for (int i = 5; i < table.Columns.Count; i++)
+                {
+                    dRow[i] = row[i];
+
+                   
+                }
+
+            }
+            catch (Exception e)
+
+            {
+                //Console.WriteLine(e.StackTrace);
+            }
+            return r;
+        }
+
+            /// <summary>
+            /// Intialises a new Record and adds data extracted from access to each relevant field.
+            /// The record is then added to the Record Dictionary.
+            /// </summary>
+            /// <param name="i: the number of records read"></param>
+            /// <param name="row: the access record"></param>
+            private async Task<Record> buildDictionary(int i, Object[] row)
         {
             Record r = new Record((string)row[1]);
             await Task.Run(() =>
@@ -194,6 +231,7 @@ namespace EXIFGeotagger
                     r.Carriageway = Convert.ToInt32(row[21]);
                     r.ERP = Convert.ToInt32(row[22]);
                     r.FaultID = Convert.ToInt32(row[23]);
+                    //DataRow dRow = new DataRow()
                 }
                 catch (Exception e)
                 {
@@ -261,13 +299,8 @@ namespace EXIFGeotagger
                 }
                 catch (OperationCanceledException)
                 {
-                    //overlay = new GMapOverlay(layer);
+
                     cts.Dispose();
-                    //string titleCancel = "Cancelled";
-                    //string messageCancel = "Import cancelled";
-                    //MessageBoxButtons buttonsCancel = MessageBoxButtons.OK;
-                    //MsgBox(messageCancel, titleCancel, buttonsCancel);
-                    //progressForm.Close();
                 }
             }, cts.Token);
             progressForm.Close();
