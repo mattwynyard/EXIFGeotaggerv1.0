@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EXIFGeotaggerv1.0", "EXIFGeotaggerv1.0\EXIFGeotaggerv1.0.csproj", "{2FD055B9-6B6D-47CB-80BE-8665085AFF9A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EXIFGeotaggerv1.1", "EXIFGeotaggerv1.1\EXIFGeotaggerv1.1.csproj", "{2FD055B9-6B6D-47CB-80BE-8665085AFF9A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
