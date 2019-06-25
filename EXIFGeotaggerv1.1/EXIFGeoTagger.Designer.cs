@@ -176,6 +176,8 @@ namespace EXIFGeotagger
             this.treeBuckets.Name = "treeBuckets";
             this.treeBuckets.Size = new System.Drawing.Size(121, 217);
             this.treeBuckets.TabIndex = 20;
+            this.treeBuckets.DoubleClick += new System.EventHandler(this.TreeView__NodeMouseDoubleClick);
+            this.treeBuckets.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.tr);
             // 
             // label1
             // 
@@ -546,14 +548,14 @@ namespace EXIFGeotagger
             // connectToolStripMenuItem
             // 
             this.connectToolStripMenuItem.Name = "connectToolStripMenuItem";
-            this.connectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.connectToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.connectToolStripMenuItem.Text = "Connect";
             this.connectToolStripMenuItem.Click += new System.EventHandler(this.ConnectToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.SettingsToolStripMenuItem_Click);
             // 
@@ -568,7 +570,7 @@ namespace EXIFGeotagger
             // menuRunGeoTag
             // 
             this.menuRunGeoTag.Name = "menuRunGeoTag";
-            this.menuRunGeoTag.Size = new System.Drawing.Size(180, 22);
+            this.menuRunGeoTag.Size = new System.Drawing.Size(112, 22);
             this.menuRunGeoTag.Text = "Geotag";
             this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
             // 

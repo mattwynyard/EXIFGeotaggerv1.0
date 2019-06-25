@@ -34,7 +34,9 @@ namespace EXIFGeotagger
         protected bool geotag;
         protected bool uploaded;
         protected string path;
-        protected DataRow dataRow;
+
+        protected DataTable table;
+
 
         public Record()
         {
@@ -105,6 +107,11 @@ namespace EXIFGeotagger
             {
                 altitude = value;
             }
+        }
+
+        public void setDatable(ref DataTable table)
+        {
+            this.table = table;
         }
 
         public double Bearing
@@ -206,6 +213,6 @@ namespace EXIFGeotagger
 
         public int FaultID { get; set; }
 
-        public DataRow DataRow { get; set; }
+        
     }
 }

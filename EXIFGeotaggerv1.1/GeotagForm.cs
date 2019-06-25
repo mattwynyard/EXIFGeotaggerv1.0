@@ -69,10 +69,10 @@ namespace EXIFGeotagger //v0._1
 
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(browseDialog.SelectedPath))
                 {
-                    mFiles = Directory.GetFiles(browseDialog.SelectedPath);
+                   //mFiles = Directory.GetFiles(browseDialog.SelectedPath);
                     mInPath = browseDialog.SelectedPath;
                     txtInputPath.Text = mInPath;
-                    MessageBox.Show("Files found: " + Directory.GetFiles(mInPath).Length.ToString(), "Message");
+                    //MessageBox.Show("Files found: " + Directory.GetFiles(mInPath).Length.ToString(), "Message");
                     BringToFront();
                     TopMost = true;
                 }
