@@ -140,7 +140,6 @@ namespace EXIFGeotagger
                             reader.GetValues(row);
                             String photo = (string)row[1];
                             Record r = buildDictionary(i, row).Result;
-                            //Record r = buildDictionary(ref table, row);
                             recordDict.Add(r.PhotoName, r);
                             i++;
                             double percent = ((double)i / length) * 100;
@@ -170,36 +169,12 @@ namespace EXIFGeotagger
                 cts.Dispose();
 
             }
-            connection.Close();
+            //connection.Close();
             progressForm.Close();
             return recordDict;
         }
 
-        private Record buildDictionary(ref DataTable table, Object[] row)
-        {
-            Record r = new Record((string)row[1]);
-            try
-            {
-                int id = (int)row[0];
-                r.Id = id.ToString();
-                r.Latitude = (double)row[3];
-                r.Longitude = (double)row[4];
-                DataRow dRow = table.NewRow();
-                for (int i = 5; i < table.Columns.Count; i++)
-                {
-                    dRow[i] = row[i];
-
-                   
-                }
-
-            }
-            catch (Exception e)
-
-            {
-                //Console.WriteLine(e.StackTrace);
-            }
-            return r;
-        }
+ 
 
             /// <summary>
             /// Intialises a new Record and adds data extracted from access to each relevant field.
@@ -216,21 +191,21 @@ namespace EXIFGeotagger
                 {
                     int id = (int)row[0];
                     r.Id = id.ToString();
-                    r.Latitude = (double)row[3];
-                    r.Longitude = (double)row[4];
-                    r.Altitude = (double)row[5];
-                    r.Bearing = Convert.ToDouble(row[6]);
-                    r.Velocity = Convert.ToDouble(row[7]);
-                    r.Satellites = Convert.ToInt32(row[8]);
-                    r.PDop = Convert.ToDouble(row[9]);
-                    r.Inspector = Convert.ToString(row[10]);
-                    r.TimeStamp = Convert.ToDateTime(row[12]);
-                    r.GeoMark = Convert.ToBoolean(row[13]);
-                    r.Side = Convert.ToString(row[19]);
-                    r.Road = Convert.ToInt32(row[20]);
-                    r.Carriageway = Convert.ToInt32(row[21]);
-                    r.ERP = Convert.ToInt32(row[22]);
-                    r.FaultID = Convert.ToInt32(row[23]);
+                    r.Latitude = (double)row[2];
+                    r.Longitude = (double)row[3];
+                    r.Altitude = (double)row[4];
+                    r.Bearing = Convert.ToDouble(row[5]);
+                    r.Velocity = Convert.ToDouble(row[6]);
+                    r.Satellites = Convert.ToInt32(row[7]);
+                    r.PDop = Convert.ToDouble(row[8]);
+                    r.Inspector = Convert.ToString(row[9]);
+                    r.TimeStamp = Convert.ToDateTime(row[11]);
+                    r.GeoMark = Convert.ToBoolean(row[12]);
+                    r.Side = Convert.ToString(row[18]);
+                    r.Road = Convert.ToInt32(row[19]);
+                    r.Carriageway = Convert.ToInt32(row[20]);
+                    r.ERP = Convert.ToInt32(row[21]);
+                    r.FaultID = Convert.ToInt32(row[22]);
                     //DataRow dRow = new DataRow()
                 }
                 catch (Exception e)
@@ -471,6 +446,7 @@ namespace EXIFGeotagger
                     ));
             progressForm.enableOK();
             progressForm.disableCancel();
+            connection.Close();
             return newRecordDict;
         }
 
@@ -541,20 +517,21 @@ namespace EXIFGeotagger
             image.SetPropertyItem(propItemSat);
             image.SetPropertyItem(propItemDateTime);
             r.GeoTag = true;
-            
-                string photoName = Path.GetFileNameWithoutExtension(threadInfo.File);
-                string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
-                OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
 
-                photo = (string)commandGetPhoto.ExecuteScalar();
+                //string photoName = Path.GetFileNameWithoutExtension(threadInfo.File);
+                string photoName = r.PhotoName;
+                //string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
+                //OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
 
-                r.PhotoName = photo; //new photo name 
-                string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
+                //photo = (string)commandGetPhoto.ExecuteScalar();
+
+                //r.PhotoName = photo; //new photo name 
+                string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo = '" + photoName + "';";
                 OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
                 
                 commandGeoTag.ExecuteNonQuery();
-                path = outPath + "\\" + photo + ".jpg";
-                string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
+                path = outPath + "\\" + photoName + ".jpg";
+                string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo = '" + photoName + "';";
                 OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
                 commandPath.ExecuteNonQuery();
                 r.Path = path;

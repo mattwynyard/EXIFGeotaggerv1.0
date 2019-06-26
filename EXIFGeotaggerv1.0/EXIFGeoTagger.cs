@@ -43,6 +43,8 @@ namespace EXIFGeotagger //v0._1
         public Color mlayerColour;
         public String mlayerColourHex;
 
+        private AWSConnection client;
+
         private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
         private GMapOverlay mOverlay; //the currently active overlay
@@ -572,8 +574,38 @@ namespace EXIFGeotagger //v0._1
             gMap.Overlays.Add(selectedMarkersOverlay);
             GMapMarker[] selectedMarkers = selectedMarkersOverlay.Markers.ToArray<GMapMarker>();
             mOverlayDict.Add("selected", selectedMarkers);
+            if (tag.Record.Uploaded)
+            {
+                //string bucket = "central-waikato";
+                //string url = "https://centralwaikato2019.s3.ap-southeast-2.amazonaws.com/" + tag.PhotoName + ".jpg";
+                //var buffer = new byte[1024 * 8]; // 8k buffer.
+                //MemoryStream data = new MemoryStream();
+                //int offset = 0;
+                //try
+                //{
+                //    var request = (HttpWebRequest)WebRequest.Create(url);
+                //    var response = request.GetResponse();
+                //    int bytesRead = 0;
+                //    using (var responseStream = response.GetResponseStream())
+                //    {
+                //        while ((bytesRead = responseStream.Read(buffer, 0, buffer.Length)) != 0)
+                //        {
+                //            data.Write(buffer, 0, bytesRead);
+                //            offset += bytesRead;
+                //        }
+                //    }
+                //    image = Image.FromStream(data);
+                //    data.Close();
+                //    lbPhoto.Text = tag.ToString();
+                //    pictureBox.Image = image;
+                //}
+                //catch (WebException ex)
+                //{
+                //    lbPhoto.Text = ex.Message;
+                //}
 
-            if (tag.Path != null)
+            }
+            else
             {
                 try
                 {
@@ -588,37 +620,7 @@ namespace EXIFGeotagger //v0._1
                 {
                     lbPhoto.Text = ex.Message;
                 }
-            }
-            else
-            {
-                string bucket = "central-waikato";
-                string url = "https://centralwaikato2019.s3.ap-southeast-2.amazonaws.com/" + tag.PhotoName + ".jpg";
-                var buffer = new byte[1024 * 8]; // 8k buffer.
-                MemoryStream data = new MemoryStream();
-                int offset = 0;
-                try
-                {
-                    var request = (HttpWebRequest)WebRequest.Create(url);
-                    var response = request.GetResponse();
-                    int bytesRead = 0;
-                    using (var responseStream = response.GetResponseStream())
-                    {
-                        while ((bytesRead = responseStream.Read(buffer, 0, buffer.Length)) != 0)
-                        {
-                            data.Write(buffer, 0, bytesRead);
-                            offset += bytesRead;
-                        }
-                    }
-                    image = Image.FromStream(data);
-                    data.Close();
-                    lbPhoto.Text = tag.ToString();
-                    pictureBox.Image = image;
-                }
-                catch (WebException ex)
-                {
-                    lbPhoto.Text = ex.Message;
-                }
-            }
+            }           
         }
 
 
@@ -831,9 +833,10 @@ namespace EXIFGeotagger //v0._1
         {
             ImportDataForm importForm = new ImportDataForm("exf");
             mRecordDict = new Dictionary<string, Record>();
+            
             importForm.mParent = this;
             importForm.Show();
-            importForm.importData += exfImportCallback;
+            importForm.updateData += exfImportCallback;
         }
 
         #endregion
@@ -928,11 +931,18 @@ namespace EXIFGeotagger //v0._1
         /// <param name="folderPath"></param>
         /// <param name="layer"></param>
         /// <param name="color"></param>
-        public void exfImportCallback(string folderPath, string layer, Color color)
+        public void exfImportCallback(string folderPath, string layer, Color color, Boolean remote)
         {
             Serializer s = new Serializer(folderPath);
             mLayerAttributes = s.deserialize();
             mRecordDict = mLayerAttributes.Data;
+            if (remote)
+            {
+                foreach (KeyValuePair<string, Record> entry in mRecordDict)
+                {
+                    entry.Value.Uploaded = true;
+                }
+            }
             max_lat = mLayerAttributes.MaxLat;
             min_lat = mLayerAttributes.MinLat;
             max_lng = mLayerAttributes.MaxLng;
@@ -1255,13 +1265,22 @@ namespace EXIFGeotagger //v0._1
 
         private async void ConnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AWSConnection client = new AWSConnection();
-            List<S3Bucket> buckets;
+            client = new AWSConnection();
+            List<S3Bucket> buckets = null;
             if (client != null)
             {
-
+                buckets = await client.requestBuckets();
             }
-            buckets = await client.requestBuckets();
+
+            foreach(S3Bucket bucket in buckets)
+            {
+                treeBuckets.Nodes.Add(bucket.BucketName);
+            }
+            
+        }
+
+        public async void getFileObjects(string bucket)
+        {
             Dictionary<string, List<string>> folderDict = await client.getObjectsAsync();
             List<string> paths = new List<string>();
             foreach (KeyValuePair<string, List<string>> entry in folderDict)
@@ -1284,7 +1303,7 @@ namespace EXIFGeotagger //v0._1
                     }
                     treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode.Text, '/'));
                 }
-                
+
             }
         }
 
@@ -1328,6 +1347,12 @@ namespace EXIFGeotagger //v0._1
             {
                 MessageBox.Show(menuItem.FullPath);
             }
+        }
+
+        private void TreeView__NodeMouseClick(object sender, EventArgs e)
+        {
+            var menuItem = treeBuckets.SelectedNode; //as MyProject.MenuItem;
+            getFileObjects(menuItem.FullPath);
         }
     } //end class   
 } //end namespace

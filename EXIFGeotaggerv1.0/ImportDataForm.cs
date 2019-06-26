@@ -19,7 +19,10 @@ namespace EXIFGeotagger //v0._1
     {
         public event ImportDataDelegate importData;
         public delegate void ImportDataDelegate(string filePath, string layer, Color color);
-       
+
+        public event UpdateDataDelegate updateData;
+        public delegate void UpdateDataDelegate(string filePath, string layer, Color color, Boolean remote);
+
         private string mfilePath;
         public EXIFGeoTagger mParent;
         private OpenFileDialog openFileDialog;
@@ -50,21 +53,25 @@ namespace EXIFGeotagger //v0._1
             {
                 Text = "Import Access Database";
                 filter = "MS Access (*.mdb *.accdb)|*.mdb;*.accdb";
+                ckUploaded.Visible = false;
             }
             else if (fileType.Equals("exf"))
             {
                 Text = "Open Data File";
                 filter = "exf files|*.exf";
+                ckUploaded.Visible = true;
             }
             else if (fileType.Equals("photos"))
             {
                 Text = "Import photo data";
                 filter = "jpg files|*.jpg";
+                ckUploaded.Visible = false;
             }
             else if (fileType.Equals("shape"))
             {
                 Text = "Import shapefile";
                 filter = "ESRI shapefiles|*.shp";
+                ckUploaded.Visible = false;
             }
         }
 
@@ -147,9 +154,14 @@ namespace EXIFGeotagger //v0._1
         {
             Close();
             mParent.BringToFront();
-            if (fileType.Equals("access"))
+            Boolean remote = false;
+            if (ckUploaded.Checked)
             {
-                //mParent.startWorker(sender, e);
+                remote = true;
+            }
+            if (fileType.Equals("exf"))
+            {
+                updateData(mfilePath, mLayer, mColor, remote);
             }
             else
             {
