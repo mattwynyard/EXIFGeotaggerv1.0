@@ -30,8 +30,8 @@ namespace Amazon
 
         private static readonly Object obj = new Object();
 
-        //public event BucketDelegate getBuckets;
-        //public delegate void BucketDelegate(List<S3Bucket> buckets);
+        public event FileObjectsDelegate getFileObjects;
+        public delegate void FileObjectsDelegate(Dictionary<string, List<string>> dict);
 
         public AWSConnection()
         {
@@ -42,8 +42,8 @@ namespace Amazon
                 if (chain.TryGetAWSCredentials("shared_profile", out awsCredentials))
                 {
                     mClient = new AmazonS3Client(awsCredentials, bucketRegion);
-                }  
-            } 
+                }
+            }
             catch (TargetInvocationException ex) //TODO exception catch not working
             {
                 string title = "Amazon S3 Exception";
@@ -56,6 +56,46 @@ namespace Amazon
                     //Close();
                 }
             }
+            
+        }
+
+       
+        public void requestFileObjects() {
+
+            Dictionary<string, List<string>> folderDict = new Dictionary<string, List<string>>();
+            ListObjectsResponse response;
+            foreach (S3Bucket bucket in clientBuckets)
+            {
+                List<string> folders = new List<string>();
+                folderDict.Add(bucket.BucketName, folders);
+                ListObjectsRequest request = new ListObjectsRequest();
+
+                request.BucketName = bucket.BucketName;
+                do
+                {
+                    response = mClient.ListObjects(request);
+                    //response.Prefix = bucket.BucketName;
+                    //response.Delimiter = "/";
+                    IEnumerable<S3Object> f = response.S3Objects.Where(x =>
+                                                        x.Key.EndsWith(@"/") && x.Size == 0);
+
+                    foreach (S3Object x in f)
+                    {
+                        folders.Add(x.Key);
+                    }
+                    if (response.IsTruncated)
+                    {
+                        request.Marker = response.NextMarker;
+                    }
+                    else
+                    {
+                        request = null;
+                    }
+                } while (request != null);
+                folderDict[bucket.BucketName] = folders;
+            }
+            getFileObjects(folderDict);
+            //return dict;
         }
 
         public async Task<Dictionary<string, List<string>>> getObjectsAsync()
@@ -69,14 +109,16 @@ namespace Amazon
                     folderDict.Add(bucket.BucketName, folders);
                     ListObjectsRequest request = new ListObjectsRequest();
                     request.BucketName = bucket.BucketName;
+                    //request.MaxKeys = 10;
                     try
                     {
                         ListObjectsResponse response;
                         do
                         {
                             response = mClient.ListObjects(request);
-                            response.Prefix = bucket.BucketName;
-                            response.Delimiter = "/";
+                            //response.Prefix = bucket.BucketName;
+                            //response.Delimiter = "/";
+                            response.MaxKeys = 10;
                             IEnumerable<S3Object> f = response.S3Objects.Where(x =>
                                                                 x.Key.EndsWith(@"/") && x.Size == 0);
 
@@ -86,7 +128,14 @@ namespace Amazon
                             }
                             if (response.IsTruncated)
                             {
-                                request.Marker = response.NextMarker;
+                                //if (response.NextMarker.Contains(".jpg"))
+                                //{
+                                    //request = null;
+                                //} else
+                                //{
+                                    request.Marker = response.NextMarker;
+                                //}
+                                
                             }
                             else
                             {
@@ -108,6 +157,9 @@ namespace Amazon
                 });
 
             }
+            //Dictionary<string, List<string>> folderDict = new Dictionary<string, List<string>>();
+            //folderDict = requestFileObjects(folderDict);
+            
             return folderDict;
         }
         public async Task<List<S3Bucket>> requestBuckets()
@@ -115,6 +167,7 @@ namespace Amazon
             clientBuckets = new List<S3Bucket>();
             await Task.Run(() => {
                 ListBucketsResponse response = mClient.ListBuckets();
+                
 
                     foreach (S3Bucket b in response.Buckets)
                     {

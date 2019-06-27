@@ -25,6 +25,7 @@ using System.Net;
 using System.Collections.Concurrent;
 using ShapeFile;
 using System.Globalization;
+using System.Diagnostics;
 
 public delegate Image getAWSImage();
 
@@ -34,6 +35,8 @@ namespace EXIFGeotagger //v0._1
     {
 
         public delegate Task<GMapOverlay> ReadGeoTagDelegate(string folderPath, string layer, Color color);
+
+        Stopwatch stopWatch;
 
         private string connectionString;
 
@@ -364,7 +367,6 @@ namespace EXIFGeotagger //v0._1
                 foreach (GMapOverlay overlay in overlays)
                 {
                     rebuildMarkers(overlay, 4);
-
                 }
             }
             else if ((int)gMap.Zoom < 15 && (int)gMap.Zoom >= 11)
@@ -385,7 +387,6 @@ namespace EXIFGeotagger //v0._1
             {
                 foreach (GMapOverlay overlay in overlays)
                 {
-
                     rebuildMarkers(overlay, 16);
                 }
             }
@@ -395,7 +396,6 @@ namespace EXIFGeotagger //v0._1
                 {
                     rebuildMarkers(overlay, 20);
                 }
-
             }
         }
 
@@ -432,8 +432,7 @@ namespace EXIFGeotagger //v0._1
                 var point = gMap.FromLocalToLatLng(e.X, e.Y);
                 txtConsole.Clear();
                 txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
-            }
-            
+            }           
         }
 
         private void gMap_MouseMove(object sender, MouseEventArgs e)
@@ -1267,44 +1266,72 @@ namespace EXIFGeotagger //v0._1
         {
             client = new AWSConnection();
             List<S3Bucket> buckets = null;
+            client.getFileObjects += getFileObjectsCallback;
             if (client != null)
             {
                 buckets = await client.requestBuckets();
             }
 
-            foreach(S3Bucket bucket in buckets)
-            {
-                treeBuckets.Nodes.Add(bucket.BucketName);
-            }
+            //foreach(S3Bucket bucket in buckets)
+            //{
+            //    //treeBuckets.Nodes.Add(bucket.BucketName);
+            //    getFileObjects(bucket.BucketName);
+
+            //}
+            stopWatch = new Stopwatch();
+            //client.requestFileObjects();
+            stopWatch.Start();
             
+            Dictionary<string, List<string>> folderDict = await client.getObjectsAsync();
+            getFileObjects(folderDict);
+
         }
 
-        public async void getFileObjects(string bucket)
+        private void getFileObjectsCallback(Dictionary<string, List<string>> dict)
         {
-            Dictionary<string, List<string>> folderDict = await client.getObjectsAsync();
+            //getFileObjects(dict);
+            Dictionary<string, List<string>> folderDict = dict;
+        }
+
+        public void getFileObjects(Dictionary<string, List<string>> folderDict)
+        {
+            
             List<string> paths = new List<string>();
-            foreach (KeyValuePair<string, List<string>> entry in folderDict)
+            try
             {
-                string[] dirArr;
-                paths = entry.Value;
-                paths = paths.Where(path => !paths.Any(p => p != path && p.StartsWith(path))).ToList();
+                foreach (KeyValuePair<string, List<string>> entry in folderDict)
+                {
+                    string[] dirArr;
+                    paths = entry.Value;
+                    paths = paths.Where(path => !paths.Any(p => p != path && p.StartsWith(path))).ToList();
 
-                rootNode = new TreeNode(entry.Key);
-                if (entry.Value.Count == 0)
-                {
-                    treeBuckets.Nodes.Add(rootNode);
-                }
-                else
-                {
-                    List<string> newPaths = new List<string>();
-                    foreach (string path in paths)
+                    rootNode = new TreeNode(entry.Key);
+                    if (entry.Value.Count == 0)
                     {
-                        newPaths.Add(path.Remove(path.Length - 1));
+                        treeBuckets.Nodes.Add(rootNode);
                     }
-                    treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode.Text, '/'));
-                }
+                    else
+                    {
+                        List<string> newPaths = new List<string>();
+                        foreach (string path in paths)
+                        {
+                            newPaths.Add(path.Remove(path.Length - 1));
+                        }
+                        treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode.Text, '/'));
+                    }
 
+                }
             }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+            }
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            ts.Hours, ts.Minutes, ts.Seconds,
+            ts.Milliseconds / 10);
+            txtConsole.Text = elapsedTime;
         }
 
         public TreeNode MakeTreeFromPaths(List<string> paths, string rootNodeName = "", char separator = '/')
@@ -1351,8 +1378,8 @@ namespace EXIFGeotagger //v0._1
 
         private void TreeView__NodeMouseClick(object sender, EventArgs e)
         {
-            var menuItem = treeBuckets.SelectedNode; //as MyProject.MenuItem;
-            getFileObjects(menuItem.FullPath);
+            //var menuItem = treeBuckets.SelectedNode; //as MyProject.MenuItem;
+            //getFileObjects(menuItem.FullPath);
         }
     } //end class   
 } //end namespace
