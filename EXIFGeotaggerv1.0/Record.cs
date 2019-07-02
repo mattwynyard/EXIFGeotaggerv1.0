@@ -35,9 +35,7 @@ namespace EXIFGeotagger
         protected bool uploaded;
         protected string path;
 
-        protected DataTable table;
-
-
+       
         public Record()
         {
         }
@@ -109,10 +107,7 @@ namespace EXIFGeotagger
             }
         }
 
-        public void setDatable(ref DataTable table)
-        {
-            this.table = table;
-        }
+        
 
         public double Bearing
         {

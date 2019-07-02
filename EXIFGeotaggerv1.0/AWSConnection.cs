@@ -14,6 +14,8 @@ using Amazon;
 using System.Reflection;
 using Amazon.Runtime.CredentialManagement;
 using Amazon.Runtime;
+using EXIFGeotagger;
+using System.Threading;
 
 namespace Amazon
 {
@@ -27,11 +29,9 @@ namespace Amazon
         private Image mImage;
         private static readonly string BUCKET = "onsitetest";
         private List<S3Bucket> clientBuckets;
+        private CancellationTokenSource cts;
 
         private static readonly Object obj = new Object();
-
-        public event FileObjectsDelegate getFileObjects;
-        public delegate void FileObjectsDelegate(Dictionary<string, List<string>> dict);
 
         public AWSConnection()
         {
@@ -59,90 +59,67 @@ namespace Amazon
             
         }
 
-       
-        public void requestFileObjects() {
-
-            Dictionary<string, List<string>> folderDict = new Dictionary<string, List<string>>();
-            ListObjectsResponse response;
-            foreach (S3Bucket bucket in clientBuckets)
-            {
-                List<string> folders = new List<string>();
-                folderDict.Add(bucket.BucketName, folders);
-                ListObjectsRequest request = new ListObjectsRequest();
-
-                request.BucketName = bucket.BucketName;
-                do
-                {
-                    response = mClient.ListObjects(request);
-                    //response.Prefix = bucket.BucketName;
-                    //response.Delimiter = "/";
-                    IEnumerable<S3Object> f = response.S3Objects.Where(x =>
-                                                        x.Key.EndsWith(@"/") && x.Size == 0);
-
-                    foreach (S3Object x in f)
-                    {
-                        folders.Add(x.Key);
-                    }
-                    if (response.IsTruncated)
-                    {
-                        request.Marker = response.NextMarker;
-                    }
-                    else
-                    {
-                        request = null;
-                    }
-                } while (request != null);
-                folderDict[bucket.BucketName] = folders;
-            }
-            getFileObjects(folderDict);
-            //return dict;
+        private void cancelImport(object sender, EventArgs e)
+        {
+            if (cts != null)
+                cts.Cancel();
         }
 
-        public async Task<Dictionary<string, List<string>>> getObjectsAsync()
+        public async Task<Dictionary<string, List<string>>> getObjectsAsync(List<S3Bucket> buckets)
         { 
             Dictionary<string, List<string>> folderDict = new Dictionary<string, List<string>>();
-            foreach (S3Bucket bucket in clientBuckets)
+            ProgressForm progressForm = new ProgressForm("Connecting to Amazon...");
+            progressForm.Show();
+            progressForm.BringToFront();
+            progressForm.cancel += cancelImport;
+            cts = new CancellationTokenSource();
+            var token = cts.Token;
+            var progressHandler1 = new Progress<int>(value =>
+            {
+                progressForm.ProgressValue = value;
+                progressForm.Message = "Getting objects from amazon read, please wait... " + value.ToString() + "% completed";
+
+            });
+            var progressValue = progressHandler1 as IProgress<int>;
+            int i = 0; 
+            foreach (S3Bucket bucket in buckets)
             {
                 await Task.Factory.StartNew(() => 
-                { 
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        token.ThrowIfCancellationRequested();
+                    }
                     List<string> folders = new List<string>();
                     folderDict.Add(bucket.BucketName, folders);
                     ListObjectsRequest request = new ListObjectsRequest();
-                    request.BucketName = bucket.BucketName;
-                    //request.MaxKeys = 10;
+                    request.BucketName = bucket.BucketName;                 
+                    request.Delimiter = ".jpg";
                     try
                     {
                         ListObjectsResponse response;
                         do
                         {
                             response = mClient.ListObjects(request);
-                            //response.Prefix = bucket.BucketName;
-                            //response.Delimiter = "/";
-                            response.MaxKeys = 10;
                             IEnumerable<S3Object> f = response.S3Objects.Where(x =>
-                                                                x.Key.EndsWith(@"/") && x.Size == 0);
-
+                                                                (x.Key.EndsWith(@"/") && x.Size == 0) || x.Key.Contains(".exf"));
+                            
                             foreach (S3Object x in f)
                             {
-                                folders.Add(x.Key);                                
+                                folders.Add(x.Key);
+                                
                             }
                             if (response.IsTruncated)
                             {
-                                //if (response.NextMarker.Contains(".jpg"))
-                                //{
-                                    //request = null;
-                                //} else
-                                //{
-                                    request.Marker = response.NextMarker;
-                                //}
-                                
+                                request.Marker = response.NextMarker;    
                             }
                             else
                             {
                                 request = null;
                             }
+                            
                         } while (request != null);
-                        
+                      
                     }
                     catch (AmazonS3Exception exAWS)
                     {
@@ -153,13 +130,21 @@ namespace Amazon
 
                     }
 
-                folderDict[bucket.BucketName] = folders;
-                });
+                    folderDict[bucket.BucketName] = folders;
+                    lock (obj)
+                    {
+                        i++;
+                    }
+                    int percent = (i / buckets.Count) * 100;
+                    if (progressValue != null)
+                    {
+                        progressValue.Report(percent);
 
-            }
-            //Dictionary<string, List<string>> folderDict = new Dictionary<string, List<string>>();
-            //folderDict = requestFileObjects(folderDict);
-            
+                    }
+                }, cts.Token);
+
+                
+            }     
             return folderDict;
         }
         public async Task<List<S3Bucket>> requestBuckets()
@@ -186,6 +171,53 @@ namespace Amazon
 
         }
 
+        public async void getDataFile(string path)
+        {
+            MemoryStream stream = new MemoryStream();
+            string[] tokens = path.Split('\\');
+            int length = tokens.Length;
+            //string key = tokens[tokens.Length - 1];
+            string key = null;
+            //string bucket = null;
+            string bucket = tokens[0];
+            for (int i = 1; i < tokens.Length; i++)
+            {
+                if (i == tokens.Length - 1)
+                {
+                    key += tokens[i];
+                }
+                else
+                {
+                    key += tokens[i] + "/";
+                }
+
+            }
+            
+                await Task.Run(() =>
+                 {
+
+                     GetObjectRequest request = new GetObjectRequest
+                     {
+                         BucketName = bucket,
+                         Key = key
+                     };
+                     using (GetObjectResponse response = mClient.GetObject(request))
+                     {
+                         using (Stream responseStream = response.ResponseStream)
+                         using (StreamReader reader = new StreamReader(responseStream))
+                         {
+                             //responseStream.CopyTo(stream);
+                             response.WriteResponseStreamToFile("C:\\EXIFGeotagger\\EXIFGeotaggerv1.0\\EXIFGeotaggerv1.0\\tmp\\" + path);
+                         }
+                     }
+                    
+                 });
+            //return stream;
+        }
+            
+          
+
+
         private async Task ReadObjectDataAsync()
         {
             try
@@ -202,7 +234,7 @@ namespace Amazon
                     MemoryStream stream = new MemoryStream();
 
                     responseStream.CopyTo(stream);
-                    mImage = Image.FromStream(stream, true);
+                    //mImage = Image.FromStream(stream, true);
                     //this.pictureBox.Image = mImage;
 
                 }

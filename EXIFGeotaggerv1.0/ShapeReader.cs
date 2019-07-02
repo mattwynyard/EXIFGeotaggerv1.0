@@ -7,8 +7,7 @@ using GMap.NET;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using ShapeFile;
+
 
 namespace ShapeFile
 {
@@ -85,13 +84,13 @@ namespace ShapeFile
             this.path = path;
         }
 
-        public void read()
+        public ESRIShapeFile read(ESRIShapeFile s)
         {
             double lat, lng;
             int errorCount = 0;
             int numRecords = 0;
             int recordNumber;
-            s = new ESRIShapeFile();
+            //s = new ESRIShapeFile();
             PointLatLng pMin;
             PointLatLng pMax;
             shpData = File.ReadAllBytes(path);
@@ -211,8 +210,7 @@ namespace ShapeFile
                         pl.zArray = getZArray(shpData, ref offset, pl.numPoints);
                         polyZList.Add(pl);
                         numRecords++;
-                    }
-                    
+                    }               
                 }
                 else
                 {
@@ -223,6 +221,7 @@ namespace ShapeFile
             s.Point = pointList.ToArray();
 
             s.PolyLineZ = polyZList.ToArray();
+            return s;
         }
 
         public int readInt(byte[] src, ref int offset)
@@ -318,33 +317,40 @@ namespace ShapeFile
             return dest;
         }
 
-        public void readDBF()
+        public async Task<DataTable> readDBF()
         {
-            
-            string dbPath = Path.GetDirectoryName(path)+ "\\";
+            DataTable dt = new DataTable();
+            string dbPath = Path.GetDirectoryName(path) + "\\";
             string fileName = Path.GetFileNameWithoutExtension(path) + ".dbf";
+            string oldPath = dbPath + fileName;
+            string newPath = dbPath + "data.dbf";
+            File.Move(oldPath, newPath);
             string constr = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + dbPath + ";Extended Properties=dBASE IV";
-
-            using (OleDbConnection con = new OleDbConnection(constr))
+            await Task.Run(() =>
             {
-                //var sql = "SELECT * FROM " + "dat_a.dbf";
-                var sql = "SELECT * FROM " + dbPath + fileName;
-                OleDbCommand cmd = new OleDbCommand(sql, con);
-                con.Open();
-                DataTable dt = new DataTable();
-
-                OleDbDataAdapter da = new OleDbDataAdapter(cmd);
-                da.Fill(dt);
-
-                foreach (DataColumn column in dt.Columns)
+                using (OleDbConnection con = new OleDbConnection(constr))
                 {
-                    string data = column.ToString();
+                    var sql = "SELECT * FROM " + "data.dbf";
+                    OleDbCommand cmd = new OleDbCommand(sql, con);
+                    con.Open();
+
+
+                    OleDbDataAdapter da = new OleDbDataAdapter(cmd);
+                    da.Fill(dt);
+
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        string data = column.ToString();
+                    }
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        string data = row[0].ToString();
+                    }
                 }
-                foreach (DataRow row in dt.Rows)
-                {
-                    string data = row[0].ToString();
-                }
-            }
+                File.Move(newPath, oldPath);
+            });
+               
+            return dt;
         }
 
         private Point processPoint(byte[] source, ref int offset)

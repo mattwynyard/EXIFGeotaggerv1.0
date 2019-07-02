@@ -52,32 +52,38 @@ namespace EXIFGeotagger //v0._1
         public static Bitmap getBitmap(string color, int size)
         {
             Stream stream = null;
+            Bitmap bitmap = null;
             try
             {
                 String icon = ColorTableDict[color] + "_" + size.ToString() + "px.png";
                 stream = assembly.GetManifestResourceStream(icon);
+                bitmap = new Bitmap(stream);
+                stream.Close();
 
             }
             catch (ArgumentNullException)
             {
 
             }
-            return (Bitmap)Image.FromStream(stream);
+            return bitmap;
         }
 
         public static Bitmap getBitmap(Dictionary<string, string> dictionary, string color, int size)
         {
             Stream stream = null;
+            Bitmap bitmap = null;
             try
             {
                 String icon = dictionary[color] + "_" + size.ToString() + "px.png";
                 stream = assembly.GetManifestResourceStream(icon);
-                
+                bitmap = new Bitmap(stream);
+                stream.Close();
+
             } catch (ArgumentNullException)
             {
 
             }
-            return (Bitmap)Image.FromStream(stream);
+            return bitmap;
         }
     }
 }

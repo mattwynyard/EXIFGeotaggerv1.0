@@ -26,6 +26,8 @@ namespace EXIFGeotagger //v0._1
 
         public Record Record { get; set; }
 
+        public Bitmap Bitmap { get; set; }
+
         public int ID { get; set; }
         public string Color { get; set; }
 

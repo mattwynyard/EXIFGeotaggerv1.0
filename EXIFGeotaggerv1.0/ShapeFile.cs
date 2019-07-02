@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +24,8 @@ namespace ShapeFile
         public PolyLineZ[] PolyLineZ { get; set; }
 
         public PolyLine[] PolyLine { get; set; }
+
+        public DataTable DataTable { get; set; }
 
     }
 }

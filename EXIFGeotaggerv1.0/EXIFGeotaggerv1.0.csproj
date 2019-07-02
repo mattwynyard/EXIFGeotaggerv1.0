@@ -7,7 +7,7 @@
     <ProjectGuid>{2FD055B9-6B6D-47CB-80BE-8665085AFF9A}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>EXIFGeotagger</RootNamespace>
-    <AssemblyName>EXIFGeotaggerv1.1</AssemblyName>
+    <AssemblyName>EXIFGeotaggerv1.0</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>false</Deterministic>
@@ -166,6 +166,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShapeFile.cs" />
     <Compile Include="ShapeReader.cs" />
+    <Compile Include="ShapeTable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ShapeTable.Designer.cs">
+      <DependentUpon>ShapeTable.cs</DependentUpon>
+    </Compile>
     <Compile Include="ThreadInfo.cs" />
     <Compile Include="ThreadUtil.cs" />
     <Compile Include="Transformation.cs" />
@@ -209,6 +215,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="ShapeTable.resx">
+      <DependentUpon>ShapeTable.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UploadedForm.resx">
       <DependentUpon>UploadedForm.cs</DependentUpon>
     </EmbeddedResource>

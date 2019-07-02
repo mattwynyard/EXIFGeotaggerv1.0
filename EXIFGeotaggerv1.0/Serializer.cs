@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
@@ -11,13 +12,19 @@ namespace EXIFGeotagger
     {
         private Dictionary<string, Record> mData;
         private string mPath;
-        private Stream stream;
+        private Stream mStream;
         private LayerAttributes mLayer;
 
         public Serializer(String path)
         {
             mPath = path;
-           stream = new FileStream(mPath, FileMode.Open, FileAccess.Read);
+           mStream = new FileStream(mPath, FileMode.Open, FileAccess.Read);
+        }
+
+        public Serializer(MemoryStream stream)
+        {
+
+            mStream = stream;
         }
 
         public Serializer(Dictionary<string, Record> data)
@@ -36,6 +43,7 @@ namespace EXIFGeotagger
             try
             {
                 IFormatter formatter = new BinaryFormatter();
+                
                 stream = new FileStream(path, FileMode.Append, FileAccess.Write);
 
                 formatter.Serialize(stream, mLayer);
@@ -62,9 +70,27 @@ namespace EXIFGeotagger
         public LayerAttributes deserialize()
         {
             IFormatter formatter = new BinaryFormatter();
-            LayerAttributes layer = (LayerAttributes)formatter.Deserialize(stream);
-            stream.Close();
+           
+            formatter.Binder = new CustomizedBinder();
+            LayerAttributes layer = formatter.Deserialize(mStream) as LayerAttributes;
+
+            mStream.Close();
             return layer;
+        }
+
+        sealed class CustomizedBinder : SerializationBinder
+        {
+            public override Type BindToType(string assemblyName, string typeName)
+            {
+                Type typeToDeserialize = null;
+                // Get the current assembly
+                string currentAssembly = Assembly.GetExecutingAssembly().FullName;
+                // Create the new type and return it
+                typeToDeserialize = Type.GetType(string.Format("{0}, {1}", typeName, currentAssembly));
+                return typeToDeserialize;
+            }
+
+            
         }
     }
 

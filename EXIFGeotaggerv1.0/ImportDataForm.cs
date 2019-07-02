@@ -21,7 +21,7 @@ namespace EXIFGeotagger //v0._1
         public delegate void ImportDataDelegate(string filePath, string layer, Color color);
 
         public event UpdateDataDelegate updateData;
-        public delegate void UpdateDataDelegate(string filePath, string layer, Color color, Boolean remote);
+        public delegate void UpdateDataDelegate(string layer, Color color);
 
         private string mfilePath;
         public EXIFGeoTagger mParent;
@@ -60,6 +60,13 @@ namespace EXIFGeotagger //v0._1
                 Text = "Open Data File";
                 filter = "exf files|*.exf";
                 ckUploaded.Visible = true;
+            }
+            else if (fileType.Equals("stream"))
+            {
+
+                txtDBName.Visible = false;
+                btnBrowse.Visible = false;
+                ckUploaded.Visible = false;
             }
             else if (fileType.Equals("photos"))
             {
@@ -111,6 +118,7 @@ namespace EXIFGeotagger //v0._1
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.DefaultExt = "exf";
             }
+            
             else if (fileType.Equals("photos"))
             {
                 browseFolderDialog = new FolderBrowserDialog();
@@ -154,6 +162,7 @@ namespace EXIFGeotagger //v0._1
         {
             Close();
             mParent.BringToFront();
+
             Boolean remote = false;
             if (ckUploaded.Checked)
             {
@@ -161,7 +170,11 @@ namespace EXIFGeotagger //v0._1
             }
             if (fileType.Equals("exf"))
             {
-                updateData(mfilePath, mLayer, mColor, remote);
+                importData(mfilePath, mLayer, mColor);
+            }
+            else if (fileType.Equals("stream"))
+            {
+                updateData(mLayer, mColor); 
             }
             else
             {

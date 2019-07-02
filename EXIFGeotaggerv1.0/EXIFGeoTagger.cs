@@ -47,6 +47,7 @@ namespace EXIFGeotagger //v0._1
         public String mlayerColourHex;
 
         private AWSConnection client;
+        private MemoryStream mStream;
 
         private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
@@ -59,6 +60,8 @@ namespace EXIFGeotagger //v0._1
         private string mSelectedLayer;
         private Boolean isLayerSelected = false;
         private Dictionary<string, Record> mRecordDict;
+
+        private Dictionary<string, ESRIShapeFile> mShapeDict;
         private static readonly Object obj = new Object();
         private LayerAttributes mLayerAttributes;
         public string[] mFiles; //array containing absolute paths of photos.
@@ -90,7 +93,9 @@ namespace EXIFGeotagger //v0._1
         private Boolean mouseInBounds;
        
         private BlockingCollection<string> fileQueue;
-        TreeNode rootNode;
+        private TreeNode rootNode;
+
+
 
 
 
@@ -134,6 +139,7 @@ namespace EXIFGeotagger //v0._1
             gMap.OnMarkerDoubleClick += gMap_onMarkerDoubleClick;
             gMap.Leave += gMap_onLeave;
             mOverlayDict = new Dictionary<string, GMapMarker[]>();
+            mShapeDict = new Dictionary<string, ESRIShapeFile>();
             //layerItem = new ListViewItem();
             imageList = new ImageList();
             layerCount = 0;
@@ -327,6 +333,7 @@ namespace EXIFGeotagger //v0._1
 
             overlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
+            stream.Close();
         }
 
         private void zoomToMarkers()
@@ -714,10 +721,12 @@ namespace EXIFGeotagger //v0._1
 
                     txtConsole.Text = "Right\n";
                     ContextMenu contextMenu = new ContextMenu();
+                    var itemTable = contextMenu.MenuItems.Add("Open Attributes Table");
                     var itemDelete = contextMenu.MenuItems.Add("Delete Layer");
                     var itemZoom = contextMenu.MenuItems.Add("Zoom to Layer");
                     listLayers.ContextMenu = contextMenu;
                     itemDelete.Click += contextMenu_ItemDelete;
+                    itemTable.Click += contextMenu_ItemTableClick;
                 }
                 if (e.Button == MouseButtons.Left)
                 {
@@ -727,17 +736,57 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
+        private void contextMenu_ItemTableClick(object sender, EventArgs e)
+        {
+            MenuItem item = (MenuItem)sender;
+            string layer = listLayers.FocusedItem.Text;
+            ESRIShapeFile shape = mShapeDict[layer];
+            DataTable table = shape.DataTable;
+            ShapeTable tableForm = new ShapeTable(table);
+            tableForm.Show();
+
+        }
+
+
+        /// <summary>
+        /// Deletes layer from menu items and shape record dictionary and overlay dictionary.
+        /// Overaly is then removed from gMap control and refreshed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void contextMenu_ItemDelete(object sender, EventArgs e)
         {
+            MenuItem item = (MenuItem)sender;
+            string layer = listLayers.FocusedItem.Text;
+            mShapeDict.Remove(layer);
             if (currentListItem.Focused && currentListItem.Selected)
             {
+                
                 mOverlayDict.Remove(mSelectedOverlay.Id);
                 gMap.Overlays.Remove(mSelectedOverlay);
+                mSelectedOverlay.Dispose();
+                mOverlay.Dispose();
                 currentListItem.Remove();
+                if (mRecordDict != null)
+                {
+                    try
+                    {
+                        mRecordDict.Remove(layer);
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+
+                    }
+                }
+                mSelectedOverlay = null;
+                mOverlay = null;
                 gMap.Refresh();
+                long bytes = GC.GetTotalMemory(true); //force full memory collection
             }
             
         }
+
+        
 
         private void listLayers_ItemActivate(object sender, EventArgs e)
         {
@@ -835,26 +884,27 @@ namespace EXIFGeotagger //v0._1
             
             importForm.mParent = this;
             importForm.Show();
-            importForm.updateData += exfImportCallback;
+            importForm.importData += exfImportCallback;
         }
 
         #endregion
 
         #region Callbacks
 
-        public void importShapeCallback(string path, string layer, Color color)
+        public async void importShapeCallback(string path, string layer, Color color)
         {
             Bitmap bitmap = null;
-            ShapeReader shape = new ShapeReader(path);
+            ShapeReader reader = new ShapeReader(path);
             GMapOverlay overlay = new GMapOverlay(layer);
+            ESRIShapeFile shape = new ESRIShapeFile();
             gMap.Overlays.Add(overlay);
-            shape.errorHandler += errorHandlerCallback;
-            shape.read();
-            ESRIShapeFile s = shape.getShape();
-            if (s.ShapeType == 3 || s.ShapeType == 13)
+            reader.errorHandler += errorHandlerCallback;
+            shape = reader.read(shape);
+            
+            if (shape.ShapeType == 3 || shape.ShapeType == 13)
             {
                 GMapRoute line_layer;
-                PolyLineZ[] polyLines = s.PolyLineZ;
+                PolyLineZ[] polyLines = shape.PolyLineZ;
                 foreach (PolyLineZ polyLine in polyLines)
                 {
                     PointLatLng[] points = polyLine.points;
@@ -863,9 +913,9 @@ namespace EXIFGeotagger //v0._1
                     overlay.Routes.Add(line_layer);
                 }
             }
-            else if (s.ShapeType == 1)
+            else if (shape.ShapeType == 1)
             {
-                ShapeFile.Point[] points = s.Point;
+                ShapeFile.Point[] points = shape.Point;
                 bitmap = ColorTable.getBitmap(ColorTable.ColorCrossDict, color.Name, 4);
                 int id = 0;
                 foreach (ShapeFile.Point point in points)
@@ -881,8 +931,8 @@ namespace EXIFGeotagger //v0._1
                 GMapMarker[] markersArr = overlay.Markers.ToArray<GMapMarker>();
                 mOverlayDict.Add(layer, markersArr);
 
-            } else if (s.ShapeType == 8) {
-                MultiPoint[] points = s.MultiPoint;
+            } else if (shape.ShapeType == 8) {
+                MultiPoint[] points = shape.MultiPoint;
                 bitmap = ColorTable.getBitmap(ColorTable.ColorCrossDict, color.Name, 4);
                 int id = 0;
                 foreach (MultiPoint point in points)
@@ -892,32 +942,30 @@ namespace EXIFGeotagger //v0._1
                     {
                         MarkerTag tag = new MarkerTag(color.Name, id);
                         tag.Dictionary = ColorTable.ColorCrossDict;
-                        GMapMarker marker = new GMarkerGoogle(p, bitmap);
+                        tag.Bitmap = bitmap;
+                        GMapMarker marker = new GMarkerGoogle(p, tag.Bitmap);
                         marker.Tag = tag;
+                        
                         overlay.Markers.Add(marker);
+                        //bitmap.Dispose();
+                        //tag = null;
+                        //marker = null;
                         id++;
                     }
                 }
                 GMapMarker[] markersArr = overlay.Markers.ToArray<GMapMarker>();
                 mOverlayDict.Add(layer, markersArr);
+                
+                
             }
             addListItem(ColorTable.ColorCrossDict, overlay, color.Name);
-            //if (bitmap != null)
-            //{
-            //    imageList.Images.Add(bitmap);
-            //}
-            //ListViewItem layerItem = new ListViewItem(overlay.Id, layerCount);
-            //layerCount++;
-
-            //layerItem.Text = overlay.Id;
-            //layerItem.Checked = true;
-            //mOverlay = overlay;
-            //listLayers.SmallImageList = imageList;
-            //listLayers.Items.Add(layerItem);
-            ////addListItem(ColorTable.ColorCrossDict, overlay, color.Name);
-            //overlay.IsVisibile = true;
-            //mOverlay.IsVisibile = true;
-            ////shape.readDBF();
+            await Task.Run(() =>
+            {
+                DataTable table = reader.readDBF().Result;
+                shape.DataTable = table;
+                mShapeDict.Add(layer, shape);
+            });
+            //reader = null;
         }
 
         public void errorHandlerCallback(string error, string message)
@@ -930,18 +978,37 @@ namespace EXIFGeotagger //v0._1
         /// <param name="folderPath"></param>
         /// <param name="layer"></param>
         /// <param name="color"></param>
-        public void exfImportCallback(string folderPath, string layer, Color color, Boolean remote)
+        public void exfImportCallback(string folderPath, string layer, Color color)
         {
             Serializer s = new Serializer(folderPath);
             mLayerAttributes = s.deserialize();
             mRecordDict = mLayerAttributes.Data;
-            if (remote)
-            {
-                foreach (KeyValuePair<string, Record> entry in mRecordDict)
-                {
-                    entry.Value.Uploaded = true;
-                }
-            }
+            //if (remote)
+            //{
+            //    foreach (KeyValuePair<string, Record> entry in mRecordDict)
+            //    {
+            //        entry.Value.Uploaded = true;
+            //    }
+            //}
+            max_lat = mLayerAttributes.MaxLat;
+            min_lat = mLayerAttributes.MinLat;
+            max_lng = mLayerAttributes.MaxLng;
+            min_lng = mLayerAttributes.MinLng;
+            plotLayer(layer, color.Name);
+        }
+
+        public void exfDownloadCallback(string layer, Color color)
+        {
+            Serializer s = new Serializer(mStream);
+            mLayerAttributes = s.deserialize();
+            mRecordDict = mLayerAttributes.Data;
+            //if (remote)
+            //{
+            //    foreach (KeyValuePair<string, Record> entry in mRecordDict)
+            //    {
+            //        entry.Value.Uploaded = true;
+            //    }
+            //}
             max_lat = mLayerAttributes.MaxLat;
             min_lat = mLayerAttributes.MinLat;
             max_lng = mLayerAttributes.MaxLng;
@@ -1265,37 +1332,93 @@ namespace EXIFGeotagger //v0._1
         private async void ConnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             client = new AWSConnection();
-            List<S3Bucket> buckets = null;
-            client.getFileObjects += getFileObjectsCallback;
+            List<S3Bucket> buckets;
             if (client != null)
             {
+                stopWatch = new Stopwatch();
+                stopWatch.Start();
                 buckets = await client.requestBuckets();
+                Dictionary<string, List<string>> folderDict = await client.getObjectsAsync(buckets);
+                List<string> paths = new List<string>();
+                foreach (KeyValuePair<string, List<string>> entry in folderDict)
+                {
+                    paths = entry.Value;
+                    paths = paths.Where(path => !paths.Any(p => p != path && p.StartsWith(path))).ToList();
+
+                    rootNode = new TreeNode(entry.Key);
+                    if (entry.Value.Count == 0)
+                    {
+                        treeBuckets.Nodes.Add(rootNode); //empty bucket
+                    }
+                    else
+                    {
+                        List<string> newPaths = new List<string>();
+                        foreach (string path in paths)
+                        {
+                            if (path.Contains(".exf"))
+                            {
+                                newPaths.Add(path); 
+                            } else
+                            {
+                                newPaths.Add(path.Remove(path.Length - 1)); //remove '/' at end of file path
+                            }
+                            
+                        }
+                        treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode.Text, '/'));
+                    }
+                }
             }
-
-            //foreach(S3Bucket bucket in buckets)
-            //{
-            //    //treeBuckets.Nodes.Add(bucket.BucketName);
-            //    getFileObjects(bucket.BucketName);
-
-            //}
-            stopWatch = new Stopwatch();
-            //client.requestFileObjects();
-            stopWatch.Start();
-            
-            Dictionary<string, List<string>> folderDict = await client.getObjectsAsync();
-            getFileObjects(folderDict);
-
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            ts.Hours, ts.Minutes, ts.Seconds,
+            ts.Milliseconds / 10);
+            txtConsole.Text = elapsedTime;
         }
 
-        private void getFileObjectsCallback(Dictionary<string, List<string>> dict)
+        public void getFileObjects(Dictionary<string, List<string>> folderDict, string rootNode)
         {
-            //getFileObjects(dict);
-            Dictionary<string, List<string>> folderDict = dict;
+            List<string> paths = new List<string>();
+            try
+            {
+                //foreach (KeyValuePair<string, List<string>> entry in folderDict)
+                //{
+                //    string[] dirArr;
+                //    paths = entry.Value;
+                //    paths = paths.Where(path => !paths.Any(p => p != path && p.StartsWith(path))).ToList();
+
+                //    //rootNode = new TreeNode(entry.Key);
+                //    if (entry.Value.Count == 0)
+                //    {
+                //        treeBuckets.Nodes.Add(rootNode);
+                //    }
+                //    else
+                //    {
+                //        List<string> newPaths = new List<string>();
+                //        foreach (string path in paths)
+                //        {
+                //            newPaths.Add(path.Remove(path.Length - 1));
+                //        }
+                //        treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode, '/'));
+                //        //treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode, '/'));
+                //    }
+
+                //}
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+            }
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            ts.Hours, ts.Minutes, ts.Seconds,
+            ts.Milliseconds / 10);
+            txtConsole.Text = elapsedTime;
         }
 
         public void getFileObjects(Dictionary<string, List<string>> folderDict)
-        {
-            
+        {         
             List<string> paths = new List<string>();
             try
             {
@@ -1376,10 +1499,24 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
-        private void TreeView__NodeMouseClick(object sender, EventArgs e)
+       
+        private async void TreeView__NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            //var menuItem = treeBuckets.SelectedNode; //as MyProject.MenuItem;
-            //getFileObjects(menuItem.FullPath);
+           
+            if (e.Node.Text.Contains(".exf"))
+            {
+                var selectedFile = e.Node.FullPath;
+                client.getDataFile(selectedFile);
+                ImportDataForm importForm = new ImportDataForm("stream");
+                importForm.mParent = this;
+                mRecordDict = new Dictionary<string, Record>();
+
+                
+                importForm.Show();
+                importForm.updateData += exfDownloadCallback;
+
+            }
+           
         }
     } //end class   
 } //end namespace
