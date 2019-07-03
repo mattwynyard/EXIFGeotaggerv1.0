@@ -72,6 +72,7 @@ namespace EXIFGeotagger
             IFormatter formatter = new BinaryFormatter();
            
             formatter.Binder = new CustomizedBinder();
+            mStream.Position = 0;
             LayerAttributes layer = formatter.Deserialize(mStream) as LayerAttributes;
 
             mStream.Close();

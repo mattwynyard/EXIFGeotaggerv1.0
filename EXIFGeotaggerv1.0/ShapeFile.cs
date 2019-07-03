@@ -25,6 +25,8 @@ namespace ShapeFile
 
         public PolyLine[] PolyLine { get; set; }
 
+        public Polygon[] Polygon{ get; set; }
+
         public DataTable DataTable { get; set; }
 
     }

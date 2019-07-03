@@ -55,6 +55,7 @@ namespace EXIFGeotagger
                     responseStream.CopyTo(stream);
                     mImage = Image.FromStream(stream, true);
                     this.pictureBox.Image = mImage;
+                    stream.Close();
 
                 }
             }

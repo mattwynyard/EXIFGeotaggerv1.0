@@ -69,6 +69,17 @@ namespace ShapeFile
         public PointLatLng[] points;
     }
 
+    public struct Polygon
+    {
+        public double[] box;
+        public int numParts;
+        public int numPoints;
+        public int[] parts;
+        public PointLatLng[] points;
+    }
+
+
+
 
     
     class ShapeReader
@@ -148,6 +159,7 @@ namespace ShapeFile
             List<MultiPoint> mpointList = new List<MultiPoint>();
             List<PolyLineZ> polyZList = new List<PolyLineZ>();
             List<Point> pointList = new List<Point>();
+            List<Polygon> polygonList = new List<Polygon>();
 
 
             while (offset < size * 2)
@@ -167,17 +179,27 @@ namespace ShapeFile
                         Point p = processPoint(shpData, ref offset);
                         pointList.Add(p);
                         numRecords++;
-
                     }
-                    else  if (shapeType == 3) //polyline
+                    else if (shapeType == 3) //polyline
                     {
                         PolyLineZ pl = new PolyLineZ();
                         pl.box = getBoundingBox(shpData, ref offset);
                         pl.numParts = readInt(shpData, ref offset);
                         pl.numPoints = readInt(shpData, ref offset);
-                        pl.parts = getnumParts(shpData, ref offset, pl.numParts);                                                         
+                        pl.parts = getnumParts(shpData, ref offset, pl.numParts);
                         pl.points = processMultiPoint(shpData, ref offset, pl.numPoints);
                         polyZList.Add(pl);
+                        numRecords++;
+                    }
+                    else if (shapeType == 5) //multipolygon
+                    {
+                        Polygon mPolygon = new Polygon();
+                        mPolygon.box = getBoundingBox(shpData, ref offset);
+                        mPolygon.numParts = readInt(shpData, ref offset);
+                        mPolygon.numPoints = readInt(shpData, ref offset);
+                        mPolygon.parts = getnumParts(shpData, ref offset, mPolygon.numParts);
+                        mPolygon.points = processMultiPoint(shpData, ref offset, mPolygon.numPoints);
+                        polygonList.Add(mPolygon);
                         numRecords++;
                     }
                     else if (shapeType == 8) //multipoint
@@ -193,7 +215,6 @@ namespace ShapeFile
                         mPoint.points = points;
                         mpointList.Add(mPoint);
                         numRecords++;
-
                     }
                     else if (shapeType == 13) //polylineZ
                     {
@@ -219,8 +240,7 @@ namespace ShapeFile
             }
             s.MultiPoint = mpointList.ToArray();
             s.Point = pointList.ToArray();
-
-            s.PolyLineZ = polyZList.ToArray();
+            s.Polygon = polygonList.ToArray();
             return s;
         }
 

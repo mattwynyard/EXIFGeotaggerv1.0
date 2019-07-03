@@ -267,8 +267,11 @@ namespace EXIFGeotagger
                                 marker.Tag = tag;
                                 tag.Size = 4;
                                 tag.PhotoName = r.PhotoName;
+                                tag.Record = r;
                                 tag.Path = Path.GetFullPath(r.Path);
                                 overlay.Markers.Add(marker);
+                                
+
                             });
                     }
                 }
@@ -287,7 +290,7 @@ namespace EXIFGeotagger
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
             string file = Path.GetFullPath(threadInfo.File);
-            string photo = file;
+            string photo = Path.GetFileNameWithoutExtension(file);
             Image image = new Bitmap(file);
             Record r = new Record(photo);
                 var progressValue = threadInfo.ProgressHandler as IProgress<int>;

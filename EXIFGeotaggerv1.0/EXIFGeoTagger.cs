@@ -47,7 +47,7 @@ namespace EXIFGeotagger //v0._1
         public String mlayerColourHex;
 
         private AWSConnection client;
-        private MemoryStream mStream;
+        
 
         private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
@@ -94,6 +94,10 @@ namespace EXIFGeotagger //v0._1
        
         private BlockingCollection<string> fileQueue;
         private TreeNode rootNode;
+
+        private string currentBucket;
+        private string currentKey;
+        private string mSelectedFile;
 
 
 
@@ -180,7 +184,7 @@ namespace EXIFGeotagger //v0._1
             Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ColorTable.ColorTableDict[color.ToString()] + "_24px.png");
             Bitmap bitmap = (Bitmap)Image.FromStream(stream);
             imageList.Images.Add(bitmap);
-
+            stream.Close();
             ListViewItem layerItem = new ListViewItem(newOverlay.Id, layerCount);
             layerCount++;
 
@@ -569,7 +573,7 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
-        private void getPicture(GMapMarker marker)
+        private async void getPicture(GMapMarker marker)
         {
             MarkerTag tag = (MarkerTag)marker.Tag;
             Bitmap bitmap = ColorTable.getBitmap("Red", tag.Size);
@@ -580,35 +584,15 @@ namespace EXIFGeotagger //v0._1
             gMap.Overlays.Add(selectedMarkersOverlay);
             GMapMarker[] selectedMarkers = selectedMarkersOverlay.Markers.ToArray<GMapMarker>();
             mOverlayDict.Add("selected", selectedMarkers);
-            if (tag.Record.Uploaded)
+            if (tag.Record.Bucket != null)
             {
-                //string bucket = "central-waikato";
-                //string url = "https://centralwaikato2019.s3.ap-southeast-2.amazonaws.com/" + tag.PhotoName + ".jpg";
-                //var buffer = new byte[1024 * 8]; // 8k buffer.
-                //MemoryStream data = new MemoryStream();
-                //int offset = 0;
-                //try
-                //{
-                //    var request = (HttpWebRequest)WebRequest.Create(url);
-                //    var response = request.GetResponse();
-                //    int bytesRead = 0;
-                //    using (var responseStream = response.GetResponseStream())
-                //    {
-                //        while ((bytesRead = responseStream.Read(buffer, 0, buffer.Length)) != 0)
-                //        {
-                //            data.Write(buffer, 0, bytesRead);
-                //            offset += bytesRead;
-                //        }
-                //    }
-                //    image = Image.FromStream(data);
-                //    data.Close();
-                //    lbPhoto.Text = tag.ToString();
-                //    pictureBox.Image = image;
-                //}
-                //catch (WebException ex)
-                //{
-                //    lbPhoto.Text = ex.Message;
-                //}
+                Image image = await client.getAWSPicture(tag.Record.Bucket, tag.Record.Key);
+                if (pictureBox.Image != null)
+                {
+                    pictureBox.Image.Dispose();
+                }
+                pictureBox.Image = image;
+                
 
             }
             else
@@ -619,7 +603,7 @@ namespace EXIFGeotagger //v0._1
                     {
                         pictureBox.Image.Dispose();
                     }
-                    lbPhoto.Text = tag.PhotoName;
+                    lbPhoto.Text = tag.Path;
                     pictureBox.Image = Image.FromFile(tag.Path);
                 }
                 catch (FileNotFoundException ex)
@@ -900,7 +884,7 @@ namespace EXIFGeotagger //v0._1
             gMap.Overlays.Add(overlay);
             reader.errorHandler += errorHandlerCallback;
             shape = reader.read(shape);
-            
+
             if (shape.ShapeType == 3 || shape.ShapeType == 13)
             {
                 GMapRoute line_layer;
@@ -911,6 +895,46 @@ namespace EXIFGeotagger //v0._1
                     line_layer = new GMapRoute(points, "lines"); //TODO get carriage number
                     line_layer.Stroke = new Pen(color, 1);
                     overlay.Routes.Add(line_layer);
+                }
+            }
+            else if (shape.ShapeType == 5)
+            {
+                //GMapPolygon polygon;
+                Polygon[] polygons = shape.Polygon;
+                //List<PointLatLng> pointsList = new List<PointLatLng>();
+                
+                foreach (var polygon in polygons) 
+                {
+                    PointLatLng[] points = polygon.points;
+                    long start = 0;
+                    long end = 0;
+                    for (int i = 0; i < polygon.numParts; i++)
+                    {
+                        start = polygon.parts[i];
+                        
+                        if (i == polygon.numParts -1)
+                        {
+                            end = polygon.numPoints - 1;
+                            
+                        } else
+                        {
+                           
+                            end = polygon.parts[i + 1] - 1;
+                            
+                        }
+                        long length = end + 1 - start;
+                        PointLatLng[] pointPart = new PointLatLng[length];
+                        Array.Copy(points, start, pointPart, 0, length);
+                        List<PointLatLng> pointsList = pointPart.ToList<PointLatLng>();
+                        GMapPolygon polygon_layer = new GMapPolygon(pointsList, "polygons");
+                        polygon_layer.Stroke = new Pen(color, 1);
+                        overlay.Polygons.Add(polygon_layer);
+
+
+                    }
+                    //GMapPolygon polygon_layer = new GMapPolygon(points, "polygons");
+                    //polygon_layer.Stroke = new Pen(color, 1);
+                    //overlay.Polygons.Add(polygon_layer);
                 }
             }
             else if (shape.ShapeType == 1)
@@ -931,7 +955,9 @@ namespace EXIFGeotagger //v0._1
                 GMapMarker[] markersArr = overlay.Markers.ToArray<GMapMarker>();
                 mOverlayDict.Add(layer, markersArr);
 
-            } else if (shape.ShapeType == 8) {
+            }
+            else if (shape.ShapeType == 8)
+            {
                 MultiPoint[] points = shape.MultiPoint;
                 bitmap = ColorTable.getBitmap(ColorTable.ColorCrossDict, color.Name, 4);
                 int id = 0;
@@ -945,7 +971,7 @@ namespace EXIFGeotagger //v0._1
                         tag.Bitmap = bitmap;
                         GMapMarker marker = new GMarkerGoogle(p, tag.Bitmap);
                         marker.Tag = tag;
-                        
+
                         overlay.Markers.Add(marker);
                         //bitmap.Dispose();
                         //tag = null;
@@ -955,8 +981,8 @@ namespace EXIFGeotagger //v0._1
                 }
                 GMapMarker[] markersArr = overlay.Markers.ToArray<GMapMarker>();
                 mOverlayDict.Add(layer, markersArr);
-                
-                
+
+
             }
             addListItem(ColorTable.ColorCrossDict, overlay, color.Name);
             await Task.Run(() =>
@@ -983,6 +1009,7 @@ namespace EXIFGeotagger //v0._1
             Serializer s = new Serializer(folderPath);
             mLayerAttributes = s.deserialize();
             mRecordDict = mLayerAttributes.Data;
+
             //if (remote)
             //{
             //    foreach (KeyValuePair<string, Record> entry in mRecordDict)
@@ -997,23 +1024,37 @@ namespace EXIFGeotagger //v0._1
             plotLayer(layer, color.Name);
         }
 
-        public void exfDownloadCallback(string layer, Color color)
+        public async void exfDownloadCallback(string layer, Color color)
         {
-            Serializer s = new Serializer(mStream);
-            mLayerAttributes = s.deserialize();
-            mRecordDict = mLayerAttributes.Data;
-            //if (remote)
-            //{
-            //    foreach (KeyValuePair<string, Record> entry in mRecordDict)
-            //    {
-            //        entry.Value.Uploaded = true;
-            //    }
-            //}
-            max_lat = mLayerAttributes.MaxLat;
-            min_lat = mLayerAttributes.MinLat;
-            max_lng = mLayerAttributes.MaxLng;
-            min_lng = mLayerAttributes.MinLng;
+            //Serializer s = new Serializer(mStream);
+            LayerAttributes attributes = await client.getDataFile(mSelectedFile);
+            mRecordDict = attributes.Data;
+
+            foreach (KeyValuePair<string, Record> entry in mRecordDict)
+            {
+                entry.Value.Uploaded = true;
+                entry.Value.Bucket = currentBucket;
+                entry.Value.Key = currentKey + entry.Value.PhotoName + ".JPG";
+            }
+            max_lat = attributes.MaxLat;
+            min_lat = attributes.MinLat;
+            max_lng = attributes.MaxLng;
+            min_lng = attributes.MinLng;
+
             plotLayer(layer, color.Name);
+        }
+
+        private void setBucketCallback(string bucket, string key)
+        {
+            string[] tokens = key.Split('/');
+            int length = tokens.Length;
+            string newKey = null;
+            for (int i = 0; i < tokens.Length -1; i++)
+            {
+                newKey += tokens[i] + "/";
+            }
+                currentBucket = bucket;
+            currentKey = newKey;
         }
 
         private void menuRunGeoTag_Click(object sender, EventArgs e)
@@ -1502,21 +1543,17 @@ namespace EXIFGeotagger //v0._1
        
         private async void TreeView__NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-           
+            client.SetBucket += setBucketCallback;
             if (e.Node.Text.Contains(".exf"))
             {
-                var selectedFile = e.Node.FullPath;
-                client.getDataFile(selectedFile);
+                mSelectedFile = e.Node.FullPath;           
                 ImportDataForm importForm = new ImportDataForm("stream");
                 importForm.mParent = this;
-                mRecordDict = new Dictionary<string, Record>();
-
-                
+                mRecordDict = new Dictionary<string, Record>();        
                 importForm.Show();
-                importForm.updateData += exfDownloadCallback;
-
+                importForm.updateData += exfDownloadCallback;                
             }
-           
+          
         }
     } //end class   
 } //end namespace

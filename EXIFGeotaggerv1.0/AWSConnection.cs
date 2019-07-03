@@ -33,6 +33,9 @@ namespace Amazon
 
         private static readonly Object obj = new Object();
 
+        public event SetBucketDelegate SetBucket;
+        public delegate void SetBucketDelegate(string bucket, string key);
+
         public AWSConnection()
         {
             try
@@ -141,9 +144,7 @@ namespace Amazon
                         progressValue.Report(percent);
 
                     }
-                }, cts.Token);
-
-                
+                }, cts.Token);            
             }     
             return folderDict;
         }
@@ -152,33 +153,25 @@ namespace Amazon
             clientBuckets = new List<S3Bucket>();
             await Task.Run(() => {
                 ListBucketsResponse response = mClient.ListBuckets();
-                
-
-                    foreach (S3Bucket b in response.Buckets)
+                foreach (S3Bucket b in response.Buckets)
+                {
+                    string bucket = b.BucketName;
+                    DateTime dt = new DateTime(2019, 6, 1);
+                    if (b.CreationDate >= dt)
                     {
-                        string bucket = b.BucketName;
-                        DateTime dt = new DateTime(2019, 6, 1);
-                        if (b.CreationDate >= dt)
-                        {
-                            clientBuckets.Add(b);
-                        }
+                        clientBuckets.Add(b);
                     }
-
-                
+                }               
             });
             return clientBuckets;
-
-
         }
 
-        public async void getDataFile(string path)
+        public async Task<LayerAttributes> getDataFile(string path)
         {
             MemoryStream stream = new MemoryStream();
             string[] tokens = path.Split('\\');
             int length = tokens.Length;
-            //string key = tokens[tokens.Length - 1];
             string key = null;
-            //string bucket = null;
             string bucket = tokens[0];
             for (int i = 1; i < tokens.Length; i++)
             {
@@ -190,63 +183,54 @@ namespace Amazon
                 {
                     key += tokens[i] + "/";
                 }
-
-            }
-            
-                await Task.Run(() =>
-                 {
-
-                     GetObjectRequest request = new GetObjectRequest
-                     {
-                         BucketName = bucket,
-                         Key = key
-                     };
-                     using (GetObjectResponse response = mClient.GetObject(request))
-                     {
-                         using (Stream responseStream = response.ResponseStream)
-                         using (StreamReader reader = new StreamReader(responseStream))
-                         {
-                             //responseStream.CopyTo(stream);
-                             response.WriteResponseStreamToFile("C:\\EXIFGeotagger\\EXIFGeotaggerv1.0\\EXIFGeotaggerv1.0\\tmp\\" + path);
-                         }
-                     }
-                    
-                 });
-            //return stream;
-        }
-            
-          
-
-
-        private async Task ReadObjectDataAsync()
-        {
-            try
+            }          
+            await Task.Run(() =>
             {
                 GetObjectRequest request = new GetObjectRequest
                 {
-                    BucketName = mBucket,
-                    Key = mKey
+                    BucketName = bucket,
+                    Key = key
                 };
-                using (GetObjectResponse response = await mClient.GetObjectAsync(request))
-                using (Stream responseStream = response.ResponseStream)
-                using (StreamReader reader = new StreamReader(responseStream))
+                using (GetObjectResponse response = mClient.GetObject(request))
                 {
-                    MemoryStream stream = new MemoryStream();
-
-                    responseStream.CopyTo(stream);
-                    //mImage = Image.FromStream(stream, true);
-                    //this.pictureBox.Image = mImage;
-
-                }
-            }
-            catch (AmazonS3Exception e)
-            {
-                //Console.WriteLine("Error encountered ***. Message:'{0}' when writing an object", e.Message);
-            }
-            catch (Exception e)
-            {
-                //Console.WriteLine("Unknown encountered on server. Message:'{0}' when writing an object", e.Message);
-            }
+                    using (Stream responseStream = response.ResponseStream)
+                    using (StreamReader reader = new StreamReader(responseStream))
+                    {
+                        responseStream.CopyTo(stream);
+                    }
+                }                  
+            });
+            Serializer s = new Serializer(stream);
+            LayerAttributes layerAttributes = s.deserialize();
+            s = null;
+            stream.Close();
+            SetBucket(bucket, key);
+            return layerAttributes;
         }
-    }
+        public async Task<Image> getAWSPicture(string bucket, string key)
+        {
+            //key = "/" + key;
+            MemoryStream stream = new MemoryStream();
+            await Task.Run(() =>
+            {
+                
+                GetObjectRequest request = new GetObjectRequest
+                {
+                    BucketName = bucket,
+                    Key = key
+                };
+                using (GetObjectResponse response = mClient.GetObject(request))
+                {
+                    using (Stream responseStream = response.ResponseStream)
+                    using (StreamReader reader = new StreamReader(responseStream))
+                    {
+                        responseStream.CopyTo(stream);
+                    }
+                }          
+            });
+            Image image = Image.FromStream(stream, true);
+            stream.Close();
+            return image;
+        }
+    } //end class
 }
