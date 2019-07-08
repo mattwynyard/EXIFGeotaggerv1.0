@@ -51,6 +51,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cbID = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.txtLayer2 = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -271,11 +274,42 @@
             this.label3.TabIndex = 31;
             this.label3.Text = "ID";
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(386, 101);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(87, 17);
+            this.checkBox1.TabIndex = 32;
+            this.checkBox1.Text = "Link to Layer";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.CheckBox1_CheckedChanged);
+            // 
+            // txtLayer2
+            // 
+            this.txtLayer2.Location = new System.Drawing.Point(496, 101);
+            this.txtLayer2.Name = "txtLayer2";
+            this.txtLayer2.Size = new System.Drawing.Size(231, 20);
+            this.txtLayer2.TabIndex = 33;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(493, 78);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(82, 16);
+            this.label5.TabIndex = 34;
+            this.label5.Text = "Layer Name";
+            // 
             // DelimitedText
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(977, 536);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.txtLayer2);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.cbID);
             this.Controls.Add(this.label1);
@@ -300,6 +334,7 @@
             this.Controls.Add(this.txtDataSource);
             this.Name = "DelimitedText";
             this.Text = "Import Delimited Text File";
+            this.Load += new System.EventHandler(this.DelimitedText_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -331,5 +366,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox cbID;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.TextBox txtLayer2;
+        private System.Windows.Forms.Label label5;
     }
 }

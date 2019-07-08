@@ -161,6 +161,16 @@ namespace EXIFGeotagger
         {
             dataGridView1.DataSource = null;
         }
+
+        private void DelimitedText_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void CheckBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            //if 
+        }
     }
 
     

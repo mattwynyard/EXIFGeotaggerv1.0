@@ -8,6 +8,10 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace EXIFGeotagger
 {
+    /// <summary>
+    /// Class to serialize and deserialize exif data from within photo
+    /// 
+    /// </summary>
     class Serializer
     {
         private Dictionary<string, Record> mData;
@@ -15,27 +19,32 @@ namespace EXIFGeotagger
         private Stream mStream;
         private LayerAttributes mLayer;
 
+        /// <summary>
+        /// Contratructor 
+        /// </summary>
+        /// <param name="path">the path to the exf file to create</param>
         public Serializer(String path)
         {
             mPath = path;
-           mStream = new FileStream(mPath, FileMode.Open, FileAccess.Read);
+           mStream = new FileStream(mPath, FileMode.OpenOrCreate, FileAccess.Read);
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream">the data stream received from AWS</param>
         public Serializer(MemoryStream stream)
         {
 
             mStream = stream;
         }
 
-        public Serializer(Dictionary<string, Record> data)
-        {
-            mData = data;
-        }
-
         public Serializer(LayerAttributes layer)
         {
             mLayer = layer;
         }
+
 
         public int serialize(String path)
         {
@@ -59,13 +68,6 @@ namespace EXIFGeotagger
             }
            return 1; 
         }
-
-        //public Dictionary<string, Record> deserialize()
-        //{
-        //    IFormatter formatter = new BinaryFormatter();
-        //    Dictionary<string, Record> dict = (Dictionary<string, Record>)formatter.Deserialize(stream);
-        //    return dict;
-        //}
 
         public LayerAttributes deserialize()
         {

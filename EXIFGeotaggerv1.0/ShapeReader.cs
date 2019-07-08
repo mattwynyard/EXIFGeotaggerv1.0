@@ -241,6 +241,7 @@ namespace ShapeFile
             s.MultiPoint = mpointList.ToArray();
             s.Point = pointList.ToArray();
             s.Polygon = polygonList.ToArray();
+            s.PolyLineZ = polyZList.ToArray();
             return s;
         }
 

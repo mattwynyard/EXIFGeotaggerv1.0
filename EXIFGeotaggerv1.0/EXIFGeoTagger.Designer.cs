@@ -129,17 +129,18 @@ namespace EXIFGeotagger
             this.gMap.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
             this.gMap.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
             this.gMap.ShowTileGridLines = false;
-            this.gMap.Size = new System.Drawing.Size(549, 556);
+            this.gMap.Size = new System.Drawing.Size(625, 701);
             this.gMap.TabIndex = 5;
             this.gMap.Zoom = 10D;
             this.gMap.OnMarkerClick += new GMap.NET.WindowsForms.MarkerClick(this.gMap_OnMarkerClick);
+            this.gMap.OnRouteClick += new GMap.NET.WindowsForms.RouteClick(this.gMap_OnRouteClick);
             this.gMap.Load += new System.EventHandler(this.gMap_Load);
             this.gMap.MouseMove += new System.Windows.Forms.MouseEventHandler(this.gMap_OnMouseMoved);
             // 
             // txtConsole
             // 
             this.txtConsole.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.txtConsole.Location = new System.Drawing.Point(6, 456);
+            this.txtConsole.Location = new System.Drawing.Point(44, 528);
             this.txtConsole.Multiline = true;
             this.txtConsole.Name = "txtConsole";
             this.txtConsole.Size = new System.Drawing.Size(123, 73);
@@ -166,8 +167,8 @@ namespace EXIFGeotagger
             this.splitContainer1.Panel2.Controls.Add(this.panel5);
             this.splitContainer1.Panel2.Controls.Add(this.panel2);
             this.splitContainer1.Panel2.Controls.Add(this.panel4);
-            this.splitContainer1.Size = new System.Drawing.Size(1484, 598);
-            this.splitContainer1.SplitterDistance = 690;
+            this.splitContainer1.Size = new System.Drawing.Size(1649, 743);
+            this.splitContainer1.SplitterDistance = 766;
             this.splitContainer1.TabIndex = 6;
             // 
             // treeBuckets
@@ -178,7 +179,6 @@ namespace EXIFGeotagger
             this.treeBuckets.TabIndex = 20;
             this.treeBuckets.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TreeView__NodeMouseClick);
             this.treeBuckets.DoubleClick += new System.EventHandler(this.TreeView__NodeMouseDoubleClick);
-           
             this.treeBuckets.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.tr);
             // 
             // label1
@@ -201,14 +201,14 @@ namespace EXIFGeotagger
             this.panel3.Controls.Add(this.gMap);
             this.panel3.Location = new System.Drawing.Point(135, 5);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(552, 590);
+            this.panel3.Size = new System.Drawing.Size(628, 735);
             this.panel3.TabIndex = 14;
             // 
             // lbScale
             // 
             this.lbScale.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lbScale.AutoSize = true;
-            this.lbScale.Location = new System.Drawing.Point(265, 571);
+            this.lbScale.Location = new System.Drawing.Point(265, 716);
             this.lbScale.Name = "lbScale";
             this.lbScale.Size = new System.Drawing.Size(46, 13);
             this.lbScale.TabIndex = 7;
@@ -220,7 +220,7 @@ namespace EXIFGeotagger
             this.lbPosition.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lbPosition.AutoSize = true;
             this.lbPosition.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbPosition.Location = new System.Drawing.Point(3, 571);
+            this.lbPosition.Location = new System.Drawing.Point(3, 716);
             this.lbPosition.Name = "lbPosition";
             this.lbPosition.Size = new System.Drawing.Size(47, 13);
             this.lbPosition.TabIndex = 6;
@@ -251,9 +251,9 @@ namespace EXIFGeotagger
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel5.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panel5.Controls.Add(this.panel6);
-            this.panel5.Location = new System.Drawing.Point(735, 6);
+            this.panel5.Location = new System.Drawing.Point(824, 6);
             this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(50, 589);
+            this.panel5.Size = new System.Drawing.Size(50, 734);
             this.panel5.TabIndex = 19;
             // 
             // panel6
@@ -261,7 +261,7 @@ namespace EXIFGeotagger
             this.panel6.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.panel6.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panel6.Controls.Add(this.btnRight);
-            this.panel6.Location = new System.Drawing.Point(3, 262);
+            this.panel6.Location = new System.Drawing.Point(3, 335);
             this.panel6.Name = "panel6";
             this.panel6.Size = new System.Drawing.Size(31, 30);
             this.panel6.TabIndex = 16;
@@ -286,7 +286,7 @@ namespace EXIFGeotagger
             this.panel2.Controls.Add(this.panel1);
             this.panel2.Location = new System.Drawing.Point(4, 5);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(57, 590);
+            this.panel2.Size = new System.Drawing.Size(57, 735);
             this.panel2.TabIndex = 16;
             // 
             // panel1
@@ -294,7 +294,7 @@ namespace EXIFGeotagger
             this.panel1.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panel1.Controls.Add(this.btnLeft);
-            this.panel1.Location = new System.Drawing.Point(23, 263);
+            this.panel1.Location = new System.Drawing.Point(23, 335);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(31, 30);
             this.panel1.TabIndex = 16;
@@ -318,7 +318,7 @@ namespace EXIFGeotagger
             this.panel4.Controls.Add(this.pictureBox);
             this.panel4.Location = new System.Drawing.Point(64, 2);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(668, 593);
+            this.panel4.Size = new System.Drawing.Size(757, 738);
             this.panel4.TabIndex = 15;
             // 
             // pictureBox
@@ -330,7 +330,7 @@ namespace EXIFGeotagger
             this.pictureBox.Location = new System.Drawing.Point(3, 3);
             this.pictureBox.MinimumSize = new System.Drawing.Size(300, 400);
             this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(662, 556);
+            this.pictureBox.Size = new System.Drawing.Size(751, 701);
             this.pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox.TabIndex = 8;
             this.pictureBox.TabStop = false;
@@ -359,7 +359,7 @@ namespace EXIFGeotagger
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1484, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1649, 24);
             this.menuStrip1.TabIndex = 7;
             this.menuStrip1.Text = "menuStrip1";
             this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.MenuStrip1_ItemClicked);
@@ -382,7 +382,7 @@ namespace EXIFGeotagger
             this.menuNew.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.projectToolStripMenuItem});
             this.menuNew.Name = "menuNew";
-            this.menuNew.Size = new System.Drawing.Size(154, 22);
+            this.menuNew.Size = new System.Drawing.Size(180, 22);
             this.menuNew.Text = "New ";
             // 
             // projectToolStripMenuItem
@@ -397,7 +397,7 @@ namespace EXIFGeotagger
             this.eXIFDataFiledatToolStripMenuItem});
             this.menuOpen.Name = "menuOpen";
             this.menuOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuOpen.Size = new System.Drawing.Size(154, 22);
+            this.menuOpen.Size = new System.Drawing.Size(180, 22);
             this.menuOpen.Text = "&Open";
             this.menuOpen.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.fileMenuOpen_Click);
             // 
@@ -412,7 +412,7 @@ namespace EXIFGeotagger
             // 
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(154, 22);
+            this.menuSave.Size = new System.Drawing.Size(180, 22);
             this.menuSave.Text = "&Save As";
             this.menuSave.Click += new System.EventHandler(this.menuSave_Click);
             // 
@@ -420,7 +420,7 @@ namespace EXIFGeotagger
             // 
             this.menuQuit.Name = "menuQuit";
             this.menuQuit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.menuQuit.Size = new System.Drawing.Size(154, 22);
+            this.menuQuit.Size = new System.Drawing.Size(180, 22);
             this.menuQuit.Text = "&Quit";
             this.menuQuit.Click += new System.EventHandler(this.menuQuit_Click);
             // 
@@ -431,7 +431,7 @@ namespace EXIFGeotagger
             this.eSRIShapefileshpToolStripMenuItem,
             this.textcsvToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.importToolStripMenuItem.Text = "Import";
             this.importToolStripMenuItem.Click += new System.EventHandler(this.connectAccess_Click);
             // 
@@ -460,7 +460,7 @@ namespace EXIFGeotagger
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dataFiledatToolStripMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            this.exportToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exportToolStripMenuItem.Text = "Export";
             // 
             // dataFiledatToolStripMenuItem
@@ -653,7 +653,7 @@ namespace EXIFGeotagger
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1484, 661);
+            this.ClientSize = new System.Drawing.Size(1649, 806);
             this.Controls.Add(this.panel8);
             this.Controls.Add(this.panel7);
             this.Controls.Add(this.splitContainer1);
