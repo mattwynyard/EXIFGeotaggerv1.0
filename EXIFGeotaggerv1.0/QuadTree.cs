@@ -18,7 +18,6 @@ namespace EXIFGeotagger
             x = _x;
             y = _y;
         }
-
     }
 
     public struct RectangleXY
@@ -50,31 +49,41 @@ namespace EXIFGeotagger
             height = topLeft.y - bottomLeft.y;
         }
 
-        public Boolean contains(PointXY point)
-        {
-            if ((point.x > topLeft.x) && (point.x < (topLeft.x + width)))
-            {
-                if ((point.y < topLeft.y) && (point.y > (topLeft.y - height)))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+        ///// <summary>
+        ///// Checks if point is with a rectangel
+        ///// </summary>
+        ///// <param name="point"> the point to check</param>
+        ///// <returns>true if point is with in rectangle</returns>
+        //public Boolean contains(PointXY point)
+        //{
+        //    if ((point.x > topLeft.x) && (point.x < (topLeft.x + width)))
+        //    {
+        //        if ((point.y < topLeft.y) && (point.y > (topLeft.y - height)))
+        //        {
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            return false;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return false;
+        //    }
+        //}
 
-            }
-            else
-            {
-                return false;
-            }
-        }
 
+        /// <summary>
+        /// Checks is map marker is within a rectangle
+        /// </summary>
+        /// <param name="marker">the marker to check</param>
+        /// <returns>treu if point is within rectangle</returns>
         public Boolean contains(GMapMarker marker)
         {
-            if ((marker.Position.Lng > topLeft.x) && (marker.Position.Lng < (topLeft.x + width)))
+            if ((marker.Position.Lng >= topLeft.x) && (marker.Position.Lng <= (topLeft.x + width)))
             {
-                if ((marker.Position.Lat < topLeft.y) && (marker.Position.Lat > (topLeft.y - height)))
+                if ((marker.Position.Lat <= topLeft.y) && (marker.Position.Lat >= (topLeft.y - height)))
                 {
                     return true;
                 }
@@ -82,7 +91,6 @@ namespace EXIFGeotagger
                 {
                     return false;
                 }
-
             }
             else
             {
@@ -90,13 +98,18 @@ namespace EXIFGeotagger
             }
         }
 
+        /// <summary>
+        /// Checks if a rectangle intersects a rectangle
+        /// </summary>
+        /// <param name="other">the second rectangle</param>
+        /// <returns>true if rectangles intersect</returns>
         public Boolean intersects(RectangleXY other)
         {
-            if (topRight.y < other.bottomLeft.y || this.bottomLeft.y > other.topRight.y)
+            if (topRight.y < other.bottomLeft.y || bottomLeft.y > other.topRight.y)
             {
                 return false;
             }
-            if (this.topRight.x < other.bottomLeft.x || this.bottomLeft.y > other.topRight.y)
+            if (topRight.x < other.bottomLeft.x || bottomLeft.x > other.topRight.x)
             {
                 return false;
             }
@@ -106,7 +119,7 @@ namespace EXIFGeotagger
     class QuadTree
     {
         // Arbitrary constant to indicate how many elements can be stored in this quad tree node
-        const int QT_NODE_CAPACITY = 10;
+        const int QT_NODE_CAPACITY = 4;
 
         // Axis-aligned bounding box stored as a center with half-dimensions
         // to represent the boundaries of this quad tree
@@ -117,10 +130,10 @@ namespace EXIFGeotagger
 
 
         // Children
-        QuadTree northWest;
-        QuadTree northEast;
-        QuadTree southWest;
-        QuadTree southEast;
+        public QuadTree northWest;
+        public QuadTree northEast;
+        public QuadTree southWest;
+        public QuadTree southEast;
 
         // Methods
 
@@ -129,16 +142,48 @@ namespace EXIFGeotagger
             boundary = rect;
         }
 
-        private void subdivide()
-        {
-            PointXY ne = new PointXY(boundary.topLeft.x + (boundary.width / 2), boundary.topLeft.y);
-            PointXY se = new PointXY(boundary.topLeft.x + (boundary.width / 2), boundary.topLeft.y - (boundary.height / 2));
-            PointXY sw = new PointXY(boundary.topLeft.x, boundary.topLeft.y - (boundary.height / 2));
 
-            northWest = new QuadTree(new RectangleXY(boundary.topLeft, boundary.width / 2, boundary.height / 2));
-            northEast = new QuadTree(new RectangleXY(ne, boundary.width / 2, boundary.height / 2));
-            southEast = new QuadTree(new RectangleXY(se, boundary.width / 2, boundary.height / 2));
-            southWest = new QuadTree(new RectangleXY(sw, boundary.width / 2, boundary.height / 2));
+        private void subdivide(QuadTree parent)
+        {
+            PointXY ne = new PointXY(parent.boundary.topLeft.x + (parent.boundary.width / 2.0), parent.boundary.topLeft.y);
+            PointXY se = new PointXY(parent.boundary.topLeft.x + (parent.boundary.width / 2.0), parent.boundary.topLeft.y - (parent.boundary.height / 2.0));
+            PointXY sw = new PointXY(parent.boundary.topLeft.x, parent.boundary.topLeft.y - (parent.boundary.height / 2.0));
+
+            parent.northWest = new QuadTree(new RectangleXY(parent.boundary.topLeft, parent.boundary.width / 2.0, parent.boundary.height / 2.0));
+            parent.northEast = new QuadTree(new RectangleXY(ne, boundary.width / 2.0, parent.boundary.height / 2.0));
+            parent.southEast = new QuadTree(new RectangleXY(se, parent.boundary.width / 2.0, parent.boundary.height / 2.0));
+            parent.southWest = new QuadTree(new RectangleXY(sw, parent.boundary.width / 2.0, parent.boundary.height / 2.0));
+        }
+
+
+        public int count()
+        {
+            int count = points.Count();
+            if (northWest == null) //there are no children terminate
+            {
+                return count;
+            }
+            else
+            {
+                count += countRecursive(northEast);
+                count += countRecursive(northWest);
+                count += countRecursive(southEast);
+                count += countRecursive(southWest);
+            }
+            return count;
+        }
+
+        public int countRecursive(QuadTree parent)
+        {
+            int count = parent.points.Count();
+            if (parent.northWest != null)
+            {
+                count += countRecursive(parent.northEast);
+                count += countRecursive(parent.northWest);
+                count += countRecursive(parent.southEast);
+                count += countRecursive(parent.southWest);
+            }
+            return count;
         }
 
 
@@ -159,7 +204,7 @@ namespace EXIFGeotagger
             {
                 if (northWest == null)
                 {
-                    subdivide();
+                    subdivide(this);
                 }
                 //We have to add the points/data contained into this quad array to the new quads if we want that only 
                 //the last node holds the data 
@@ -167,23 +212,20 @@ namespace EXIFGeotagger
                 {
                     return true;
                 }
-                else if (northEast.insert(marker))
+                if (northEast.insert(marker))
                 {
                     return true;
                 }
-                else if (southWest.insert(marker))
+                if (southWest.insert(marker))
                 {
                     return true;
                 }
-                else if (southEast.insert(marker))
+                if (southEast.insert(marker))
                 {
                     return true;
                 }
                 // Otherwise, the point cannot be inserted for some unknown reason (this should never happen)
-                else
-                {
-                    return false;
-                }
+                return false;
             }
         }
         //public Boolean insert(PointXY p)
@@ -247,7 +289,6 @@ namespace EXIFGeotagger
                 {
                     pointsInRange.Add(point);
                 }
-
             }
 
             // Terminate here, if there are no children
@@ -258,15 +299,46 @@ namespace EXIFGeotagger
             else
             {
                 // Otherwise, add the points from the children
-                pointsInRange.AddRange(northWest.queryRange(range));
-                pointsInRange.AddRange(northEast.queryRange(range));
-                pointsInRange.AddRange(southWest.queryRange(range));
-                pointsInRange.AddRange(southEast.queryRange(range));
+                pointsInRange.AddRange(queryRangeRecursive(northWest, range));
+                pointsInRange.AddRange(queryRangeRecursive(northEast, range));
+                pointsInRange.AddRange(queryRangeRecursive(southEast, range));
+                pointsInRange.AddRange(queryRangeRecursive(southWest, range));
             }
             return pointsInRange;
         }
 
+        public List<GMapMarker> queryRangeRecursive(QuadTree parent, RectangleXY range)
+        {
+            List<GMapMarker> pointsInRange = new List<GMapMarker>();
 
+            // Automatically abort if the range does not intersect this quad
+            if (!parent.boundary.intersects(range))
+            {
+                return pointsInRange; // empty list
+            }
+            // Check objects at this quad level
+            foreach (var point in parent.points)
+            {
+                if (range.contains(point))
+                {
+                    pointsInRange.Add(point);
+                }
+
+            }
+            if (parent.northWest == null)
+            {
+                return pointsInRange;
+            }
+            else
+            {
+                // Otherwise, add the points from the children
+                pointsInRange.AddRange(queryRangeRecursive(parent.northWest, range));
+                pointsInRange.AddRange(queryRangeRecursive(parent.northEast, range));
+                pointsInRange.AddRange(queryRangeRecursive(parent.southEast, range));
+                pointsInRange.AddRange(queryRangeRecursive(parent.southWest, range));
+            }
+            return pointsInRange;
+        }
     }
 }
 

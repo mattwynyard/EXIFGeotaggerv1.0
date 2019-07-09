@@ -213,9 +213,10 @@ namespace EXIFGeotagger //v0._1
         /// <returns>the GPOverlay containing the markers</returns>
         private GMapOverlay buildMarkers(GMapOverlay overlay, string color)
         {
+
+            int id = 0;
             if (mRecordDict != null)
             {
-                int id = 0;
                 Bitmap bitmap = ColorTable.getBitmap(color, 4);
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
@@ -237,6 +238,7 @@ namespace EXIFGeotagger //v0._1
                     id++;
                 }
             }
+            int c = qt.count();
             overlay.IsVisibile = true;
             return overlay;
         }
@@ -508,7 +510,7 @@ namespace EXIFGeotagger //v0._1
                     PointXY topRight = new PointXY(rect.Points[1].Lng, rect.Points[1].Lat);
                     PointXY bottomRight = new PointXY(rect.Points[2].Lng, rect.Points[2].Lat);
                     PointXY bottomLeft = new PointXY(rect.Points[3].Lng, rect.Points[3].Lat);
-                    RectangleXY selectionBox = new RectangleXY(topLeft, topRight, bottomLeft, bottomRight);
+                    RectangleXY selectionBox = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
                     List<GMapMarker> selection = qt.queryRange(selectionBox);
                     markerGroupSelect(selection);
                     zoomOverlay.Polygons.Remove(rect);
