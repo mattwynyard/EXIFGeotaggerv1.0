@@ -17,9 +17,10 @@ namespace EXIFGeotagger
         private Color mColor;
         private OpenFileDialog openFileDialog;
         private string mfilePath;
-        DataTable dt;
-        string header;
-        List<string> cbList;
+        private DataTable dt;
+        private string header;
+        private List<string> cbList;
+        private string layer;
 
         public event ImportDataDelegate importData;
         public delegate void ImportDataDelegate(DataTable table, string layer, Color color);
@@ -162,14 +163,16 @@ namespace EXIFGeotagger
             dataGridView1.DataSource = null;
         }
 
-        private void DelimitedText_Load(object sender, EventArgs e)
-        {
-
-        }
 
         private void CheckBox1_CheckedChanged(object sender, EventArgs e)
         {
             //if 
+        }
+
+        private void BtnImport_Click(object sender, EventArgs e)
+        {
+            layer = txtLayer.Text;
+            importData(dt, layer, mColor);
         }
     }
 

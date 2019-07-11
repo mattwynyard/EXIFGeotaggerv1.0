@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EXIFGeotagger 
 {
-    class RecordUtil : Record
+    class RecordUtil// : Record
     {
         Record record;
 

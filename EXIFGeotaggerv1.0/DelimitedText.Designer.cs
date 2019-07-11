@@ -54,6 +54,7 @@
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.txtLayer2 = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.btnImport = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -302,11 +303,22 @@
             this.label5.TabIndex = 34;
             this.label5.Text = "Layer Name";
             // 
+            // btnImport
+            // 
+            this.btnImport.Location = new System.Drawing.Point(818, 164);
+            this.btnImport.Name = "btnImport";
+            this.btnImport.Size = new System.Drawing.Size(122, 41);
+            this.btnImport.TabIndex = 35;
+            this.btnImport.Text = "Import";
+            this.btnImport.UseVisualStyleBackColor = true;
+            this.btnImport.Click += new System.EventHandler(this.BtnImport_Click);
+            // 
             // DelimitedText
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(977, 536);
+            this.Controls.Add(this.btnImport);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtLayer2);
             this.Controls.Add(this.checkBox1);
@@ -334,7 +346,6 @@
             this.Controls.Add(this.txtDataSource);
             this.Name = "DelimitedText";
             this.Text = "Import Delimited Text File";
-            this.Load += new System.EventHandler(this.DelimitedText_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -369,5 +380,6 @@
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.TextBox txtLayer2;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btnImport;
     }
 }

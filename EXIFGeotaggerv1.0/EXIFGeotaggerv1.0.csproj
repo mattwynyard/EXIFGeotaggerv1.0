@@ -173,6 +173,7 @@
     <Compile Include="ShapeTable.Designer.cs">
       <DependentUpon>ShapeTable.cs</DependentUpon>
     </Compile>
+    <Compile Include="ShapeWriter.cs" />
     <Compile Include="ThreadInfo.cs" />
     <Compile Include="ThreadUtil.cs" />
     <Compile Include="Transformation.cs" />

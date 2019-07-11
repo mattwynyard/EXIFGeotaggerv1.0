@@ -76,12 +76,7 @@ namespace ShapeFile
         public int numPoints;
         public int[] parts;
         public PointLatLng[] points;
-    }
-
-
-
-
-    
+    }  
     class ShapeReader
     {
         public event ErrorDelegate errorHandler;

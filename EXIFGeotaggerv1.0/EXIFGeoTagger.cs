@@ -53,6 +53,8 @@ namespace EXIFGeotagger //v0._1
 
         private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
+        private Dictionary<string, QuadTree> mQuadTreeDict;
+        private QuadTree qt;
         private GMapOverlay mOverlay; //the currently active overlay
         private GMapOverlay selectedMarkersOverlay; //overlay containing selected markers
         private GMapMarker selectedMarker; //the current marker selected by user
@@ -88,9 +90,9 @@ namespace EXIFGeotagger //v0._1
         private List<PointLatLng> zoomRect;
         private GMapOverlay zoomOverlay; //overlay containing zoom rectangle
         private GMapPolygon rect;
-        List<GMapMarker> selection; //currently selected marker group
+        private List<GMapMarker> selection; //currently selected marker group
 
-        private QuadTree qt;
+        //private QuadTree qt;
 
         private static double min_lat;
         private static double min_lng;
@@ -106,10 +108,6 @@ namespace EXIFGeotagger //v0._1
         private string currentKey;
         private string mSelectedFile;
 
-
-
-
-
         /// <summary>
         /// Class constructor to intialize form
         /// </summary>
@@ -117,8 +115,7 @@ namespace EXIFGeotagger //v0._1
         {
             InitializeComponent();
             //awsClient = new AWSConnection();
-            this.menuRunGeoTag.Enabled = true;
-            
+            menuRunGeoTag.Enabled = true;         
         }
 
         /// <summary>
@@ -157,11 +154,11 @@ namespace EXIFGeotagger //v0._1
             imageList = new ImageList();
             layerCount = 0;
             selectedMarkersOverlay = new GMapOverlay("selected");
+            mQuadTreeDict = new Dictionary<string, QuadTree>();
 
         }
 
-        
-
+       
         /// <summary>
         /// Creates an import data form to get the path of the access database selected by the user
         /// Intialiases the record dictionary which will eventually recieve the data from access.
@@ -219,6 +216,7 @@ namespace EXIFGeotagger //v0._1
         private GMapOverlay buildMarkers(GMapOverlay overlay, string color)
         {
             int id = 0;
+            //qt = mQuadTreeDict[overlay.Id];
             if (mRecordDict != null)
             {
                 Bitmap bitmap = ColorTable.getBitmap(color, 4);
@@ -235,6 +233,7 @@ namespace EXIFGeotagger //v0._1
                     //PointXY p = new PointXY(lon, lat);
                     
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
+                    
                     qt.insert(marker);
                     marker.Tag = tag;
                     marker = setToolTip(marker);
@@ -242,7 +241,7 @@ namespace EXIFGeotagger //v0._1
                     id++;
                 }
             }
-            int c = qt.count();
+            //int c = qt.count();
             overlay.IsVisibile = true;
             return overlay;
         }
@@ -274,6 +273,7 @@ namespace EXIFGeotagger //v0._1
                     for (int j = 0; j < redCount; j += 1)
                     {
                         GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
+                        newMarker = setToolTip(newMarker);
                         overlay.Markers.Add(newMarker);
                     }
                 }
@@ -516,8 +516,6 @@ namespace EXIFGeotagger //v0._1
                 }
                 else if (mouseDown && !mZoom)
                 {
-
-
                     List<GMapMarker> selection = new List<GMapMarker>();
                     if (rect != null)
                     {
@@ -526,25 +524,27 @@ namespace EXIFGeotagger //v0._1
                         PointXY bottomRight = new PointXY(rect.Points[2].Lng, rect.Points[2].Lat);
                         PointXY bottomLeft = new PointXY(rect.Points[3].Lng, rect.Points[3].Lat);
                         RectangleXY selectionBox = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
-                        selection = qt.queryRange(selectionBox);
-                        if (selection.Count != 0)
+                        if (qt != null)
                         {
-                            markerGroupSelect(selection);                           
-                        } else
-                        {
-                            clearOverlay(selectedMarkersOverlay);
+                            selection = qt.queryRange(selectionBox);
+                            if (selection.Count != 0)
+                            {
+                                markerGroupSelect(selection);
+                            }
+                            else
+                            {
+                                clearOverlay(selectedMarkersOverlay);
+                            }
                         }
                         zoomOverlay.Polygons.Remove(rect);
                         gMap.Overlays.Remove(zoomOverlay);
-                        rect = null;
+                        rect = null;                  
                     } else
                     {
                         clearOverlay(selectedMarkersOverlay);
-                    }
-                    
+                    }                
                 }
-            }
-            
+            }           
             mouseDown = false;
         }
 
@@ -555,23 +555,20 @@ namespace EXIFGeotagger //v0._1
             mOverlayDict.Remove(overlay.Id);
         }
 
+        /// <summary>
+        /// Selects a group of markers when user drags box over icons. Markers are added to overlay
+        /// </summary>
+        /// <param name="markers"> The list of GMapMarker obtained from quad tree that the user selected</param>
         private void markerGroupSelect(List<GMapMarker> markers)
         {
             clearOverlay(selectedMarkersOverlay);
             foreach (var marker in markers)
             {
-                //selectedMarker = marker;
                 MarkerTag tag = (MarkerTag)marker.Tag;
                 tag.IsSelected = true;
                 Bitmap bitmap = ColorTable.getBitmap("Red", tag.Size);
                 GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
-                //GPoint pointLocal = gMap.FromLatLngToLocal(marker.Position);
-                //System.Drawing.Point local = new System.Drawing.Point((int)pointLocal.X, (int)pointLocal.Y);
-                //newMarker.LocalPosition = marker.LocalPosition;
-                //newMarker.Offset = marker.Offset;
                 selectedMarkersOverlay.Markers.Add(newMarker);
-                
-
             }
             gMap.Overlays.Add(selectedMarkersOverlay);
             GMapMarker[] selectedMarkers = selectedMarkersOverlay.Markers.ToArray<GMapMarker>();
@@ -591,18 +588,15 @@ namespace EXIFGeotagger //v0._1
             if (mouseInBounds && e.Button == MouseButtons.Left)
             {
                 if (selectedMarker != null)
-                {
-                    
+                {                 
                     MarkerTag currentTag = (MarkerTag)selectedMarker.Tag;
                     currentTag.IsSelected = false;
                     selectedMarkersOverlay.Clear();
                     mOverlayDict.Remove("selected");
                     selectedMarker = null;
-                    //selectedMarkersList = null;
                 } else if (selectedMarkersList != null) {
                     clearOverlay(selectedMarkersOverlay);
                     selectedMarkersList = null;
-                    //gMap.Refresh();
                 }
             }
             
@@ -688,8 +682,6 @@ namespace EXIFGeotagger //v0._1
                     pictureBox.Image.Dispose();
                 }
                 pictureBox.Image = image;
-                
-
             }
             else
             {
@@ -798,8 +790,6 @@ namespace EXIFGeotagger //v0._1
             {
                 if (e.Button == MouseButtons.Right)
                 {
-
-                    txtConsole.Text = "Right\n";
                     ContextMenu contextMenu = new ContextMenu();
                     var itemTable = contextMenu.MenuItems.Add("Open Attributes Table");
                     var itemDelete = contextMenu.MenuItems.Add("Delete Layer");
@@ -810,8 +800,8 @@ namespace EXIFGeotagger //v0._1
                 }
                 if (e.Button == MouseButtons.Left)
                 {
-                    txtConsole.Text = currentListItem.Text + "\n";
-                    txtConsole.Text = currentListItem.Index.ToString();
+
+                    
                 }
             }
         }
@@ -820,7 +810,15 @@ namespace EXIFGeotagger //v0._1
         {
             MenuItem item = (MenuItem)sender;
             string layer = listLayers.FocusedItem.Text;
-            ESRIShapeFile shape = mShapeDict[layer];
+            ESRIShapeFile shape = null;
+            try
+            {
+                shape = mShapeDict[layer];
+            }
+            catch (KeyNotFoundException ex)
+            {
+
+            }
             DataTable table = shape.DataTable;
             ShapeTable tableForm = new ShapeTable(table);
             tableForm.Show();
@@ -866,8 +864,6 @@ namespace EXIFGeotagger //v0._1
             
         }
 
-        
-
         private void listLayers_ItemActivate(object sender, EventArgs e)
         {
             txtConsole.Text = "ïtemActivate\n";
@@ -897,10 +893,20 @@ namespace EXIFGeotagger //v0._1
         {
             
             ListView ls = sender as ListView;
+            if (currentListItem != null)
+            {
+                currentListItem.BackColor = Color.White;
+            }
             currentListItem = ls.FocusedItem;
-            mSelectedLayer = currentListItem.Text;           
-           
-           
+            mSelectedLayer = currentListItem.Text;
+            try
+            {
+                qt = mQuadTreeDict[ls.FocusedItem.Text];
+            } catch (KeyNotFoundException ex)
+            {
+            }
+            ls.FocusedItem.BackColor = Color.SteelBlue;
+
         }
 
         private void listLayers_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -971,6 +977,12 @@ namespace EXIFGeotagger //v0._1
 
         #region Callbacks
 
+
+        private void importTextCallback(DataTable table, string layer, Color color)
+        {
+            DataColumnCollection columns = table.Columns;
+
+        }
         public async void importShapeCallback(string path, string layer, Color color)
         {
             Bitmap bitmap = null;
@@ -1088,6 +1100,7 @@ namespace EXIFGeotagger //v0._1
         {
             MessageBox.Show(message, error, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1099,15 +1112,7 @@ namespace EXIFGeotagger //v0._1
             Serializer s = new Serializer(folderPath);
             mLayerAttributes = s.deserialize();
             mRecordDict = mLayerAttributes.Data;
-
-            //if (remote)
-            //{
-            //    foreach (KeyValuePair<string, Record> entry in mRecordDict)
-            //    {
-            //        entry.Value.Uploaded = true;
-            //    }
-            //}
-            
+              
             max_lat = mLayerAttributes.MaxLat;
             min_lat = mLayerAttributes.MinLat;
             max_lng = mLayerAttributes.MaxLng;
@@ -1118,7 +1123,7 @@ namespace EXIFGeotagger //v0._1
             PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
             RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
             qt = new QuadTree(rect);
-            
+            mQuadTreeDict.Add(layer, qt);
             plotLayer(layer, color.Name);
         }
 
@@ -1138,9 +1143,17 @@ namespace EXIFGeotagger //v0._1
             min_lat = attributes.MinLat;
             max_lng = attributes.MaxLng;
             min_lng = attributes.MinLng;
-
+            PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
+            PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
+            PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
+            PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
+            RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+            qt = new QuadTree(rect);
+            mQuadTreeDict.Add(layer, qt);
             plotLayer(layer, color.Name);
         }
+
+
 
         private void setBucketCallback(string bucket, string key)
         {
@@ -1430,35 +1443,15 @@ namespace EXIFGeotagger //v0._1
             
         }
 
+        
         private void TextcsvToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
             DelimitedText importForm = new DelimitedText();
             importForm.Show();
 
-            //importForm.importData += importTextCallback;
-            //string csv = "C:\\Onsite\\Kaikoura\\Onsite Developments Kaikoura Sumps 7-Jun-19.csv";
-            //StreamReader sr = new StreamReader(csv);
-            //string line = sr.ReadLine();
-            //string[] value = line.Split(',');
-            //DataTable dt = new DataTable();
-            //DataRow row;
-            //foreach (string dc in value)
-            //{
-
-            //    dt.Columns.Add(new DataColumn(dc));
-            //}
-
-            //while (!sr.EndOfStream)
-            //{
-            //    value = sr.ReadLine().Split(',');
-            //    if (value.Length == dt.Columns.Count)
-            //    {
-            //        row = dt.NewRow();
-            //        row.ItemArray = value;
-            //        dt.Rows.Add(row);
-            //    }
-            //}
+            importForm.importData += importTextCallback;
+            
         }
 
         private void ExcelDataMenu_Click(object sender, EventArgs e)

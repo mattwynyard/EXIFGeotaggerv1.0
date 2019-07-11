@@ -204,6 +204,8 @@ namespace EXIFGeotagger
 
         public string Side { get; set; }
 
+        public int TACode { get; set; }
+
         public int Road { get; set; }
 
         public int Carriageway { get; set; }
