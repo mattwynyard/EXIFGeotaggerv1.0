@@ -233,9 +233,13 @@ namespace EXIFGeotagger //v0._1
                     //PointXY p = new PointXY(lon, lat);
                     
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
-                    
-                    qt.insert(marker);
+
+                    if (qt != null)
+                    {
+                        qt.insert(marker);
+                    }
                     marker.Tag = tag;
+          
                     marker = setToolTip(marker);
                     overlay.Markers.Add(marker);
                     id++;
@@ -273,7 +277,7 @@ namespace EXIFGeotagger //v0._1
                     for (int j = 0; j < redCount; j += 1)
                     {
                         GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
-                        newMarker = setToolTip(newMarker);
+                        //newMarker = setToolTip(newMarker);
                         overlay.Markers.Add(newMarker);
                     }
                 }
@@ -311,7 +315,7 @@ namespace EXIFGeotagger //v0._1
                         {
                             newMarker.Tag = markers[i].Tag;
                         }
-                        //setToolTip(newMarker);
+                        newMarker = setToolTip(newMarker);
                         overlay.Markers.Add(newMarker);
                     }
                 }
@@ -356,7 +360,6 @@ namespace EXIFGeotagger //v0._1
         private void zoomToMarkers()
         {
             zoomRect = new List<PointLatLng>();
-
             PointLatLng topLeft = new PointLatLng(max_lat, min_lng);
             PointLatLng topRight = new PointLatLng(max_lat, max_lng);
             PointLatLng bottomRight = new PointLatLng(min_lat, max_lng);
@@ -1153,8 +1156,6 @@ namespace EXIFGeotagger //v0._1
             plotLayer(layer, color.Name);
         }
 
-
-
         private void setBucketCallback(string bucket, string key)
         {
             string[] tokens = key.Split('/');
@@ -1179,9 +1180,9 @@ namespace EXIFGeotagger //v0._1
         public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords)
         {
             ThreadUtil t = new ThreadUtil();
-            connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}", "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
-            connection = new OleDbConnection(connectionString);
-            connection.Open();
+            //connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}", "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
+            //connection = new OleDbConnection(connectionString);
+            //connection.Open();
             resetMinMax();
             t.setMinMax += setMinMax;
             fileQueue = await t.buildQueue(inPath);
@@ -1190,9 +1191,18 @@ namespace EXIFGeotagger //v0._1
             mRecordDict = await t.writeGeoTag(mRecordDict, fileQueue, inPath, outPath);
             
             setLayerAttributes();
-            zoomToMarkers();
+
+            //zoomToMarkers();
+            PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
+            PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
+            PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
+            PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
+            RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+            qt = new QuadTree(rect);
+            mQuadTreeDict.Add(layer, qt);
+
             plotLayer(layer, color);
-            connection.Close();
+            //connection.Close();
         }
 
         public async void readGeoTagCallback(string inPath, string layer, Color color)
@@ -1208,7 +1218,14 @@ namespace EXIFGeotagger //v0._1
             overlay = await t.readGeoTag(fileQueue, inPath, layer, color.Name);
             
             setLayerAttributes();
-            zoomToMarkers();
+            //zoomToMarkers();
+            PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
+            PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
+            PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
+            PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
+            RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+            qt = new QuadTree(rect);
+            mQuadTreeDict.Add(layer, qt);
             refreshUI(overlay, color.Name);
         }
 

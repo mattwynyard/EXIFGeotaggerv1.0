@@ -89,6 +89,7 @@ namespace EXIFGeotagger //v0._1
                 {
                     
                     mOutPath = browseDialog.SelectedPath;
+                    string root = Directory.GetDirectoryRoot(mOutPath);
                     txtOutputPath.Text = mOutPath;
                 }
             }

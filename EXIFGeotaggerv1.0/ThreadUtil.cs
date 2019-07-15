@@ -108,7 +108,7 @@ namespace EXIFGeotagger
                     if (allRecords)
                     {
                         strSQL = "SELECT * FROM PhotoList";
-                        lengthSQL = "SELECT Count(Photo) FROM PhotoList;";
+                        lengthSQL = "SELECT Count(PhotoID) FROM PhotoList;";
                     }
                     else
                     {
@@ -131,25 +131,33 @@ namespace EXIFGeotagger
                     readerColumn.Close();
                     length = (Int32)commandLength.ExecuteScalar();
                     using (OleDbDataReader reader = command.ExecuteReader())
-                    {
-                        
+                    {                      
                         int i = 0;
                         while (reader.Read())
                         {
                             Object[] row = new Object[reader.FieldCount];
                             reader.GetValues(row);
-                            String photo = (string)row[1];
+                            //String photo = (string)row[1];
                             Record r = buildDictionary(i, row).Result;
-                            recordDict.Add(r.PhotoName, r);
                             i++;
                             double percent = ((double)i / length) * 100;
                             int percentInt = (int)Math.Ceiling(percent);
                             if (progressValue != null)
                             {
-                                progressValue.Report(percentInt);
+                                //progressValue.Report(percentInt);
+                                progressForm.Invoke(
+                                    new MethodInvoker(() => progressValue.Report(percentInt)
+                                ));
 
                             }
-                            //token.ThrowIfCancellationRequested();
+                            try
+                            {
+                                recordDict.Add(r.PhotoName, r);
+                                
+                            } catch (Exception ex)
+                            {
+                                //String s = ex.Message;
+                            }
                         }
                     }
 
@@ -182,7 +190,7 @@ namespace EXIFGeotagger
             /// </summary>
             /// <param name="i: the number of records read"></param>
             /// <param name="row: the access record"></param>
-            private async Task<Record> buildDictionary(int i, Object[] row)
+        private async Task<Record> buildDictionary(int i, Object[] row)
         {
             Record r = new Record((string)row[1]);
             await Task.Run(() =>
@@ -342,22 +350,21 @@ namespace EXIFGeotagger
                 r.Altitude = altitude;
                 r.TimeStamp = dateTime;
                 r.Path = Path.GetFullPath(file);
-                r.Id = id.ToString();
-
+                r.Id = id.ToString();   
+                addRecord(photo, r);
                 lock (obj)
                 {
-                    addRecord(photo, r);
                     geoTagCount++;
-                    setMinMax(latitude, longitude);
-                    double percent = ((double)geoTagCount / length) * 100;
-                    int percentInt = (int)(Math.Round(percent));
-                    if (progressValue != null)
-                    {
-                        progressValue = threadInfo.ProgressHandler;
-                        progressForm.Invoke(
-                            new MethodInvoker(() => progressValue.Report(percentInt)
-                        ));
-                    }
+                }
+                setMinMax(latitude, longitude);
+                double percent = ((double)geoTagCount / length) * 100;
+                int percentInt = (int)(Math.Round(percent));
+                if (progressValue != null)
+                {
+                    progressValue = threadInfo.ProgressHandler;
+                    progressForm.Invoke(
+                        new MethodInvoker(() => progressValue.Report(percentInt)
+                    ));
                 }
             return r;
         }
@@ -385,6 +392,14 @@ namespace EXIFGeotagger
             errorCount = 0;
             stationaryCount = 0;
             Dictionary<string, Record> newRecordDict = new Dictionary<string, Record>();
+            int processors = Environment.ProcessorCount;
+            int minWorkerThreads = processors;
+            int minIOThreads = processors;
+            int maxWorkerThreads = processors;
+            int maxIOThreads = processors;
+
+            //ThreadPool.SetMinThreads(minWorkerThreads, minIOThreads);
+            ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
 
             await Task.Factory.StartNew(() =>
             {
@@ -394,41 +409,39 @@ namespace EXIFGeotagger
                     {
                         if (token.IsCancellationRequested)
                         {
-
-                            token.ThrowIfCancellationRequested();
-                            
+                            token.ThrowIfCancellationRequested();                           
                         }
-                        Parallel.Invoke (
-                            () =>
+                        Parallel.Invoke (() =>
+                        {
+                            ThreadInfo threadInfo = new ThreadInfo();
+                            threadInfo.OutPath = outPath;
+                            threadInfo.Length = mQueueSize;
+                            threadInfo.ProgressHandler = progressHandler1;
+                            threadInfo.File = fileQueue.Take();
+                            try
                             {
-                                ThreadInfo threadInfo = new ThreadInfo();
-                                threadInfo.OutPath = outPath;
-                                threadInfo.Length = mQueueSize;
-                                threadInfo.ProgressHandler = progressHandler1;
-                                threadInfo.File = fileQueue.Take();
-                                try
-                                {
-                                      Record r = recordDict[Path.GetFileNameWithoutExtension(threadInfo.File)];
-                                      threadInfo.Record = r;
+                                string fileName = Path.GetFileNameWithoutExtension(threadInfo.File);
+                                    Record r = recordDict[fileName];
+                                    threadInfo.Record = r;
 
-                                    if (r.GeoMark)
-                                    {
-                                        Record newRecord = null;
-                                        newRecord = ProcessFile(threadInfo).Result;
-                                        newRecordDict.Add(r.PhotoName, r);
-                                    }
-                                    else
-                                    {
-                                        object a = "nogps";
-                                        incrementGeoTagError(a);
-                                    }
-                                }
-                                catch (KeyNotFoundException ex)
+                                if (r.GeoMark)
                                 {
-                                    object a = "nokey";
+                                    Record newRecord = null;
+                                    newRecord = ProcessFile(threadInfo).Result;
+                                    newRecordDict.Add(r.PhotoName, r);
+                                }
+                                else
+                                {
+                                    object a = "nogps";
                                     incrementGeoTagError(a);
                                 }
-                            });
+                            }
+                            catch (KeyNotFoundException ex)
+                            {
+                                object a = "nokey";
+                                incrementGeoTagError(a);
+                            }
+                        });
                     }
                 }
                 catch (OperationCanceledException)
