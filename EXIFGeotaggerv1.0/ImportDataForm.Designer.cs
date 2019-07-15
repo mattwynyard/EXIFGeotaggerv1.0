@@ -93,11 +93,13 @@
             this.txtLayer.Name = "txtLayer";
             this.txtLayer.Size = new System.Drawing.Size(154, 20);
             this.txtLayer.TabIndex = 5;
+            this.txtLayer.Text = "default";
             this.txtLayer.TextChanged += new System.EventHandler(this.txtLayer_TextChanged);
             // 
             // colorDialog1
             // 
             this.colorDialog1.AnyColor = true;
+            this.colorDialog1.Color = System.Drawing.Color.LightCoral;
             // 
             // btnColour
             // 

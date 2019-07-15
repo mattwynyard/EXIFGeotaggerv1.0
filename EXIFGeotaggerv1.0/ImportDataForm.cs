@@ -47,8 +47,9 @@ namespace EXIFGeotagger //v0._1
 
         private void intialize()
         {
-            InitializeComponent();
             
+            InitializeComponent();
+            btnColour.BackColor = colorDialog1.Color;
             if (fileType.Equals("access"))
             {
                 Text = "Import Access Database";

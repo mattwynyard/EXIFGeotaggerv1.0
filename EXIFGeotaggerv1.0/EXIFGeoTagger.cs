@@ -26,6 +26,9 @@ using System.Collections.Concurrent;
 using ShapeFile;
 using System.Globalization;
 using System.Diagnostics;
+using System.Windows;
+using System.Windows.Input;
+using System.Text.RegularExpressions;
 
 public delegate Image getAWSImage();
 
@@ -107,6 +110,8 @@ namespace EXIFGeotagger //v0._1
         private string currentBucket;
         private string currentKey;
         private string mSelectedFile;
+
+        string elapsedTime; //Stopwatch timer
 
         /// <summary>
         /// Class constructor to intialize form
@@ -452,7 +457,7 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void gMap_MouseDown(object sender, MouseEventArgs e)
+        private void gMap_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             //if (mZoom)
             //{
@@ -467,7 +472,7 @@ namespace EXIFGeotagger //v0._1
             //}           
         }
 
-        private void gMap_MouseMove(object sender, MouseEventArgs e)
+        private void gMap_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (mouseDown)// && mZoom)
             {
@@ -498,7 +503,7 @@ namespace EXIFGeotagger //v0._1
             //txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
         }
 
-        private void gMap_MouseUp(object sender, MouseEventArgs e)
+        private void gMap_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
@@ -586,7 +591,7 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void gMap_MouseClick(object sender, MouseEventArgs e)
+        private void gMap_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (mouseInBounds && e.Button == MouseButtons.Left)
             {
@@ -605,7 +610,7 @@ namespace EXIFGeotagger //v0._1
             
         }
 
-        private void gMap_OnMouseMoved(object sender, MouseEventArgs e)
+        private void gMap_OnMouseMoved(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             var point = gMap.FromLocalToLatLng(e.X, e.Y);
 
@@ -613,12 +618,12 @@ namespace EXIFGeotagger //v0._1
             //gMap.MouseHover += gMap_OnMouseHoverChanged;
         }
 
-        private void gMap_onMarkerDoubleClick(GMapMarker marker, MouseEventArgs e)
+        private void gMap_onMarkerDoubleClick(GMapMarker marker, System.Windows.Forms.MouseEventArgs e)
         {
             
         }
 
-        private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
+        private void gMap_OnMarkerClick(GMapMarker marker, System.Windows.Forms.MouseEventArgs e)
         {
             MarkerTag tag = (MarkerTag)marker.Tag;
             if (selectedMarker == null)
@@ -660,7 +665,7 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
-        private void gMap_OnRouteClick(GMapRoute route, MouseEventArgs e)
+        private void gMap_OnRouteClick(GMapRoute route, System.Windows.Forms.MouseEventArgs e)
         {
 
             GMapOverlay overaly = route.Overlay;
@@ -712,13 +717,13 @@ namespace EXIFGeotagger //v0._1
             mouseInBounds = true;
             if (mZoom)
             {
-                Cursor = Cursors.Cross;
-                Cursor.Show();
+                Cursor = System.Windows.Forms.Cursors.Cross;
+                System.Windows.Forms.Cursor.Show();
             }
             else if (mArrow)
             {
-                Cursor = Cursors.Arrow;
-                Cursor.Show();
+                Cursor = System.Windows.Forms.Cursors.Arrow;
+                System.Windows.Forms.Cursor.Show();
             }
         }
 
@@ -726,20 +731,20 @@ namespace EXIFGeotagger //v0._1
         {
             txtConsole.Clear();
             txtConsole.AppendText("Leave");
-            Cursor = Cursors.Arrow;
+            Cursor = System.Windows.Forms.Cursors.Arrow;
             mouseInBounds = false;
         }
 
         private void btnZoom_Click(object sender, EventArgs e)
         {
-            Cursor = Cursors.Cross;
+            Cursor = System.Windows.Forms.Cursors.Cross;
             mZoom = true;
             mArrow = false;
         }
 
         private void btnArrow_Click(object sender, EventArgs e)
         {
-            Cursor = Cursors.Arrow;
+            Cursor = System.Windows.Forms.Cursors.Arrow;
             mZoom = false;
             mArrow = true;
         }
@@ -753,7 +758,53 @@ namespace EXIFGeotagger //v0._1
 
         #region Form Events
 
-        private void PhotosToolStripMenuItem1_Click(object sender, EventArgs e)
+
+        private void OnKeyDownHandler(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                string coordinate = txtLatLng.Text;
+                String[] coordinates = isValidCoordinate(coordinate);
+                if (coordinates != null) {
+                    PointLatLng location = new PointLatLng(Convert.ToDouble(coordinates[0]), Convert.ToDouble(coordinates[1]));
+                    gMap.Position = location;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks using regex if user entered coordinate in text box is a valid lat long coordinate
+        /// </summary>
+        /// <param name="coordinate">the user string to parse</param>
+        /// <returns>the valid coordinate as a string[] or null if coordinate not valid</returns>
+        private String[] isValidCoordinate(String coordinate)
+        {
+            string[] coordinates = coordinate.Split(' ');
+            var regexLat = new Regex(@"^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$");
+            var regexLng = new Regex(@"^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9] |1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$");
+            Boolean lat = regexLat.IsMatch(coordinates[0]);
+            Boolean lng = regexLng.IsMatch(coordinates[1]);
+            if (lat && lng)
+            {
+                return coordinates;
+            } else
+            {
+                return null;
+            }
+
+
+        }
+
+        private void txtLatLng_Enter(object sender, EventArgs e)
+        {
+            txtLatLng.Text = "";
+            txtLatLng.ForeColor = Color.Black;
+            txtLatLng.Font = new Font(txtLatLng.Font, System.Drawing.FontStyle.Regular);
+
+        }
+        
+
+            private void PhotosToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             ImportDataForm importForm = new ImportDataForm("photos");
             mRecordDict = new Dictionary<string, Record>();
@@ -786,7 +837,7 @@ namespace EXIFGeotagger //v0._1
             Boolean itemIsHover = true;
         }
 
-        private void listLayers_MouseClick(object sender, MouseEventArgs e)
+        private void listLayers_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             ListView ls = sender as ListView;
             if (currentListItem != null)
@@ -822,9 +873,13 @@ namespace EXIFGeotagger //v0._1
             {
 
             }
-            DataTable table = shape.DataTable;
-            ShapeTable tableForm = new ShapeTable(table);
-            tableForm.Show();
+            if (shape != null)
+            {
+                DataTable table = shape.DataTable;
+                ShapeTable tableForm = new ShapeTable(table);
+                tableForm.Show();
+            }
+            
 
         }
 
@@ -915,13 +970,13 @@ namespace EXIFGeotagger //v0._1
         private void listLayers_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             mOverlay = gMap.Overlays.ElementAt(e.Index);
-            if (mOverlay.IsVisibile == false)
+            CheckState cs = e.NewValue;
+            if (cs.ToString() == "Unchecked")
             {
-                mOverlay.IsVisibile = true;
-            }
-            else
+                mOverlay.IsVisibile = false; 
+            } else
             {
-                mOverlay.IsVisibile = false;
+                mOverlay.IsVisibile = true; 
             }
         }
 
@@ -1187,9 +1242,18 @@ namespace EXIFGeotagger //v0._1
             t.setMinMax += setMinMax;
             fileQueue = await t.buildQueue(inPath);
             mRecordDict = await t.readFromDatabase(dbPath, allRecords);
-            
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             mRecordDict = await t.writeGeoTag(mRecordDict, fileQueue, inPath, outPath);
-            
+            stopWatch.Stop();
+            // Get the elapsed time as a TimeSpan value.
+            TimeSpan ts = stopWatch.Elapsed;
+
+            // Format and display the TimeSpan value.
+            elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            txtConsole.Text = elapsedTime;
             setLayerAttributes();
 
             //zoomToMarkers();
@@ -1235,7 +1299,8 @@ namespace EXIFGeotagger //v0._1
             {
                 string title = "Finished";
                 string message = "Geotagging complete\n" + geotagCount + " of " + "fix" + " photos geotagged\n"
-                    + "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n";
+                    + "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n"
+                    + "Time Taken: " + elapsedTime + "\n";
                 MessageBoxButtons buttons = MessageBoxButtons.OK;
                 DialogResult result = MessageBox.Show(message, title, buttons);
                 if (result == DialogResult.Yes)
@@ -1631,7 +1696,7 @@ namespace EXIFGeotagger //v0._1
             importForm.Show();
         }
 
-        private void tr(object sender, MouseEventArgs e)
+        private void tr(object sender, System.Windows.Forms.MouseEventArgs e)
         {
 
         }
@@ -1661,5 +1726,7 @@ namespace EXIFGeotagger //v0._1
             }
           
         }
+
+        
     } //end class   
 } //end namespace

@@ -267,10 +267,8 @@ namespace EXIFGeotagger
                                 threadInfo.Length = mQueueSize;
                                 threadInfo.ProgressHandler = progressHandler1;
                                 threadInfo.File = fileQueue.Take();
-
                                 Record r = null;
-                                r = readData(threadInfo);
-                               
+                                r = readData(threadInfo);                              
                                 MarkerTag tag = new MarkerTag(color, id);
                                 GMapMarker marker = new GMarkerGoogle(new PointLatLng(r.Latitude, r.Longitude), bitmap);
                                 marker.Tag = tag;
@@ -279,8 +277,6 @@ namespace EXIFGeotagger
                                 tag.Record = r;
                                 tag.Path = Path.GetFullPath(r.Path);
                                 overlay.Markers.Add(marker);
-                                
-
                             });
                     }
                 }
@@ -450,9 +446,8 @@ namespace EXIFGeotagger
                 }
                 
             }, cts.Token);
-            progressForm.Invoke(
-                        new MethodInvoker(() => progressValue.Report(100)
-                    ));
+            progressForm.Invoke(new MethodInvoker(() => progressValue.Report(100)
+            ));
             progressForm.enableOK();
             progressForm.disableCancel();
             connection.Close();
@@ -546,16 +541,16 @@ namespace EXIFGeotagger
                     lock (obj)
                     {
                         geoTagCount++;
-
-                        setMinMax(r.Latitude, r.Longitude);
-                        int totalCount = geoTagCount + errorCount;
-                        double percent = ((double)totalCount / length) * 100;
-                        int percentInt = (int)Math.Floor(percent);
-                        progressValue = threadInfo.ProgressHandler;
-                        progressForm.Invoke(
-                            new MethodInvoker(() => progressValue.Report(percentInt)
-                        ));
-                    }               
+                    }
+                    setMinMax(r.Latitude, r.Longitude);
+                    int totalCount = geoTagCount + errorCount;
+                    double percent = ((double)totalCount / length) * 100;
+                    int percentInt = (int)Math.Floor(percent);
+                    progressValue = threadInfo.ProgressHandler;
+                    progressForm.Invoke(
+                        new MethodInvoker(() => progressValue.Report(percentInt)
+                    ));
+                                  
                     await saveFile(image, path);
                     image.Dispose();
                     image = null;

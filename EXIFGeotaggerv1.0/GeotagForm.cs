@@ -38,6 +38,7 @@ namespace EXIFGeotagger //v0._1
         {
             this.BringToFront();
             this.TopMost = true;
+            btnColor.BackColor = colorDialog1.Color;
         }
 
         private void btnBrowse0_Click(object sender, EventArgs e)
@@ -65,14 +66,13 @@ namespace EXIFGeotagger //v0._1
         {
             using (var browseDialog = new FolderBrowserDialog())
             {
+                browseDialog.SelectedPath = Directory.GetParent(mDataPath).ToString();
                 DialogResult result = browseDialog.ShowDialog();
 
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(browseDialog.SelectedPath))
                 {
-                   //mFiles = Directory.GetFiles(browseDialog.SelectedPath);
                     mInPath = browseDialog.SelectedPath;
                     txtInputPath.Text = mInPath;
-                    //MessageBox.Show("Files found: " + Directory.GetFiles(mInPath).Length.ToString(), "Message");
                     BringToFront();
                     TopMost = true;
                 }
@@ -83,11 +83,10 @@ namespace EXIFGeotagger //v0._1
         {
             using(var browseDialog = new FolderBrowserDialog())
             {
+                browseDialog.SelectedPath = Directory.GetParent(mDataPath).ToString();
                 DialogResult result = browseDialog.ShowDialog();
-
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(browseDialog.SelectedPath))
-                {
-                    
+                {  
                     mOutPath = browseDialog.SelectedPath;
                     string root = Directory.GetDirectoryRoot(mOutPath);
                     txtOutputPath.Text = mOutPath;
@@ -121,8 +120,6 @@ namespace EXIFGeotagger //v0._1
 
         private void btnGeotag_Click(object sender, EventArgs e)
         {
-
-            //mParent.mFiles = Directory.GetFiles(inPath);
             Close();
             mParent.BringToFront();;
             writeGeoTag(mDataPath, mInPath, mOutPath, mLayer, mColor, mAllRecords);

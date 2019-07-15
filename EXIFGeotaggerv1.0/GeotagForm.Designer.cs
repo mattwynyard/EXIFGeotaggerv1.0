@@ -145,6 +145,7 @@
             this.txtLayer.Name = "txtLayer";
             this.txtLayer.Size = new System.Drawing.Size(156, 20);
             this.txtLayer.TabIndex = 10;
+            this.txtLayer.Text = "default";
             this.txtLayer.TextChanged += new System.EventHandler(this.TxtLayer_TextChanged);
             // 
             // lbLayer
@@ -194,6 +195,11 @@
             this.comboFileType.Name = "comboFileType";
             this.comboFileType.Size = new System.Drawing.Size(121, 21);
             this.comboFileType.TabIndex = 15;
+            // 
+            // colorDialog1
+            // 
+            this.colorDialog1.AllowFullOpen = false;
+            this.colorDialog1.Color = System.Drawing.Color.LightCoral;
             // 
             // GeotagForm
             // 
