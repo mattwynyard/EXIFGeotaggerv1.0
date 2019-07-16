@@ -135,6 +135,11 @@ namespace EXIFGeotagger
                         int i = 0;
                         while (reader.Read())
                         {
+ 
+                            if (token.IsCancellationRequested)
+                            {
+                                token.ThrowIfCancellationRequested();
+                            }
                             Object[] row = new Object[reader.FieldCount];
                             reader.GetValues(row);
                             //String photo = (string)row[1];
@@ -153,8 +158,9 @@ namespace EXIFGeotagger
                             try
                             {
                                 recordDict.Add(r.PhotoName, r);
-                                
-                            } catch (Exception ex)
+
+                            }
+                            catch (Exception ex)
                             {
                                 //String s = ex.Message;
                             }
@@ -174,7 +180,11 @@ namespace EXIFGeotagger
             }
             catch (OperationCanceledException)
             {
+                cts.Cancel();
                 cts.Dispose();
+                progressForm.Close();
+                return new Dictionary<string, Record>();
+
 
             }
             //connection.Close();
@@ -442,7 +452,9 @@ namespace EXIFGeotagger
                 }
                 catch (OperationCanceledException)
                 {
+                    cts.Cancel();
                     cts.Dispose();
+                    //return null;
                 }
                 
             }, cts.Token);

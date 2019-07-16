@@ -22,8 +22,8 @@ namespace Amazon
 
     class AWSConnection
     {
-        private string mKey;
-        private string mBucket;
+        //private string mKey;
+        //private string mBucket;
         private static readonly RegionEndpoint bucketRegion = RegionEndpoint.APSoutheast2;
         private static AmazonS3Client mClient;
         private Image mImage;

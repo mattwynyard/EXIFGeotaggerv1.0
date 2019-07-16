@@ -39,6 +39,8 @@ namespace EXIFGeotagger //v0._1
             this.BringToFront();
             this.TopMost = true;
             btnColor.BackColor = colorDialog1.Color;
+            mColor = "ffff8080";
+            mLayer = txtLayer.Text;
         }
 
         private void btnBrowse0_Click(object sender, EventArgs e)

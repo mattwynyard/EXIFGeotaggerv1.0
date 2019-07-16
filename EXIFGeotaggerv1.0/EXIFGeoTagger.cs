@@ -773,7 +773,7 @@ namespace EXIFGeotagger //v0._1
         }
 
         /// <summary>
-        /// Checks using regex if user entered coordinate in text box is a valid lat long coordinate
+        /// Checks (using regex) if user entered a valid lat long coordinate in text box
         /// </summary>
         /// <param name="coordinate">the user string to parse</param>
         /// <returns>the valid coordinate as a string[] or null if coordinate not valid</returns>
@@ -1242,31 +1242,36 @@ namespace EXIFGeotagger //v0._1
             t.setMinMax += setMinMax;
             fileQueue = await t.buildQueue(inPath);
             mRecordDict = await t.readFromDatabase(dbPath, allRecords);
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-            mRecordDict = await t.writeGeoTag(mRecordDict, fileQueue, inPath, outPath);
-            stopWatch.Stop();
-            // Get the elapsed time as a TimeSpan value.
-            TimeSpan ts = stopWatch.Elapsed;
+            if (mRecordDict.Count > 0)
+            {
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+                mRecordDict = await t.writeGeoTag(mRecordDict, fileQueue, inPath, outPath);
+                stopWatch.Stop();
+                // Get the elapsed time as a TimeSpan value.
+                TimeSpan ts = stopWatch.Elapsed;
 
-            // Format and display the TimeSpan value.
-            elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                ts.Hours, ts.Minutes, ts.Seconds,
-                ts.Milliseconds / 10);
-            txtConsole.Text = elapsedTime;
-            setLayerAttributes();
-
-            //zoomToMarkers();
-            PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
-            PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
-            PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
-            PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
-            RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
-            qt = new QuadTree(rect);
-            mQuadTreeDict.Add(layer, qt);
-
-            plotLayer(layer, color);
-            //connection.Close();
+                // Format and display the TimeSpan value.
+                elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    ts.Hours, ts.Minutes, ts.Seconds,
+                    ts.Milliseconds / 10);
+                txtConsole.Text = elapsedTime;
+                if (mRecordDict != null)
+                {
+                    setLayerAttributes();
+                    PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
+                    PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
+                    PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
+                    PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
+                    RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+                    qt = new QuadTree(rect);
+                    if (qt != null)
+                    {
+                        mQuadTreeDict.Add(layer, qt);
+                    }
+                    plotLayer(layer, color);
+                }
+            }
         }
 
         public async void readGeoTagCallback(string inPath, string layer, Color color)
