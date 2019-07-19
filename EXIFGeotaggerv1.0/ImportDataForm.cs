@@ -29,7 +29,7 @@ namespace EXIFGeotagger //v0._1
         private FolderBrowserDialog browseFolderDialog;
         private string fileType;
         private string filter;
-        private Color mColor;
+        private string mColor;
         private string mLayer;
 
         public ImportDataForm(string fileType)
@@ -90,6 +90,8 @@ namespace EXIFGeotagger //v0._1
             /// <param name="e"></param>
             private void ImportDataForm_Load(object sender, EventArgs e)
         {
+            mColor = "ffff8080";
+            mLayer = txtLayer.Text;
             BringToFront();
             TopMost = true;
         }
@@ -171,15 +173,15 @@ namespace EXIFGeotagger //v0._1
             }
             if (fileType.Equals("exf"))
             {
-                importData(mfilePath, mLayer, mColor);
+                importData(mfilePath, mLayer, colorDialog1.Color);
             }
             else if (fileType.Equals("stream"))
             {
-                updateData(mLayer, mColor); 
+                updateData(mLayer, colorDialog1.Color); 
             }
             else
             {
-                importData(mfilePath, mLayer, mColor);
+                importData(mfilePath, mLayer, colorDialog1.Color);
             }
         }
 
@@ -188,7 +190,7 @@ namespace EXIFGeotagger //v0._1
             if (colorDialog1.ShowDialog() == DialogResult.OK)
             {
                 btnColour.BackColor = colorDialog1.Color;
-                mColor = colorDialog1.Color;
+                mColor = colorDialog1.Color.Name;
                 //mParent.mlayerColourHex = colorDialog1.Color.Name;
                 //mParent.mlayerColour = colorDialog1.Color;
             }

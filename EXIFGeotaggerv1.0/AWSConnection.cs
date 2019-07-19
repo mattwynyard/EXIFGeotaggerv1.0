@@ -211,6 +211,7 @@ namespace Amazon
         {
             //key = "/" + key;
             MemoryStream stream = new MemoryStream();
+
             await Task.Run(() =>
             {
                 

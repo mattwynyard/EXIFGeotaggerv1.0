@@ -63,6 +63,7 @@ namespace EXIFGeotagger //v0._1
         private GMapMarker selectedMarker; //the current marker selected by user
         private GMapMarker[] selectedMarkersList;
         private GMapOverlay mSelectedOverlay;
+        private GMapOverlay zoomToMarkersOverlay;
         private GMapRoute mSelectedRoute;
         //index of currently layer in checkbox
         private int mSelectedOverlayIndex;
@@ -103,7 +104,10 @@ namespace EXIFGeotagger //v0._1
         private static double max_lng;
 
         private Boolean mouseInBounds;
-       
+
+        private PointLatLng point; //cursor point
+
+
         private BlockingCollection<string> fileQueue;
         private TreeNode rootNode;
 
@@ -159,7 +163,9 @@ namespace EXIFGeotagger //v0._1
             imageList = new ImageList();
             layerCount = 0;
             selectedMarkersOverlay = new GMapOverlay("selected");
+            zoomToMarkersOverlay = new GMapOverlay("zoomTo");
             mQuadTreeDict = new Dictionary<string, QuadTree>();
+            
 
         }
 
@@ -276,15 +282,28 @@ namespace EXIFGeotagger //v0._1
                 MarkerTag tag = (MarkerTag)markers[0].Tag;
                 if (tag == null)
                 {
-                    Bitmap redBitmap = ColorTable.getBitmap("Red", size);
-                    GMapMarker[] redMarkers = mOverlayDict["selected"];
-                    int redCount = redMarkers.Length;
-                    for (int j = 0; j < redCount; j += 1)
+                    if (overlay.Id == "zoomTo")
                     {
-                        GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
-                        //newMarker = setToolTip(newMarker);
-                        overlay.Markers.Add(newMarker);
-                    }
+                        GMapMarker[] zoomToMarkers = mOverlayDict["zoomTo"];
+                        int zoomCount = zoomToMarkers.Length;
+                        for (int j = 0; j < zoomCount; j += 1)
+                        {
+                            GMapMarker newMarker = new GMarkerGoogle(zoomToMarkers[j].Position, GMarkerGoogleType.blue_small);
+                            //newMarker = setToolTip(newMarker);
+                            overlay.Markers.Add(newMarker);
+                        }
+                    } else
+                    {
+                        Bitmap redBitmap = ColorTable.getBitmap("Red", size);
+                        GMapMarker[] redMarkers = mOverlayDict["selected"];
+                        int redCount = redMarkers.Length;
+                        for (int j = 0; j < redCount; j += 1)
+                        {
+                            GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
+                            //newMarker = setToolTip(newMarker);
+                            overlay.Markers.Add(newMarker);
+                        }
+                    }                
                 }
                 else
                 {
@@ -607,7 +626,21 @@ namespace EXIFGeotagger //v0._1
                     selectedMarkersList = null;
                 }
             }
-            
+            if (mouseInBounds && e.Button == MouseButtons.Right)
+            {
+                point = gMap.FromLocalToLatLng(e.X, e.Y);
+                ContextMenu mapContextMenu = new ContextMenu();
+                var itemCopy = mapContextMenu.MenuItems.Add("Copy position to clipboard");              
+                ContextMenu = mapContextMenu;
+                itemCopy.Click += copyToClipBoard;
+            }
+        }
+
+        private void copyToClipBoard(object sender, EventArgs e)
+        {
+            string lat = point.Lat.ToString();
+            string lng = point.Lng.ToString();
+            System.Windows.Clipboard.SetText(lat + " " + lng);
         }
 
         private void gMap_OnMouseMoved(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -768,6 +801,14 @@ namespace EXIFGeotagger //v0._1
                 if (coordinates != null) {
                     PointLatLng location = new PointLatLng(Convert.ToDouble(coordinates[0]), Convert.ToDouble(coordinates[1]));
                     gMap.Position = location;
+                    gMap.Zoom = 20;
+                    GMapMarker marker = new GMarkerGoogle(location, GMarkerGoogleType.blue_small);
+                    GMapMarker[] markerArr = { marker };
+
+                    zoomToMarkersOverlay.Markers.Add(marker);
+                    
+                    mOverlayDict.Add("zoomTo", markerArr);
+                    gMap.Overlays.Add(zoomToMarkersOverlay);
                 }
             }
         }
@@ -777,11 +818,11 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="coordinate">the user string to parse</param>
         /// <returns>the valid coordinate as a string[] or null if coordinate not valid</returns>
-        private String[] isValidCoordinate(String coordinate)
+        private string[] isValidCoordinate(String coordinate)
         {
             string[] coordinates = coordinate.Split(' ');
-            var regexLat = new Regex(@"^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$");
-            var regexLng = new Regex(@"^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9] |1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$");
+            var regexLat = new Regex(@"^(\+|-)?(?:90(?:(?:\.0{1,15})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,15})?))$");
+            var regexLng = new Regex(@"^(\+|-)?(?:180(?:(?:\.0{1,15})?)|(?:[0-9]|[1-9][0-9] |1[0-7][0-9])(?:(?:\.[0-9]{1,15})?))$");
             Boolean lat = regexLat.IsMatch(coordinates[0]);
             Boolean lng = regexLng.IsMatch(coordinates[1]);
             if (lat && lng)
@@ -800,6 +841,9 @@ namespace EXIFGeotagger //v0._1
             txtLatLng.Text = "";
             txtLatLng.ForeColor = Color.Black;
             txtLatLng.Font = new Font(txtLatLng.Font, System.Drawing.FontStyle.Regular);
+            mOverlayDict.Remove("zoomTo");
+            zoomToMarkersOverlay.Clear();
+            gMap.Overlays.Remove(zoomToMarkersOverlay);
 
         }
         
@@ -1181,7 +1225,7 @@ namespace EXIFGeotagger //v0._1
             PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
             RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
             qt = new QuadTree(rect);
-            mQuadTreeDict.Add(layer, qt);
+            //mQuadTreeDict.Add(layer, qt);
             plotLayer(layer, color.Name);
         }
 
@@ -1195,7 +1239,7 @@ namespace EXIFGeotagger //v0._1
             {
                 entry.Value.Uploaded = true;
                 entry.Value.Bucket = currentBucket;
-                entry.Value.Key = currentKey + entry.Value.PhotoName + ".JPG";
+                entry.Value.Key = currentKey + entry.Value.PhotoName + ".jpg";
             }
             max_lat = attributes.MaxLat;
             min_lat = attributes.MinLat;
@@ -1331,9 +1375,9 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
-        
 
-        
+
+
 
         #endregion
 
@@ -1644,7 +1688,6 @@ namespace EXIFGeotagger //v0._1
                     string[] dirArr;
                     paths = entry.Value;
                     paths = paths.Where(path => !paths.Any(p => p != path && p.StartsWith(path))).ToList();
-
                     rootNode = new TreeNode(entry.Key);
                     if (entry.Value.Count == 0)
                     {
@@ -1659,7 +1702,6 @@ namespace EXIFGeotagger //v0._1
                         }
                         treeBuckets.Nodes.Add(MakeTreeFromPaths(newPaths, rootNode.Text, '/'));
                     }
-
                 }
             }
             catch (Exception ex)

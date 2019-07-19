@@ -21,6 +21,7 @@ namespace EXIFGeotagger //v0._1
             ColorTableDict = new Dictionary<string, string>()
             {
                 {"ffff8080", "EXIFGeotagger.BitMap.OpenCameraPink"},
+                {"LightCoral", "EXIFGeotagger.BitMap.OpenCameraPink"},
                 {"ffffff80", "EXIFGeotagger.BitMap.OpenCameraLemon"},
                 {"ffff8000", "EXIFGeotagger.BitMap.OpenCameraOrange"},
                 {"ff80ff80", "EXIFGeotagger.BitMap.OpenCameraLightLime"},
@@ -36,6 +37,7 @@ namespace EXIFGeotagger //v0._1
             ColorCrossDict = new Dictionary<string, string>()
             {
                 {"ffff8080", "EXIFGeotagger.BitMap.Crossff8080"},
+                {"LightCoral", "EXIFGeotagger.BitMap.Crossff8080"},
                 {"ffffff80", "EXIFGeotagger.BitMap.Openffff80"},
                 {"ffff8000", "EXIFGeotagger.BitMap.Openff8000"},
                 {"ff80ff80", "EXIFGeotagger.BitMap.OpenCameraLightLime80ff80"},
