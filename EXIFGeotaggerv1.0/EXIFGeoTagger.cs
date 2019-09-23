@@ -1774,6 +1774,23 @@ namespace EXIFGeotagger //v0._1
           
         }
 
-        
+        private void MirrorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenCVManager cv = new OpenCVManager();
+            cv.mirrorImge();
+        }
+
+        private void ColorCorrectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenCVManager cv = new OpenCVManager();
+            cv.ClaheCorrection();
+            
+        }
+
+        private void EqualiseHistogramToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenCVManager cv = new OpenCVManager();
+            cv.Equalise();
+        }
     } //end class   
 } //end namespace

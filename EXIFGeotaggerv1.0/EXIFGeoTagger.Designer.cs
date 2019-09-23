@@ -87,6 +87,9 @@ namespace EXIFGeotagger
             this.panel8 = new System.Windows.Forms.Panel();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mirrorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorCorrectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.equaliseHistogramToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -590,7 +593,10 @@ namespace EXIFGeotagger
             // geotagToolStripMenuItem
             // 
             this.geotagToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuRunGeoTag});
+            this.menuRunGeoTag,
+            this.mirrorToolStripMenuItem,
+            this.colorCorrectToolStripMenuItem,
+            this.equaliseHistogramToolStripMenuItem});
             this.geotagToolStripMenuItem.Name = "geotagToolStripMenuItem";
             this.geotagToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.geotagToolStripMenuItem.Text = "Tools";
@@ -598,7 +604,7 @@ namespace EXIFGeotagger
             // menuRunGeoTag
             // 
             this.menuRunGeoTag.Name = "menuRunGeoTag";
-            this.menuRunGeoTag.Size = new System.Drawing.Size(112, 22);
+            this.menuRunGeoTag.Size = new System.Drawing.Size(180, 22);
             this.menuRunGeoTag.Text = "Geotag";
             this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
             // 
@@ -674,6 +680,27 @@ namespace EXIFGeotagger
             this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
             this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.deleteLayerToolStripMenuItem.Text = "Delete Layer";
+            // 
+            // mirrorToolStripMenuItem
+            // 
+            this.mirrorToolStripMenuItem.Name = "mirrorToolStripMenuItem";
+            this.mirrorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.mirrorToolStripMenuItem.Text = "Mirror";
+            this.mirrorToolStripMenuItem.Click += new System.EventHandler(this.MirrorToolStripMenuItem_Click);
+            // 
+            // colorCorrectToolStripMenuItem
+            // 
+            this.colorCorrectToolStripMenuItem.Name = "colorCorrectToolStripMenuItem";
+            this.colorCorrectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.colorCorrectToolStripMenuItem.Text = "Clahe Correct";
+            this.colorCorrectToolStripMenuItem.Click += new System.EventHandler(this.ColorCorrectToolStripMenuItem_Click);
+            // 
+            // equaliseHistogramToolStripMenuItem
+            // 
+            this.equaliseHistogramToolStripMenuItem.Name = "equaliseHistogramToolStripMenuItem";
+            this.equaliseHistogramToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.equaliseHistogramToolStripMenuItem.Text = "Equalise Histogram";
+            this.equaliseHistogramToolStripMenuItem.Click += new System.EventHandler(this.EqualiseHistogramToolStripMenuItem_Click);
             // 
             // EXIFGeoTagger
             // 
@@ -772,6 +799,9 @@ namespace EXIFGeotagger
         private System.Windows.Forms.ToolStripMenuItem eSRIShapeFileshpToolStripMenuItem1;
         private System.Windows.Forms.TextBox txtLatLng;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ToolStripMenuItem mirrorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem colorCorrectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem equaliseHistogramToolStripMenuItem;
     }
 }
 
