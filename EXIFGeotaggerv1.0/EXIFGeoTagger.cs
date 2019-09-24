@@ -1792,5 +1792,11 @@ namespace EXIFGeotagger //v0._1
             OpenCVManager cv = new OpenCVManager();
             cv.Equalise();
         }
+
+        private void GammaCorrectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenCVManager cv = new OpenCVManager();
+            cv.GammaCorrection();
+        }
     } //end class   
 } //end namespace

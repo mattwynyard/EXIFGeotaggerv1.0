@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Emgu.CV;
-using Emgu.CV.Util;
+﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.IO;
 
 namespace EXIFGeotagger
@@ -18,7 +13,7 @@ namespace EXIFGeotagger
     {
         public OpenCVManager()
         {
-            
+
         }
 
         public void mirrorImge()
@@ -34,11 +29,11 @@ namespace EXIFGeotagger
             PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
             image.Dispose();
             Mat src = CvInvoke.Imread("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422.jpg", ImreadModes.AnyColor);
-            
+
             Mat dst = src.Clone();
             CvInvoke.Flip(src, dst, FlipType.Horizontal);
             //dst.Save("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422_flip.jpg");
-           
+
             Image<Bgr, Byte> img = dst.ToImage<Bgr, Byte>(); //convert Mat to Image
             src.Dispose();
             dst.Dispose();
@@ -67,9 +62,9 @@ namespace EXIFGeotagger
             imgNew.Save("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422_flip.jpg");
             imgNew.Dispose();
             //cleanup
-            
-            
-            
+
+
+
 
 
         }
@@ -81,34 +76,56 @@ namespace EXIFGeotagger
             return dst;
         }
 
+        public void GammaCorrection()
+        {
+            Mat src = CvInvoke.Imread("C:\\EXIFGeotagger\\opencv\\contrast2.jpg", ImreadModes.AnyColor);
+            Mat hsv = new Mat();
+            CvInvoke.CvtColor(src, hsv, ColorConversion.Bgr2Hsv);
+            //VectorOfMat channels = new VectorOfMat();
+            //CvInvoke.Split(hsv, channels);
+
+            MCvScalar mean = CvInvoke.Mean(hsv); //get average brightness V channel
+            double meanV = mean.V2 / 256; //normalise
+
+            //soure: Automatic gamma correction based on average of brightness - Babakhani & Zarei
+            //Advances in Computer Science Volume 4 issue 6 No.18 2015
+            double gamma = -0.3 / (Math.Log10(meanV));
+
+            Image<Bgr, Byte> img = src.ToImage<Bgr, Byte>();
+            img._GammaCorrect(gamma);
+
+            //Image<Bgr, Byte> bgr = img.Convert<Bgr, Byte>();
+            img.Save("C:\\EXIFGeotagger\\opencv\\gamma.jpg");
+
+        }
+
         public void Equalise()
         {
-            Mat src = CvInvoke.Imread("C:\\Onsite\\opencvTest\\correction_test.jpg", ImreadModes.AnyColor);
+            Mat src = CvInvoke.Imread("C:\\EXIFGeotagger\\opencv\\contrast.jpg", ImreadModes.AnyColor);
             Mat hsv = new Mat();
-            CvInvoke.CvtColor(src, hsv, ColorConversion.Bgr2Lab);
+            CvInvoke.CvtColor(src, hsv, ColorConversion.Bgr2YCrCb);
 
             VectorOfMat channels = new VectorOfMat();
-            
+
             CvInvoke.Split(hsv, channels);
 
-            //for (int i = 0; i < 3; i++)
-            //{
-                Mat hst = new Mat();
-                CvInvoke.EqualizeHist(channels[0], hst);
-                hst.CopyTo(channels[0]);
-                CvInvoke.Merge(channels, hsv);
+
+            Mat hst = new Mat();
+            CvInvoke.EqualizeHist(channels[0], hst);
+            hst.CopyTo(channels[0]);
+            CvInvoke.Merge(channels, hsv);
             Mat dst = new Mat();
-            CvInvoke.CvtColor(hsv, dst, ColorConversion.Lab2Bgr);
+            CvInvoke.CvtColor(hsv, dst, ColorConversion.YCrCb2Bgr);
             //}
 
 
-            dst.Save("C:\\Onsite\\opencvTest\\correction_test_equalise.jpg");
+            dst.Save("C:\\EXIFGeotagger\\opencv\\contrast_equalise.jpg");
         }
 
         public void ClaheCorrection()
         {
 
-            Mat src = CvInvoke.Imread("C:\\Onsite\\opencvTest\\correction_test.jpg", ImreadModes.AnyColor);
+            Mat src = CvInvoke.Imread("C:\\EXIFGeotagger\\opencv\\contrast_equalise.jpg", ImreadModes.AnyColor);
             Mat lab = new Mat();
             CvInvoke.CvtColor(src, lab, ColorConversion.Bgr2Lab);
 
@@ -116,14 +133,14 @@ namespace EXIFGeotagger
             CvInvoke.Split(lab, channels);
             Mat dst = new Mat();
             Size size = new Size(8, 8);
-            CvInvoke.CLAHE(channels[0], 0.9, size, dst);
-    
+            CvInvoke.CLAHE(channels[0], 0.5, size, dst);
+
             dst.CopyTo(channels[0]);
             CvInvoke.Merge(channels, lab);
             Mat clahe = new Mat();
             CvInvoke.CvtColor(lab, clahe, ColorConversion.Lab2Bgr);
 
-            clahe.Save("C:\\Onsite\\opencvTest\\correction_test_clahe.jpg");
+            clahe.Save("C:\\EXIFGeotagger\\opencv\\contrast_equalise_clahe.jpg");
 
 
         }

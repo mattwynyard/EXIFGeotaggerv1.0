@@ -79,6 +79,9 @@ namespace EXIFGeotagger
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.geotagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
+            this.mirrorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorCorrectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.equaliseHistogramToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnArrow = new System.Windows.Forms.Button();
@@ -87,9 +90,7 @@ namespace EXIFGeotagger
             this.panel8 = new System.Windows.Forms.Panel();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mirrorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.colorCorrectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.equaliseHistogramToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gammaCorrectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -596,7 +597,8 @@ namespace EXIFGeotagger
             this.menuRunGeoTag,
             this.mirrorToolStripMenuItem,
             this.colorCorrectToolStripMenuItem,
-            this.equaliseHistogramToolStripMenuItem});
+            this.equaliseHistogramToolStripMenuItem,
+            this.gammaCorrectionToolStripMenuItem});
             this.geotagToolStripMenuItem.Name = "geotagToolStripMenuItem";
             this.geotagToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.geotagToolStripMenuItem.Text = "Tools";
@@ -607,6 +609,27 @@ namespace EXIFGeotagger
             this.menuRunGeoTag.Size = new System.Drawing.Size(180, 22);
             this.menuRunGeoTag.Text = "Geotag";
             this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
+            // 
+            // mirrorToolStripMenuItem
+            // 
+            this.mirrorToolStripMenuItem.Name = "mirrorToolStripMenuItem";
+            this.mirrorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.mirrorToolStripMenuItem.Text = "Mirror";
+            this.mirrorToolStripMenuItem.Click += new System.EventHandler(this.MirrorToolStripMenuItem_Click);
+            // 
+            // colorCorrectToolStripMenuItem
+            // 
+            this.colorCorrectToolStripMenuItem.Name = "colorCorrectToolStripMenuItem";
+            this.colorCorrectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.colorCorrectToolStripMenuItem.Text = "Clahe Correct";
+            this.colorCorrectToolStripMenuItem.Click += new System.EventHandler(this.ColorCorrectToolStripMenuItem_Click);
+            // 
+            // equaliseHistogramToolStripMenuItem
+            // 
+            this.equaliseHistogramToolStripMenuItem.Name = "equaliseHistogramToolStripMenuItem";
+            this.equaliseHistogramToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.equaliseHistogramToolStripMenuItem.Text = "Equalise Histogram";
+            this.equaliseHistogramToolStripMenuItem.Click += new System.EventHandler(this.EqualiseHistogramToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -681,26 +704,12 @@ namespace EXIFGeotagger
             this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.deleteLayerToolStripMenuItem.Text = "Delete Layer";
             // 
-            // mirrorToolStripMenuItem
+            // gammaCorrectionToolStripMenuItem
             // 
-            this.mirrorToolStripMenuItem.Name = "mirrorToolStripMenuItem";
-            this.mirrorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.mirrorToolStripMenuItem.Text = "Mirror";
-            this.mirrorToolStripMenuItem.Click += new System.EventHandler(this.MirrorToolStripMenuItem_Click);
-            // 
-            // colorCorrectToolStripMenuItem
-            // 
-            this.colorCorrectToolStripMenuItem.Name = "colorCorrectToolStripMenuItem";
-            this.colorCorrectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.colorCorrectToolStripMenuItem.Text = "Clahe Correct";
-            this.colorCorrectToolStripMenuItem.Click += new System.EventHandler(this.ColorCorrectToolStripMenuItem_Click);
-            // 
-            // equaliseHistogramToolStripMenuItem
-            // 
-            this.equaliseHistogramToolStripMenuItem.Name = "equaliseHistogramToolStripMenuItem";
-            this.equaliseHistogramToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.equaliseHistogramToolStripMenuItem.Text = "Equalise Histogram";
-            this.equaliseHistogramToolStripMenuItem.Click += new System.EventHandler(this.EqualiseHistogramToolStripMenuItem_Click);
+            this.gammaCorrectionToolStripMenuItem.Name = "gammaCorrectionToolStripMenuItem";
+            this.gammaCorrectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.gammaCorrectionToolStripMenuItem.Text = "Gamma Correction";
+            this.gammaCorrectionToolStripMenuItem.Click += new System.EventHandler(this.GammaCorrectionToolStripMenuItem_Click);
             // 
             // EXIFGeoTagger
             // 
@@ -802,6 +811,7 @@ namespace EXIFGeotagger
         private System.Windows.Forms.ToolStripMenuItem mirrorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem colorCorrectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem equaliseHistogramToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem gammaCorrectionToolStripMenuItem;
     }
 }
 
