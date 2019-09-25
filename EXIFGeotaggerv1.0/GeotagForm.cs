@@ -27,6 +27,10 @@ namespace EXIFGeotagger //v0._1
         public event writeGeoTagDelegate writeGeoTag;
         public delegate void writeGeoTagDelegate(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords);
 
+        private Boolean mMirror;
+        private Boolean mGamma;
+        private Boolean mContrast;
+
         public GeotagForm()
         {
             InitializeComponent();
@@ -136,6 +140,67 @@ namespace EXIFGeotagger //v0._1
         private void TxtLayer_TextChanged(object sender, EventArgs e)
         {
             mLayer = txtLayer.Text;
+        }
+
+        private void CkContrast_CheckedStateChanged(object sender, EventArgs e)
+        {
+            if (ckContrast.Checked)
+            {
+                mContrast = true;
+            }
+            else
+            {
+                mContrast = false;
+            }
+        }
+
+        private void CkGamma_CheckedStateChanged(object sender, EventArgs e)
+        {
+            if (ckGamma.Checked)
+            {
+                mGamma = true;
+            }
+            else
+            {
+                mGamma = false;
+            }
+        }
+
+        private void CkMirror_CheckedStateChanged(object sender, EventArgs e)
+        {
+            if (ckMirror.Checked)
+            {
+                mMirror = true;
+            }
+            else
+            {
+                mMirror = false;
+            }
+        }
+
+        private void BtnCorrect_Click(object sender, EventArgs e)
+        {
+            String photo = null;
+            using (var openFileDialog = new OpenFileDialog())
+            {
+                filter = "jpg files|*.jpg";
+                openFileDialog.Filter = filter;
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.Title = "Browse Files";
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.DefaultExt = "jpg";
+                DialogResult result = openFileDialog.ShowDialog();
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.FileName))
+                {
+                    photo = openFileDialog.FileName;
+                    txtDataSource.Text = openFileDialog.FileName;
+                    BringToFront();
+                    TopMost = true;
+                }
+            }
+            //CorrectionUtil correct = new CorrectionUtil(photo);
+            CorrectionUtil.ClaheCorrection(photo);
+
         }
     }
 }

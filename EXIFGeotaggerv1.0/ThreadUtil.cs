@@ -100,7 +100,6 @@ namespace EXIFGeotagger
                     string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                                         "Microsoft.Jet.OLEDB.4.0", path, 5);
                     connection = new OleDbConnection(connectionString);
-                    //string connectionStr = connection.ConnectionString;
                     string strSQL;
                     string lengthSQL; //sql count string
                     int length; //number of records to process
@@ -135,7 +134,6 @@ namespace EXIFGeotagger
                         int i = 0;
                         while (reader.Read())
                         {
- 
                             if (token.IsCancellationRequested)
                             {
                                 token.ThrowIfCancellationRequested();
@@ -149,11 +147,9 @@ namespace EXIFGeotagger
                             int percentInt = (int)Math.Ceiling(percent);
                             if (progressValue != null)
                             {
-                                //progressValue.Report(percentInt);
                                 progressForm.Invoke(
                                     new MethodInvoker(() => progressValue.Report(percentInt)
                                 ));
-
                             }
                             try
                             {

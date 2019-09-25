@@ -3,11 +3,12 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace EXIFGeotagger
+namespace OpenCV
 {
     class OpenCVManager
     {
@@ -18,6 +19,8 @@ namespace EXIFGeotagger
 
         public void mirrorImge()
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             Image image = new Bitmap("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422.jpg");
             PropertyItem[] propItems = image.PropertyItems;
             PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
@@ -28,11 +31,14 @@ namespace EXIFGeotagger
             PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
             PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
             image.Dispose();
+
+            //Image<Bgr, Byte> img = new Image<Bgr, Byte>("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422.jpg");
             Mat src = CvInvoke.Imread("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422.jpg", ImreadModes.AnyColor);
+            //Mat src = img.Mat;
 
             Mat dst = src.Clone();
             CvInvoke.Flip(src, dst, FlipType.Horizontal);
-            //dst.Save("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422_flip.jpg");
+
 
             Image<Bgr, Byte> img = dst.ToImage<Bgr, Byte>(); //convert Mat to Image
             src.Dispose();
@@ -58,13 +64,13 @@ namespace EXIFGeotagger
             //image.SetPropertyItem(propItemPDop);
             //image.SetPropertyItem(propItemSat);
             //image.SetPropertyItem(propItemDateTime);
-            //img.Dispose();
+
             imgNew.Save("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422_flip.jpg");
             imgNew.Dispose();
             //cleanup
 
-
-
+            sw.Stop();
+            
 
 
         }
@@ -78,7 +84,7 @@ namespace EXIFGeotagger
 
         public void GammaCorrection()
         {
-            Mat src = CvInvoke.Imread("C:\\EXIFGeotagger\\opencv\\contrast2.jpg", ImreadModes.AnyColor);
+            Mat src = CvInvoke.Imread("C:\\Onsite\\opencvTest\\gamma_test.jpg", ImreadModes.AnyColor);
             Mat hsv = new Mat();
             CvInvoke.CvtColor(src, hsv, ColorConversion.Bgr2Hsv);
             //VectorOfMat channels = new VectorOfMat();
@@ -95,7 +101,7 @@ namespace EXIFGeotagger
             img._GammaCorrect(gamma);
 
             //Image<Bgr, Byte> bgr = img.Convert<Bgr, Byte>();
-            img.Save("C:\\EXIFGeotagger\\opencv\\gamma.jpg");
+            img.Save("C:\\Onsite\\opencvTest\\gamma.jpg");
 
         }
 

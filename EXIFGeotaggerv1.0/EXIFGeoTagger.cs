@@ -29,6 +29,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Text.RegularExpressions;
+using OpenCV;
 
 public delegate Image getAWSImage();
 

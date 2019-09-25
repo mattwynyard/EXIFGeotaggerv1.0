@@ -158,6 +158,7 @@
     <Compile Include="AWSSecurityForm.Designer.cs">
       <DependentUpon>AWSSecurityForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CorrectionUtil.cs" />
     <Compile Include="DelimitedText.cs">
       <SubType>Form</SubType>
     </Compile>
