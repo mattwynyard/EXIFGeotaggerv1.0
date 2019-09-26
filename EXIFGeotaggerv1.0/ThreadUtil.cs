@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Emgu.CV;
+using Emgu.CV.Structure;
 using GMap.NET;
 
 using GMap.NET.MapProviders;
@@ -121,11 +123,11 @@ namespace EXIFGeotagger
                     OleDbDataReader readerColumn = command.ExecuteReader(CommandBehavior.KeyInfo);
                     DataTable schemaTable = readerColumn.GetSchemaTable();
 
-                    foreach(DataRow col in schemaTable.Rows) {
+                    //foreach(DataRow col in schemaTable.Rows) {
 
-                        string c = col.Field<String>("ColumnName");
-                        table.Columns.Add(c);
-                    }
+                    //    string c = col.Field<String>("ColumnName");
+                    //    table.Columns.Add(c);
+                    //}
 
                     readerColumn.Close();
                     length = (Int32)commandLength.ExecuteScalar();
@@ -414,12 +416,13 @@ namespace EXIFGeotagger
                             token.ThrowIfCancellationRequested();                           
                         }
                         Parallel.Invoke (() =>
-                        {
+                        { 
                             ThreadInfo threadInfo = new ThreadInfo();
                             threadInfo.OutPath = outPath;
                             threadInfo.Length = mQueueSize;
                             threadInfo.ProgressHandler = progressHandler1;
                             threadInfo.File = fileQueue.Take();
+                            //threadInfo.QueueSize = fileQueue.Count;
                             try
                             {
                                 string fileName = Path.GetFileNameWithoutExtension(threadInfo.File);
@@ -434,7 +437,7 @@ namespace EXIFGeotagger
                                 }
                                 else
                                 {
-                                    object a = "nogps";
+                                    object a = "nogeomark";
                                     incrementGeoTagError(a);
                                 }
                             }
@@ -450,7 +453,6 @@ namespace EXIFGeotagger
                 {
                     cts.Cancel();
                     cts.Dispose();
-                    //return null;
                 }
                 
             }, cts.Token);
@@ -482,27 +484,26 @@ namespace EXIFGeotagger
             ThreadInfo threadInfo = a as ThreadInfo;
             Record r = threadInfo.Record;
             await Task.Factory.StartNew(async () =>
-            {
-                
+            {               
                 var progressValue = threadInfo.ProgressHandler as IProgress<int>;
                 string outPath = threadInfo.OutPath;
                 int length = threadInfo.Length;
             
                 string photoRename;
                 string path;
-                Bitmap image = new Bitmap(threadInfo.File);
-                PropertyItem[] propItems = image.PropertyItems;
-                PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
-                PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-                PropertyItem propItemSat = image.GetPropertyItem(0x0008);
-                PropertyItem propItemDir = image.GetPropertyItem(0x0011);
-                PropertyItem propItemVel = image.GetPropertyItem(0x000D);
-                PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
-                PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
+                Bitmap bmp = new Bitmap(threadInfo.File);
+                PropertyItem[] propItems = bmp.PropertyItems;
+                PropertyItem propItemLatRef = bmp.GetPropertyItem(0x0001);
+                PropertyItem propItemLat = bmp.GetPropertyItem(0x0002);
+                PropertyItem propItemLonRef = bmp.GetPropertyItem(0x0003);
+                PropertyItem propItemLon = bmp.GetPropertyItem(0x0004);
+                PropertyItem propItemAltRef = bmp.GetPropertyItem(0x0005);
+                PropertyItem propItemAlt = bmp.GetPropertyItem(0x0006);
+                PropertyItem propItemSat = bmp.GetPropertyItem(0x0008);
+                PropertyItem propItemDir = bmp.GetPropertyItem(0x0011);
+                PropertyItem propItemVel = bmp.GetPropertyItem(0x000D);
+                PropertyItem propItemPDop = bmp.GetPropertyItem(0x000B);
+                PropertyItem propItemDateTime = bmp.GetPropertyItem(0x0132);
                 RecordUtil RecordUtil = new RecordUtil(r);
                 propItemLat = RecordUtil.getEXIFCoordinate("latitude", propItemLat);
                 propItemLon = RecordUtil.getEXIFCoordinate("longitude", propItemLon);
@@ -517,6 +518,15 @@ namespace EXIFGeotagger
                 propItemSat = RecordUtil.getEXIFInt(propItemSat, r.Satellites);
                 propItemDateTime = RecordUtil.getEXIFDateTime(propItemDateTime);
                 RecordUtil = null;
+                //do image correction
+                //CLAHE correction
+                Image<Bgr, Byte> img = new Image<Bgr, Byte>(bmp);
+                Mat src = img.Mat;
+                Image<Bgr, Byte> emguImage = CorrectionUtil.ClaheCorrection(src, 0.5);
+                bmp.Dispose();
+                emguImage = CorrectionUtil.GammaCorrection(emguImage);
+                Image image = CorrectionUtil.ImageFromEMGUImage(emguImage);
+                emguImage.Dispose();
                 image.SetPropertyItem(propItemLat);
                 image.SetPropertyItem(propItemLon);
                 image.SetPropertyItem(propItemLatRef);
@@ -530,39 +540,43 @@ namespace EXIFGeotagger
                 image.SetPropertyItem(propItemDateTime);
                 r.GeoTag = true;
 
-                    string photoName = r.PhotoName;
-                    string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
-                    OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
+                string photoName = r.PhotoName;
+                string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
+                OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
 
-                    photoRename = (string)commandGetPhoto.ExecuteScalar();
+                photoRename = (string)commandGetPhoto.ExecuteScalar();
 
-                    r.PhotoName = photoRename; //new photo name 
-                    string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
-                    OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
+                r.PhotoName = photoRename; //new photo name 
+                string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
+                OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
                 
-                    commandGeoTag.ExecuteNonQuery();
-                    path = outPath + "\\" + photoRename + ".jpg";
-                    string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
-                    OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
-                    commandPath.ExecuteNonQuery();
-                    r.Path = path;
-                    lock (obj)
-                    {
-                        geoTagCount++;
-                    }
-                    setMinMax(r.Latitude, r.Longitude);
-                    int totalCount = geoTagCount + errorCount;
-                    double percent = ((double)totalCount / length) * 100;
-                    int percentInt = (int)Math.Floor(percent);
-                    progressValue = threadInfo.ProgressHandler;
-                    progressForm.Invoke(
-                        new MethodInvoker(() => progressValue.Report(percentInt)
-                    ));
+                commandGeoTag.ExecuteNonQuery();
+                path = outPath + "\\" + photoRename + ".jpg";
+                string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
+                OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+                commandPath.ExecuteNonQuery();
+                r.Path = path;
+                int totalCount;
+                lock (obj)
+                {
+                    geoTagCount++;
+                   
+                }
+                totalCount = geoTagCount + errorCount + stationaryCount;
+                setMinMax(r.Latitude, r.Longitude);
+                    
+                //int totalCount = length - threadInfo.QueueSize;
+                double percent = ((double)totalCount / length) * 100;
+                int percentInt = (int)Math.Floor(percent);
+                progressValue = threadInfo.ProgressHandler;
+                progressForm.Invoke(
+                    new MethodInvoker(() => progressValue.Report(percentInt)
+                ));
                                   
-                    await saveFile(image, path);
-                    image.Dispose();
-                    image = null;
-                });
+                await saveFile(image, path);
+                image.Dispose();
+                image = null;
+            });
             return r;
         }
 
@@ -575,7 +589,7 @@ namespace EXIFGeotagger
                 {
                     lock (obj)
                     {
-                        errorCount++;
+                        errorCount++;            
                     }
                 }
                 else

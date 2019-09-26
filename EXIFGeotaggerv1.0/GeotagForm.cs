@@ -199,7 +199,7 @@ namespace EXIFGeotagger //v0._1
                 }
             }
             //CorrectionUtil correct = new CorrectionUtil(photo);
-            CorrectionUtil.ClaheCorrection(photo);
+            CorrectionUtil.ClaheCorrection(photo, 0.5);
 
         }
     }

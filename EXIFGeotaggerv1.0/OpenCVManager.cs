@@ -19,8 +19,7 @@ namespace OpenCV
 
         public void mirrorImge()
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            
             Image image = new Bitmap("C:\\Onsite\\opencvTest\\C1_IMG190413_100908_10422.jpg");
             PropertyItem[] propItems = image.PropertyItems;
             PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
@@ -69,7 +68,7 @@ namespace OpenCV
             imgNew.Dispose();
             //cleanup
 
-            sw.Stop();
+           
             
 
 

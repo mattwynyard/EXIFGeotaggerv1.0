@@ -22,7 +22,7 @@ namespace EXIFGeotagger
 
         public Record Record { get; set; }
 
-        //public ProgressForm ProgressForm { get; set; }
+        public int QueueSize { get; set; }
 
         public IProgress<int> ProgressHandler { get; set; }
 
