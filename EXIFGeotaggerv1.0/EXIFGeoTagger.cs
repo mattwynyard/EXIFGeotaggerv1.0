@@ -1285,16 +1285,28 @@ namespace EXIFGeotagger //v0._1
             //connection.Open();
             resetMinMax();
             t.setMinMax += setMinMax;
-            fileQueue = await t.buildQueue(inPath);
-            mRecordDict = await t.readFromDatabase(dbPath, allRecords);
+            //fileQueue = t.buildQueue(inPath);
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+            //mRecordDict = await t.writeGeoTag(inPath, outPath);
+            ConcurrentDictionary<string, Record> dict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
+           
+            TimeSpan ts = stopWatch.Elapsed;
+
+            // Format and display the TimeSpan value.
+            elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            txtConsole.Text = elapsedTime;
             if (mRecordDict.Count > 0)
             {
-                Stopwatch stopWatch = new Stopwatch();
+                stopWatch = new Stopwatch();
                 stopWatch.Start();
-                mRecordDict = await t.writeGeoTag(mRecordDict, fileQueue, inPath, outPath);
+                //mRecordDict = await t.writeGeoTag(dict, fileQueue, inPath, outPath);
+                mRecordDict = await t.writeGeoTag(inPath, outPath);
                 stopWatch.Stop();
                 // Get the elapsed time as a TimeSpan value.
-                TimeSpan ts = stopWatch.Elapsed;
+                ts = stopWatch.Elapsed;
 
                 // Format and display the TimeSpan value.
                 elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
@@ -1326,7 +1338,7 @@ namespace EXIFGeotagger //v0._1
             t.setMinMax += setMinMax;
             t.addRecord += addRecord;
             t.geoTagComplete += geoTagComplete;
-            fileQueue = await t.buildQueue(inPath);
+            //fileQueue = await t.buildQueue(inPath);
             GMapOverlay overlay = new GMapOverlay(layer);
             resetMinMax();
             overlay = await t.readGeoTag(fileQueue, inPath, layer, color.Name);

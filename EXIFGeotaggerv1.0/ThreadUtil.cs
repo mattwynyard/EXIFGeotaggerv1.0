@@ -38,7 +38,9 @@ namespace EXIFGeotagger
         int errorCount;
         int stationaryCount;
         int id;
-        CancellationTokenSource cts;
+        private CancellationTokenSource cts;
+        private ConcurrentDictionary<string, Record> dict;
+
 
         /// <summary>
         /// Default constructor
@@ -52,33 +54,14 @@ namespace EXIFGeotagger
         /// </summary>
         /// <param name="path"> the full path of the folder containing the files</param>
         /// <returns>the queue</returns>
-        public async Task<BlockingCollection<string>> buildQueue(string path)
+        public async Task<Dictionary<string, Record>> writeGeoTag(string inPath, string outPath)
         {
-            BlockingCollection<string> mFileQueue = new BlockingCollection<string>();
-            await Task.Run(() =>
-            {
-            
-            string[] files = Directory.GetFiles(path);
-            foreach (string file in files)
-            {
-                mFileQueue.Add(file);
-            }
-                
-            });
-            return mFileQueue;
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="allRecords"></param>
-        /// <returns></returns>
-        public async Task<Dictionary<string, Record>> readFromDatabase(string path, Boolean allRecords)
-        {
-            Dictionary<string, Record> recordDict = new Dictionary<string, Record>();
-            ProgressForm progressForm = new ProgressForm("Reading from database...");
-            DataTable table = new DataTable();
+            BlockingCollection<string> fileQueue = new BlockingCollection<string>();
+            int mQueueSize = fileQueue.Count;
+
+            progressForm = new ProgressForm("Writing geotags to photos...");
+            string[] files = Directory.GetFiles(inPath);
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
@@ -87,124 +70,228 @@ namespace EXIFGeotagger
             var progressHandler1 = new Progress<int>(value =>
             {
                 progressForm.ProgressValue = value;
-                progressForm.Message = "Database read, please wait... " + value.ToString() + "% completed";
-
+                progressForm.Message = "Geotagging, please wait... " + value.ToString() + "% completed\n" +
+                geoTagCount + " of " + mQueueSize + " photos geotagged\n" +
+               "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n";
             });
             var progressValue = progressHandler1 as IProgress<int>;
-            try
+            geoTagCount = 0;
+            errorCount = 0;
+            stationaryCount = 0;
+            Dictionary<string, Record> newRecordDict = new Dictionary<string, Record>();
+            int processors = Environment.ProcessorCount;
+            int minWorkerThreads = processors;
+            int minIOThreads = processors;
+            int maxWorkerThreads = processors;
+            int maxIOThreads = processors;
+
+            //ThreadPool.SetMinThreads(minWorkerThreads, minIOThreads);
+            ThreadPool.SetMaxThreads(maxWorkerThreads, maxIOThreads);
+            Task producer = Task.Factory.StartNew(() =>
+            {                     
+                foreach (string file in files)
+                {
+                    fileQueue.Add(file);
+                }
+                fileQueue.CompleteAdding();
+            });
+
+            Task consumer = Task.Factory.StartNew(() =>
             {
-                await Task.Run(() =>
+                foreach (var item in fileQueue.GetConsumingEnumerable())
                 {
                     if (token.IsCancellationRequested)
                     {
                         token.ThrowIfCancellationRequested();
                     }
-                    string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
-                                        "Microsoft.Jet.OLEDB.4.0", path, 5);
-                    connection = new OleDbConnection(connectionString);
-                    string strSQL;
-                    string lengthSQL; //sql count string
-                    int length; //number of records to process
-                    
-                    if (allRecords)
+                    ThreadInfo threadInfo = new ThreadInfo();
+                    threadInfo.OutPath = outPath;
+                    threadInfo.Length = mQueueSize;
+                    threadInfo.ProgressHandler = progressHandler1;
+                    threadInfo.File = item;
+                    //threadInfo.QueueSize = fileQueue.Count;
+                    try
                     {
-                        strSQL = "SELECT * FROM PhotoList";
-                        lengthSQL = "SELECT Count(PhotoID) FROM PhotoList;";
-                    }
-                    else
-                    {
-                        strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
-                        lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true;";
-                    }
-                    OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
-                    OleDbCommand command = new OleDbCommand(strSQL, connection);
-                    connection.Open();
+                        string fileName = Path.GetFileNameWithoutExtension(threadInfo.File);
+                        Record r = dict[fileName];
+                        threadInfo.Record = r;
 
-                    OleDbDataReader readerColumn = command.ExecuteReader(CommandBehavior.KeyInfo);
-                    DataTable schemaTable = readerColumn.GetSchemaTable();
-
-                    //foreach(DataRow col in schemaTable.Rows) {
-
-                    //    string c = col.Field<String>("ColumnName");
-                    //    table.Columns.Add(c);
-                    //}
-
-                    readerColumn.Close();
-                    length = (Int32)commandLength.ExecuteScalar();
-                    using (OleDbDataReader reader = command.ExecuteReader())
-                    {                      
-                        int i = 0;
-                        while (reader.Read())
+                        if (r.GeoMark)
                         {
-                            if (token.IsCancellationRequested)
-                            {
-                                token.ThrowIfCancellationRequested();
-                            }
-                            Object[] row = new Object[reader.FieldCount];
-                            reader.GetValues(row);
-                            //String photo = (string)row[1];
-                            Record r = buildDictionary(i, row).Result;
-                            i++;
-                            double percent = ((double)i / length) * 100;
-                            int percentInt = (int)Math.Ceiling(percent);
-                            if (progressValue != null)
-                            {
-                                progressForm.Invoke(
-                                    new MethodInvoker(() => progressValue.Report(percentInt)
-                                ));
-                            }
-                            try
-                            {
-                                recordDict.Add(r.PhotoName, r);
-
-                            }
-                            catch (Exception ex)
-                            {
-                                //String s = ex.Message;
-                            }
+                            Record newRecord = null;
+                            newRecord = ProcessFile(threadInfo).Result;
+                            newRecordDict.Add(r.PhotoName, r);
+                            Random random = new Random();
+                            int number = random.Next(100, 300);
+                            Thread.Sleep(number);
+                        }
+                        else
+                        {
+                            object a = "nogeomark";
+                            incrementGeoTagError(a);
                         }
                     }
-
-                }, cts.Token);
-
-            }
-            catch (ArgumentException ex)
-            {
-
-            }
-            catch (NullReferenceException ex)
-            {
-                //txtConsole.AppendText(ex.StackTrace);
-            }
-            catch (OperationCanceledException)
-            {
-                cts.Cancel();
-                cts.Dispose();
-                progressForm.Close();
-                return new Dictionary<string, Record>();
-
-
-            }
-            //connection.Close();
-            progressForm.Close();
-            return recordDict;
+                    catch (KeyNotFoundException ex)
+                    {
+                        object a = "nokey";
+                        incrementGeoTagError(a);
+                    }
+                }
+            });
+            //progressForm.Invoke(new MethodInvoker(() => progressValue.Report(100)
+            //));
+            await Task.WhenAll(producer, consumer);
+            progressForm.enableOK();
+            progressForm.disableCancel();
+            connection.Close();
+            return newRecordDict;
         }
+        
+        public async Task<ConcurrentDictionary<string, Record>>buildDictionary(string photoPath, string dbPath, string outPath, Boolean allRecords)
+        {
+            ProgressForm progressForm = new ProgressForm("Reading from database...");
+            dict = new ConcurrentDictionary<string, Record>();
+            BlockingCollection<Record> queue = new BlockingCollection<Record>();
+            BlockingCollection<string> fileQueue = new BlockingCollection<string>();
+            progressForm.Show();
+            progressForm.BringToFront();
+            progressForm.cancel += cancelImport;
+            cts = new CancellationTokenSource();
+            var token = cts.Token;
+            var progressHandler1 = new Progress<object>(a =>
+            {
+                int[] values = (int[])a;
+                progressForm.ProgressValue = values[0];
+                progressForm.Message = "Database read, please wait... " + values[0].ToString() + "% completed\n" +
+                values[1] + " of " + values[2] + " records processed\n" +
+                "Queue size: " + values[3] + "\n" +
+                "Photo Queue size: " + values[4] + "\n" +
+                "Dictionary size: " + values[5];
 
+            });
+            var progressValue = progressHandler1 as IProgress<object>;
+            
+            int length = 0;
+            int count = 0;
+
+            //foreach(DataRow col in schemaTable.Rows) {
+
+            //    string c = col.Field<String>("ColumnName");
+            //    table.Columns.Add(c);
+            //}
  
+            string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
+                "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
+            connection = new OleDbConnection(connectionString);
+            string strSQL;
+            string lengthSQL; //sql count string
+                              //int length; //number of records to process
+            if (allRecords)
+            {
+                strSQL = "SELECT * FROM PhotoList";
+                lengthSQL = "SELECT Count(PhotoID) FROM PhotoList;";
+            }
+            else
+            {
+                strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
+                lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true;";
+            }
+            OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
+            OleDbCommand command = new OleDbCommand(strSQL, connection);
+            connection.Open();
 
-            /// <summary>
-            /// Intialises a new Record and adds data extracted from access to each relevant field.
-            /// The record is then added to the Record Dictionary.
-            /// </summary>
-            /// <param name="i: the number of records read"></param>
-            /// <param name="row: the access record"></param>
-        private async Task<Record> buildDictionary(int i, Object[] row)
+            OleDbDataReader readerColumn = command.ExecuteReader(CommandBehavior.KeyInfo);
+            DataTable schemaTable = readerColumn.GetSchemaTable();
+
+            length = (Int32)commandLength.ExecuteScalar();
+            readerColumn.Close();
+            int queueCount = 0;
+            string[] files = Directory.GetFiles(photoPath);
+
+            Task producer = Task.Factory.StartNew(() =>
+            {
+                foreach (string file in files)
+                {
+                    fileQueue.Add(file);
+                }
+                fileQueue.CompleteAdding();
+            });
+
+            Task producer2 = Task.Factory.StartNew(async() =>
+            {
+                using (OleDbDataReader reader = command.ExecuteReader())
+                {
+                    Object[] row;
+                    while (reader.Read())
+                    {
+                        row = new Object[reader.FieldCount];
+                        reader.GetValues(row);
+                        Record r = await buildRecord(row);
+                        queue.Add(r);
+                    }
+                    reader.Close();
+                    queue.CompleteAdding();
+                }
+            });
+
+            Task consumer = Task.Factory.StartNew(() =>
+            {
+                foreach(var item in queue.GetConsumingEnumerable())
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        token.ThrowIfCancellationRequested();
+                    }
+                    try
+                    {
+                        //ThreadInfo threadInfo = new ThreadInfo();
+                        //threadInfo.OutPath = outPath;
+                        //threadInfo.Record = item;
+                        //threadInfo.File = outPath + "\\" + item.PhotoName + ".jpg";
+                        dict.TryAdd(item.PhotoName, item);
+                        count++;
+                        Task.Run(() =>
+                        {
+                            double percent = ((double)count / length) * 100;
+                            int percentInt = (int)Math.Ceiling(percent);
+                            int[] values = { percentInt, count, length, queue.Count, fileQueue.Count, dict.Count };
+                            object a = (object)values;
+                            progressForm.Invoke(new MethodInvoker(() =>
+                            {
+                                if (progressValue != null)
+                                {
+                                    progressValue.Report(a);
+
+                                }
+                            }));
+                            Thread.Sleep(10);
+                        });                    
+                    }
+                    catch (Exception ex)
+                    {
+                            String s = ex.Message;
+                    }                    
+                }
+            });
+            await Task.WhenAll(producer, producer2, consumer);
+            queue.Dispose();
+            progressForm.Close();
+            return dict;
+        }
+      
+        /// <summary>
+        /// Intialises a new Record and adds data extracted from access to each relevant field.
+        /// The record is then added to the Record Dictionary.
+        /// </summary>
+        /// <param name="i: the number of records read"></param>
+        /// <param name="row: the access record"></param>
+        private async Task<Record> buildRecord(Object[] row)
         {
             Record r = new Record((string)row[1]);
             await Task.Run(() =>
-            {             
+            {              
                 try
-                {
+                {                  
                     int id = (int)row[0];
                     r.Id = id.ToString();
                     r.Latitude = (double)row[3];
@@ -222,13 +309,15 @@ namespace EXIFGeotagger
                     r.Carriageway = Convert.ToInt32(row[21]);
                     r.ERP = Convert.ToInt32(row[22]);
                     r.FaultID = Convert.ToInt32(row[23]);
-                    r.TACode = Convert.ToInt32(row[24]);
+                    //r.TACode = Convert.ToInt32(row[24]);
                     //DataRow dRow = new DataRow()
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.StackTrace);
-                }     
+                   
+                }
+                
             });
             return r;
         }
@@ -417,6 +506,8 @@ namespace EXIFGeotagger
                         }
                         Parallel.Invoke (() =>
                         { 
+                        //Task.Factory.StartNew(() =>
+                        //{
                             ThreadInfo threadInfo = new ThreadInfo();
                             threadInfo.OutPath = outPath;
                             threadInfo.Length = mQueueSize;
@@ -426,14 +517,17 @@ namespace EXIFGeotagger
                             try
                             {
                                 string fileName = Path.GetFileNameWithoutExtension(threadInfo.File);
-                                    Record r = recordDict[fileName];
-                                    threadInfo.Record = r;
+                                Record r = recordDict[fileName];
+                                threadInfo.Record = r;
 
                                 if (r.GeoMark)
                                 {
                                     Record newRecord = null;
                                     newRecord = ProcessFile(threadInfo).Result;
                                     newRecordDict.Add(r.PhotoName, r);
+                                    Random random = new Random();
+                                    int number = random.Next(100, 300);
+                                    Thread.Sleep(number);
                                 }
                                 else
                                 {
@@ -483,8 +577,8 @@ namespace EXIFGeotagger
         {
             ThreadInfo threadInfo = a as ThreadInfo;
             Record r = threadInfo.Record;
-            await Task.Factory.StartNew(async () =>
-            {               
+            //Task.Factory.StartNew(async () =>
+            //{               
                 var progressValue = threadInfo.ProgressHandler as IProgress<int>;
                 string outPath = threadInfo.OutPath;
                 int length = threadInfo.Length;
@@ -576,7 +670,7 @@ namespace EXIFGeotagger
                 await saveFile(image, path);
                 image.Dispose();
                 image = null;
-            });
+            //});
             return r;
         }
 
