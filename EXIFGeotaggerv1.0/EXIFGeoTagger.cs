@@ -1285,12 +1285,12 @@ namespace EXIFGeotagger //v0._1
             //connection.Open();
             resetMinMax();
             t.setMinMax += setMinMax;
-            //fileQueue = t.buildQueue(inPath);
+            fileQueue = t.buildQueue(inPath);
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             //mRecordDict = await t.writeGeoTag(inPath, outPath);
             ConcurrentDictionary<string, Record> dict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
-           
+            ConcurrentDictionary<string, Record> newDict = await t.WriteGeotag(fileQueue, dict, inPath, outPath);
             TimeSpan ts = stopWatch.Elapsed;
 
             // Format and display the TimeSpan value.
@@ -1298,12 +1298,12 @@ namespace EXIFGeotagger //v0._1
                 ts.Hours, ts.Minutes, ts.Seconds,
                 ts.Milliseconds / 10);
             txtConsole.Text = elapsedTime;
-            if (mRecordDict.Count > 0)
+            if (dict.Count > 0)
             {
                 stopWatch = new Stopwatch();
                 stopWatch.Start();
                 //mRecordDict = await t.writeGeoTag(dict, fileQueue, inPath, outPath);
-                mRecordDict = await t.writeGeoTag(inPath, outPath);
+                //mRecordDict = await t.writeGeoTag(inPath, outPath);
                 stopWatch.Stop();
                 // Get the elapsed time as a TimeSpan value.
                 ts = stopWatch.Elapsed;
@@ -1313,7 +1313,7 @@ namespace EXIFGeotagger //v0._1
                     ts.Hours, ts.Minutes, ts.Seconds,
                     ts.Milliseconds / 10);
                 txtConsole.Text = elapsedTime;
-                if (mRecordDict != null)
+                if (dict != null)
                 {
                     setLayerAttributes();
                     PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);

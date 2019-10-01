@@ -21,6 +21,7 @@ namespace EXIFGeotagger
     {
         protected string id;
         protected string photo;
+        protected string photoRename;
         protected double latitude;
         protected double longitude;
         protected double altitude;
@@ -56,6 +57,18 @@ namespace EXIFGeotagger
             set
             {
                 photo = value;
+            }
+        }
+
+        public string PhotoRename
+        {
+            get
+            {
+                return photoRename;
+            }
+            set
+            {
+                photoRename = value;
             }
         }
 
