@@ -1277,7 +1277,7 @@ namespace EXIFGeotagger //v0._1
             geotagForm.writeGeoTag += writeGeoTagCallback;
         }
 
-        public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords)
+        public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip)
         {
             ThreadUtil t = new ThreadUtil();
             //connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}", "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
@@ -1286,11 +1286,17 @@ namespace EXIFGeotagger //v0._1
             resetMinMax();
             t.setMinMax += setMinMax;
             // = t.buildQueue(inPath);
+            //t.zipReader(inPath);
+            if (zip) {
+                t.photoReader(inPath, true);
+             } else
+            {
+                t.photoReader(inPath, false);
+            }
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            //mRecordDict = await t.writeGeoTag(inPath, outPath);
+
             ConcurrentDictionary<string, Record> dict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
-            //ConcurrentDictionary<string, Record> newDict = await t.WriteGeotag(fileQueue, dict, inPath, outPath);
             TimeSpan ts = stopWatch.Elapsed;
 
             // Format and display the TimeSpan value.

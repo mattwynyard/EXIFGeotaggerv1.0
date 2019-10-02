@@ -51,6 +51,7 @@
             this.ckMirror = new System.Windows.Forms.CheckBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.btnCorrect = new System.Windows.Forms.Button();
+            this.ckZip = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // txtInputPath
@@ -211,7 +212,7 @@
             // 
             this.ckContrast.AutoSize = true;
             this.ckContrast.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ckContrast.Location = new System.Drawing.Point(636, 64);
+            this.ckContrast.Location = new System.Drawing.Point(665, 65);
             this.ckContrast.Name = "ckContrast";
             this.ckContrast.Size = new System.Drawing.Size(140, 20);
             this.ckContrast.TabIndex = 16;
@@ -223,7 +224,7 @@
             // 
             this.lbCorrection.AutoSize = true;
             this.lbCorrection.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbCorrection.Location = new System.Drawing.Point(642, 37);
+            this.lbCorrection.Location = new System.Drawing.Point(671, 38);
             this.lbCorrection.Name = "lbCorrection";
             this.lbCorrection.Size = new System.Drawing.Size(122, 18);
             this.lbCorrection.TabIndex = 17;
@@ -233,7 +234,7 @@
             // 
             this.ckGamma.AutoSize = true;
             this.ckGamma.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ckGamma.Location = new System.Drawing.Point(636, 92);
+            this.ckGamma.Location = new System.Drawing.Point(665, 93);
             this.ckGamma.Name = "ckGamma";
             this.ckGamma.Size = new System.Drawing.Size(139, 20);
             this.ckGamma.TabIndex = 18;
@@ -245,7 +246,7 @@
             // 
             this.ckMirror.AutoSize = true;
             this.ckMirror.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ckMirror.Location = new System.Drawing.Point(636, 118);
+            this.ckMirror.Location = new System.Drawing.Point(665, 119);
             this.ckMirror.Name = "ckMirror";
             this.ckMirror.Size = new System.Drawing.Size(161, 20);
             this.ckMirror.TabIndex = 19;
@@ -263,7 +264,7 @@
             // 
             // btnCorrect
             // 
-            this.btnCorrect.Location = new System.Drawing.Point(636, 213);
+            this.btnCorrect.Location = new System.Drawing.Point(665, 153);
             this.btnCorrect.Name = "btnCorrect";
             this.btnCorrect.Size = new System.Drawing.Size(96, 41);
             this.btnCorrect.TabIndex = 21;
@@ -271,11 +272,24 @@
             this.btnCorrect.UseVisualStyleBackColor = true;
             this.btnCorrect.Click += new System.EventHandler(this.BtnCorrect_Click);
             // 
+            // ckZip
+            // 
+            this.ckZip.AutoSize = true;
+            this.ckZip.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ckZip.Location = new System.Drawing.Point(552, 116);
+            this.ckZip.Name = "ckZip";
+            this.ckZip.Size = new System.Drawing.Size(94, 20);
+            this.ckZip.TabIndex = 23;
+            this.ckZip.Text = "Zip Archive";
+            this.ckZip.UseVisualStyleBackColor = true;
+            this.ckZip.CheckStateChanged += new System.EventHandler(this.CkZip_CheckedStateChanged);
+            // 
             // GeotagForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(845, 394);
+            this.Controls.Add(this.ckZip);
             this.Controls.Add(this.btnCorrect);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.ckMirror);
@@ -331,5 +345,6 @@
         private System.Windows.Forms.CheckBox ckMirror;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button btnCorrect;
+        private System.Windows.Forms.CheckBox ckZip;
     }
 }

@@ -25,11 +25,12 @@ namespace EXIFGeotagger //v0._1
         private OpenFileDialog openFileDialog;
         private string filter;
         public event writeGeoTagDelegate writeGeoTag;
-        public delegate void writeGeoTagDelegate(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords);
+        public delegate void writeGeoTagDelegate(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip);
 
         private Boolean mMirror;
         private Boolean mGamma;
         private Boolean mContrast;
+        private Boolean mZip;
 
         public GeotagForm()
         {
@@ -128,7 +129,7 @@ namespace EXIFGeotagger //v0._1
         {
             Close();
             mParent.BringToFront();;
-            writeGeoTag(mDataPath, mInPath, mOutPath, mLayer, mColor, mAllRecords);
+            writeGeoTag(mDataPath, mInPath, mOutPath, mLayer, mColor, mAllRecords, mZip);
         }
 
         private void txtDataSource_TextChanged(object sender, EventArgs e)
@@ -175,6 +176,18 @@ namespace EXIFGeotagger //v0._1
             else
             {
                 mMirror = false;
+            }
+        }
+
+        private void CkZip_CheckedStateChanged(object sender, EventArgs e)
+        {
+            if (ckZip.Checked)
+            {
+                mZip = true;
+            }
+            else
+            {
+                mZip = false;
             }
         }
 
