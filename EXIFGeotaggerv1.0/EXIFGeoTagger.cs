@@ -1285,12 +1285,12 @@ namespace EXIFGeotagger //v0._1
             //connection.Open();
             resetMinMax();
             t.setMinMax += setMinMax;
-            fileQueue = t.buildQueue(inPath);
+            // = t.buildQueue(inPath);
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             //mRecordDict = await t.writeGeoTag(inPath, outPath);
             ConcurrentDictionary<string, Record> dict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
-            ConcurrentDictionary<string, Record> newDict = await t.WriteGeotag(fileQueue, dict, inPath, outPath);
+            //ConcurrentDictionary<string, Record> newDict = await t.WriteGeotag(fileQueue, dict, inPath, outPath);
             TimeSpan ts = stopWatch.Elapsed;
 
             // Format and display the TimeSpan value.
