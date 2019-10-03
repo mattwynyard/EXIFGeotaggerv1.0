@@ -3,11 +3,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using Emgu.CV.Structure;
 using System.Drawing.Imaging;
@@ -118,10 +114,8 @@ namespace EXIFGeotagger
         {
             int stride = 0;
             Bitmap bmp = new Bitmap(image);
-
             Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
             BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadWrite, bmp.PixelFormat);
-
             PixelFormat pf = bmp.PixelFormat;
             if (pf == PixelFormat.Format32bppArgb)
             {
@@ -131,13 +125,10 @@ namespace EXIFGeotagger
             {
                 stride = bmp.Width * 3;
             }
-
             Image<Bgr, byte> cvImage = new Image<Bgr, byte>(bmp.Width, bmp.Height, stride, (IntPtr)bmpData.Scan0);
-
             bmp.UnlockBits(bmpData);
             //bmp.Dispose();
             return cvImage.Mat;
         }
-
     }
 }

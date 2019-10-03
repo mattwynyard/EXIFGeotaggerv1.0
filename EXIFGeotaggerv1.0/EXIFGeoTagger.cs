@@ -8,26 +8,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Data.OleDb;
-using System.Data.SqlClient;
-using System.ComponentModel;
 using System.Data;
 using GMap.NET;
-
 using GMap.NET.MapProviders;
 using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
-using System.Threading;
 using Amazon;
 using Amazon.S3.Model;
-using System.Net;
 using System.Collections.Concurrent;
 using ShapeFile;
-using System.Globalization;
 using System.Diagnostics;
-using System.Windows;
-using System.Windows.Input;
 using System.Text.RegularExpressions;
 using OpenCV;
 
@@ -1287,16 +1278,24 @@ namespace EXIFGeotagger //v0._1
             t.setMinMax += setMinMax;
             // = t.buildQueue(inPath);
             //t.zipReader(inPath);
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             if (zip) {
                 t.photoReader(inPath, true);
              } else
             {
                 t.photoReader(inPath, false);
             }
-            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Stop();
+            //TimeSpan ts = stopWatch.Elapsed;
+            //elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            //    ts.Hours, ts.Minutes, ts.Seconds,
+            //        ts.Milliseconds / 10);
+            //Stopwatch stopWatch = new Stopwatch();
+            //stopWatch.Start();
             stopWatch.Start();
-
             ConcurrentDictionary<string, Record> dict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
+            stopWatch.Stop();
             TimeSpan ts = stopWatch.Elapsed;
 
             // Format and display the TimeSpan value.

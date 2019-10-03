@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -25,6 +26,8 @@ namespace EXIFGeotagger
         public int Length { get; set; }
 
         public Record Record { get; set; }
+
+        public ZipArchiveEntry Entry { get; set; }
 
         public int QueueSize { get; set; }
 

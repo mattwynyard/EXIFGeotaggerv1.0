@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.OleDb;
-using System.Data.SqlClient;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +14,6 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 using GMap.NET;
 
-using GMap.NET.MapProviders;
 using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
 
@@ -42,6 +38,7 @@ namespace EXIFGeotagger
         int id;
         private CancellationTokenSource cts;
         private ConcurrentDictionary<string, string> photoDict;
+        private ConcurrentDictionary<string, object[]> photoZipDict;
         private Boolean geotagging = false;
         private Boolean mZip;
 
@@ -69,15 +66,31 @@ namespace EXIFGeotagger
             return fileQueue;
         }
 
+        //public void ProcessDirectory(string targetDirectory)
+        //{
+        //    // Process the list of files found in the directory.
+        //    string[] fileEntries = Directory.GetFiles(targetDirectory);
+        //    foreach (string fileName in fileEntries)
+        //        ProcessFile(fileName);
+
+        //    // Recurse into subdirectories of this directory.
+        //    string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+        //    foreach (string subdirectory in subdirectoryEntries)
+        //        ProcessDirectory(subdirectory);
+        //}
+
         public void photoReader(string path, Boolean zip)
         {
-            photoDict = new ConcurrentDictionary<string, string>();
+            //String files = 
+            //photoDict = new ConcurrentDictionary<string, string>();
             mZip = zip;
             Task build = Task.Factory.StartNew(() =>
             {
                 if (zip)
                 {
-                    string[] files = Directory.GetFiles(path);
+                    //photoZipDict = new ConcurrentDictionary<string, object[]>();
+                    photoDict = new ConcurrentDictionary<string, string>();
+                    string[] files = Directory.GetFiles(path, "*.zip", SearchOption.AllDirectories);
                     foreach (var file in files)
                     {
                         String f = file;
@@ -95,6 +108,8 @@ namespace EXIFGeotagger
                                     {
                                         string key = s.Substring(0, s.Length - 4);
                                         photoDict.TryAdd(key, file);
+                                        //object[] o = { file, entry};
+                                        //photoZipDict.TryAdd(key, o);
                                     }
                                 }
                             }
@@ -103,7 +118,8 @@ namespace EXIFGeotagger
                 }
                 else
                 {
-                    string[] files = Directory.GetFiles(path);
+                    photoDict = new ConcurrentDictionary<string, string>();
+                    string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
                     foreach (var file in files)
                     {
                         string key = Path.GetFileNameWithoutExtension(file);
@@ -146,6 +162,7 @@ namespace EXIFGeotagger
             int noGeomark = 0;
             int noPhoto = 0;
             int geoTagCount = 0;
+            int dictCount = 0;
 
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                 "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
@@ -212,15 +229,30 @@ namespace EXIFGeotagger
                     }
                     try
                     {
-                       
-                        string folder;
-                        Boolean found = photoDict.TryRemove(item.PhotoName, out folder);
                         ThreadInfo threadInfo = new ThreadInfo();
-                        threadInfo.Folder = folder;
-                        //if (File.Exists(path))
+                        Boolean found;
+                        //object[] entry = null;
+                        string folder = null;
+                        //if (mZip) {                           
+                            //found = photoZipDict.TryRemove(item.PhotoName, out entry);
+                           // dictCount = photoZipDict.Count;
+                        //} else
                         //{
-                        if (found) {
-
+                            
+                            found = photoDict.TryRemove(item.PhotoName, out folder);                         
+                            dictCount = photoDict.Count;
+                        //}
+                        if (found)
+                        {
+                            //if (mZip)
+                            //{
+                                //threadInfo.Folder = (string)entry[0];
+                                //threadInfo.Entry = (ZipArchiveEntry)entry[1];
+                            //} else
+                            //{
+                                threadInfo.Folder = folder;
+                            //}
+                            
                             threadInfo.Zip = mZip;
                             threadInfo.OutPath = outPath;
                             threadInfo.Record = item;
@@ -268,7 +300,7 @@ namespace EXIFGeotagger
                     {
                         double percent = ((double)count / length) * 100;
                         int percentInt = (int)percent;
-                        int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, geoTagCount, noPhoto };
+                        int[] values = { percentInt, count, length, queue.Count, dict.Count, dictCount, geoTagCount, noPhoto };
                         object a = (object)values;
                         progressForm.Invoke(new MethodInvoker(() =>
                         {
@@ -596,42 +628,70 @@ namespace EXIFGeotagger
             int length = threadInfo.Length;
             string path;
             Bitmap bmp = null;
+            PropertyItem[] propItems = null;
+            PropertyItem propItemLatRef;
+            PropertyItem propItemLat;
+            PropertyItem propItemLonRef;
+            PropertyItem propItemLon;
+            PropertyItem propItemAltRef;
+            PropertyItem propItemAlt;
+            PropertyItem propItemSat;
+            PropertyItem propItemDir;
+            PropertyItem propItemVel;
+            PropertyItem propItemPDop;
+            PropertyItem propItemDateTime;
             try
             {
                 if (!threadInfo.Zip)
                 {
                     bmp = new Bitmap(file);
+                    propItems = bmp.PropertyItems;
+                    propItemLatRef = bmp.GetPropertyItem(0x0001);
+                    propItemLat = bmp.GetPropertyItem(0x0002);
+                    propItemLonRef = bmp.GetPropertyItem(0x0003);
+                    propItemLon = bmp.GetPropertyItem(0x0004);
+                    propItemAltRef = bmp.GetPropertyItem(0x0005);
+                    propItemAlt = bmp.GetPropertyItem(0x0006);
+                    propItemSat = bmp.GetPropertyItem(0x0008);
+                    propItemDir = bmp.GetPropertyItem(0x0011);
+                    propItemVel = bmp.GetPropertyItem(0x000D);
+                    propItemPDop = bmp.GetPropertyItem(0x000B);
+                    propItemDateTime = bmp.GetPropertyItem(0x0132);
                 }
                 else
                 {
                     using (FileStream zipToOpen = new FileStream(threadInfo.Folder, FileMode.Open))
                     {
+                        String[] tokens = zipToOpen.Name.Split('\\');
+                        string s = tokens[tokens.Length - 1];
+                        string key = s.Substring(0, s.Length - 4);
                         using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
                         {
+                            //string entry = s.Substring(0, s.Length - 4) + "/" + threadInfo.Photo + ".jpg";
                             string entry = threadInfo.Photo + ".jpg";
                             ZipArchiveEntry zip = archive.GetEntry(entry);
-                            //ZipArchiveEntry entry = archive.GetEntry(entry);
-                            //a.Name.Contains(entry));
+                            //ZipArchiveEntry zip = threadInfo.Entry;
                             Stream stream = zip.Open();
                             Image img = Image.FromStream(stream);
+                            propItems = img.PropertyItems;
+                            propItemLatRef = img.GetPropertyItem(0x0001);
+                            propItemLat = img.GetPropertyItem(0x0002);
+                            propItemLonRef = img.GetPropertyItem(0x0003);
+                            propItemLon = img.GetPropertyItem(0x0004);
+                            propItemAltRef = img.GetPropertyItem(0x0005);
+                            propItemAlt = img.GetPropertyItem(0x0006);
+                            propItemSat = img.GetPropertyItem(0x0008);
+                            propItemDir = img.GetPropertyItem(0x0011);
+                            propItemVel = img.GetPropertyItem(0x000D);
+                            propItemPDop = img.GetPropertyItem(0x000B);
+                            propItemDateTime = img.GetPropertyItem(0x0132);
+                            bmp = new Bitmap(img);
+                            img.Dispose();
                             stream.Close();
-                            img.Save(outPath + "\\" + threadInfo.Photo + ".jpg");
+                            //img.Save(outPath + "\\" + threadInfo.Photo + ".jpg");
                         }
                     }
                 }
-
-                PropertyItem[] propItems = bmp.PropertyItems;
-                PropertyItem propItemLatRef = bmp.GetPropertyItem(0x0001);
-                PropertyItem propItemLat = bmp.GetPropertyItem(0x0002);
-                PropertyItem propItemLonRef = bmp.GetPropertyItem(0x0003);
-                PropertyItem propItemLon = bmp.GetPropertyItem(0x0004);
-                PropertyItem propItemAltRef = bmp.GetPropertyItem(0x0005);
-                PropertyItem propItemAlt = bmp.GetPropertyItem(0x0006);
-                PropertyItem propItemSat = bmp.GetPropertyItem(0x0008);
-                PropertyItem propItemDir = bmp.GetPropertyItem(0x0011);
-                PropertyItem propItemVel = bmp.GetPropertyItem(0x000D);
-                PropertyItem propItemPDop = bmp.GetPropertyItem(0x000B);
-                PropertyItem propItemDateTime = bmp.GetPropertyItem(0x0132);
                 RecordUtil RecordUtil = new RecordUtil(r);
                 propItemLat = RecordUtil.getEXIFCoordinate("latitude", propItemLat);
                 propItemLon = RecordUtil.getEXIFCoordinate("longitude", propItemLon);
@@ -742,7 +802,6 @@ namespace EXIFGeotagger
 
         private DateTime byteToDate(byte[] b)
         {
-
             try
             {
                 int year = byteToDateInt(b, 0, 4);
@@ -757,8 +816,6 @@ namespace EXIFGeotagger
             {
                 return new DateTime();
             }
-            
-
         }
         private int byteToDateInt(byte[] b, int offset, int len)
         {
