@@ -15,6 +15,10 @@ namespace EXIFGeotagger
 
         }
 
+        public string Photo { get; set; }
+
+        public string Folder { get; set; }
+
         public string File { get; set; }
         public string OutPath { get; set; }
 
@@ -23,6 +27,8 @@ namespace EXIFGeotagger
         public Record Record { get; set; }
 
         public int QueueSize { get; set; }
+
+        public Boolean Zip { get; set; }
 
         public IProgress<int> ProgressHandler { get; set; }
 
