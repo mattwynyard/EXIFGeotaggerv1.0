@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -32,6 +33,28 @@ namespace EXIFGeotagger
         public int QueueSize { get; set; }
 
         public Boolean Zip { get; set; }
+
+        public PropertyItem propItemLatRef { get; set; }
+
+        public PropertyItem propItemLat { get; set; }
+
+        public PropertyItem propItemLonRef { get; set; }
+
+        public PropertyItem propItemLon { get; set; }
+
+        public PropertyItem propItemAltRef { get; set; }
+
+        public PropertyItem propItemAlt { get; set; }
+
+        public PropertyItem propItemSat { get; set; }
+
+        public PropertyItem propItemDir { get; set; }
+
+        public PropertyItem propItemVel { get; set; }
+
+        public PropertyItem propItemPDop { get; set; }
+
+        public PropertyItem propItemDateTime { get; set; }
 
         public IProgress<int> ProgressHandler { get; set; }
 
