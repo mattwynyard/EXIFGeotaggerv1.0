@@ -32,7 +32,7 @@ namespace EXIFGeotagger
         private OleDbConnection connection;
         private static readonly Object obj = new Object();
         private ProgressForm progressForm;
-        int geoTagCount;
+        int geoTagCount = 0;
         int errorCount;
         int stationaryCount;
         int id;
@@ -151,9 +151,10 @@ namespace EXIFGeotagger
             int length = 0;
             int count = 0;
             int noGeomark = 0;
-            int noPhoto = 0;
-            int geoTagCount = 0;
+           
             int dictCount = 0;
+            int queueCount = 0;
+            int noRecord = 0;
 
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                 "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
@@ -178,8 +179,7 @@ namespace EXIFGeotagger
             connection.Open();
             length = Convert.ToInt32(commandLength.ExecuteScalar());
             commandLength.Dispose();
-            int queueCount = 0;
-            int noRecord = 0;
+           
             string[] files = Directory.GetFiles(photoPath);
  
             Task producer = Task.Factory.StartNew(async () =>
@@ -240,13 +240,16 @@ namespace EXIFGeotagger
                                 }
                                 //threadInfo.File = path;
                                 Record newRecord = null;
-                                Task geotagQueue = Task.Factory.StartNew(() =>
+                                //Task geotagQueue = Task.Factory.StartNew(() =>
+                                //{
+                                Parallel.Invoke(() =>
                                 {
                                     newRecord = ProcessFile(threadInfo);
-                                    dict.TryAdd(item.PhotoName, item);
-                                    geoTagCount++;
                                 });
-                                Task.WaitAll(geotagQueue);
+                                    dict.TryAdd(item.PhotoName, item);
+                                    //geoTagCount++;
+                                //});
+                                //Task.WaitAll(geotagQueue);
                             }
                             else
                             {
@@ -258,12 +261,11 @@ namespace EXIFGeotagger
                         }
                         else
                         {
-                            geotagging = false;
+                            
                             lock (obj)
                             {
                                 geotagging = false;
                                 noPhotoDict.TryAdd(item.PhotoName, item);
-
                             }
                             Thread.Sleep(1);
                         }
@@ -303,10 +305,14 @@ namespace EXIFGeotagger
                     processImage(item);
 
                 }
-                //Task.WaitAll(consumeBitmaps);
+                if (queue.IsCompleted && bitmapQueue.Count == 0)
+                {
+                    bitmapQueue.CompleteAdding();
+                }
             });
 
-            await Task.WhenAll(producer, consumer, consumeBitmaps);
+            await Task.WhenAll(producer, consumer);
+            await Task.WhenAll(consumeBitmaps);
             progressForm.Close();
             return dict;
         }
@@ -690,7 +696,6 @@ namespace EXIFGeotagger
                             bmp = new Bitmap(img);
                             img.Dispose();
                             stream.Close();
-                            //img.Save(outPath + "\\" + threadInfo.Photo + ".jpg");
                         }
                     }
                 }
@@ -701,10 +706,7 @@ namespace EXIFGeotagger
             }
             object[] o = { threadInfo, bmp };
             bitmapQueue.Add(o);
-            if (queue.IsCompleted && photoDict.Count == 0)
-            {
-                bitmapQueue.CompleteAdding();
-            }
+            
             return r;
         }
 
@@ -765,14 +767,15 @@ namespace EXIFGeotagger
                 image.SetPropertyItem(propItemDateTime);
 
                 int totalCount;
+                
+                //totalCount = geoTagCount + errorCount + stationaryCount;
+
+                await saveFile(image, threadInfo.OutPath);
                 lock (obj)
                 {
                     geoTagCount++;
 
                 }
-                totalCount = geoTagCount + errorCount + stationaryCount;
-
-                await saveFile(image, threadInfo.OutPath);
                 image.Dispose();
                 image = null;
             }
