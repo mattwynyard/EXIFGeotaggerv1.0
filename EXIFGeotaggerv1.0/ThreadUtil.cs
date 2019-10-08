@@ -2,10 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.OleDb;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +47,7 @@ namespace EXIFGeotagger
         private ConcurrentDictionary<string, Record> noPhotoDict;
         private Boolean geotagging = false;
         private Boolean mZip;
+        private int tagRate = -1;
 
 
         /// <summary>
@@ -112,7 +115,7 @@ namespace EXIFGeotagger
                     {
                         string key = Path.GetFileNameWithoutExtension(file);
                         
-                        photoDict.TryAdd(key, path);
+                        photoDict.TryAdd(key, file);
                     }
                 }
             });
@@ -136,6 +139,8 @@ namespace EXIFGeotagger
             var progressHandler1 = new Progress<object>(a =>
             {
                 int[] values = (int[])a;
+                double seconds = values[8] / 1000;
+                double rate = 1 / seconds;
                 progressForm.ProgressValue = values[0];
                 progressForm.Message = "Database read, please wait... " + values[0].ToString() + "% completed\n" +
                 values[1] + " of " + values[2] + " records processed\n" +
@@ -143,8 +148,8 @@ namespace EXIFGeotagger
                 "Record Dictionary size: " + values[4] + "\n" +
                 "Photo Dictionary size: " + values[5] + "\n" +
                 "Bitmap Queue size: " + values[6] + "\n" +
-                "Geotag count: " + values[7] + "\n" +
-                "No photo: " + values[8];
+                "Geotag count: " + values[7] +  "......Processing " + rate.ToString() + " items/sec" + "\n" +
+                "No photo: " + values[9];
 
             });
             var progressValue = progressHandler1 as IProgress<object>;
@@ -211,91 +216,97 @@ namespace EXIFGeotagger
             });
 
             Task consumer = Task.Factory.StartNew(() =>
-            {                
+            {
                 foreach (var item in queue.GetConsumingEnumerable())
                 {
-                    if (token.IsCancellationRequested)
-                    {
-                        token.ThrowIfCancellationRequested();
-                    }
-                    try
-                    {
-                        ThreadInfo threadInfo = new ThreadInfo();
-                        Boolean found;
-                        string folder = null;                           
-                        found = photoDict.TryRemove(item.PhotoName, out folder);                         
-                        dictCount = photoDict.Count;
-                        if (found)
-                        {                           
-                            threadInfo.Folder = folder;                           
-                            threadInfo.Zip = mZip;
-                            threadInfo.OutPath = outPath;
-                            threadInfo.Record = item;
-                            threadInfo.Photo = item.PhotoName;
-                            if (threadInfo.Record.GeoMark)
-                            {
-                                if (!geotagging)
-                                {
-                                    geotagging = true;
-                                }
+                //Parallel.ForEach(queue.GetConsumingEnumerable(), item =>
+               //{
+                   if (token.IsCancellationRequested)
+                   {
+                       token.ThrowIfCancellationRequested();
+                   }
+                   try
+                   {
+                       ThreadInfo threadInfo = new ThreadInfo();
+                       Boolean found;
+                       string folder = null;
+                       found = photoDict.TryRemove(item.PhotoName, out folder);
+                       dictCount = photoDict.Count;
+                       if (found)
+                       {
+                           Stopwatch stopWatch = new Stopwatch();
+                           stopWatch.Start();
+                           threadInfo.Timer = stopWatch;
+                           threadInfo.Folder = folder;
+                           threadInfo.Zip = mZip;
+                           threadInfo.OutPath = outPath;
+                           threadInfo.Record = item;
+                           threadInfo.Photo = item.PhotoName;
+                           if (threadInfo.Record.GeoMark)
+                           {
+                               if (!geotagging)
+                               {
+                                   geotagging = true;
+                               }
                                 //threadInfo.File = path;
                                 Record newRecord = null;
                                 //Task geotagQueue = Task.Factory.StartNew(() =>
                                 //{
-                                Parallel.Invoke(() =>
-                                {
-                                    newRecord = ProcessFile(threadInfo);
-                                });
-                                    dict.TryAdd(item.PhotoName, item);
-                                    //geoTagCount++;
+                                //Parallel.Invoke(() =>
+                                //{
+                                newRecord = ProcessFile(threadInfo);
+                                dict.TryAdd(item.PhotoName, item);
+                                //});
+
+                                //geoTagCount++;
                                 //});
                                 //Task.WaitAll(geotagQueue);
-                            }
-                            else
-                            {
-                                lock (obj)
-                                {
-                                    noGeomark++;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            
-                            lock (obj)
-                            {
-                                geotagging = false;
-                                noPhotoDict.TryAdd(item.PhotoName, item);
-                            }
-                            Thread.Sleep(1);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        String s = ex.Message;
-                    }
-                    lock (obj)
-                    {
-                        count++;
-                    }
-                    Task progress = Task.Factory.StartNew(() =>
-                    {
-                        double percent = ((double)count / length) * 100;
-                        int percentInt = (int)percent;
-                        int[] values = { percentInt, count, length, queue.Count, dict.Count, dictCount, bitmapQueue.Count, geoTagCount, noPhotoDict.Count };
-                        object a = (object)values;
-                        progressForm.Invoke(new MethodInvoker(() =>
-                        {
-                            if (progressValue != null)
-                            {
-                                progressValue.Report(a);
+                           }
+                           else
+                           {
+                               lock (obj)
+                               {
+                                   noGeomark++;
+                               }
+                           }
+                       }
+                       else
+                       {
 
-                            }
-                        }));
+                           lock (obj)
+                           {
+                               geotagging = false;
+                               noPhotoDict.TryAdd(item.PhotoName, item);
+                           }
+                           Thread.Sleep(1);
+                       }
+                   }
+                   catch (Exception ex)
+                   {
+                       String s = ex.Message;
+                   }
+                   lock (obj)
+                   {
+                       count++;
+                   }
+                   Task progress = Task.Factory.StartNew(() =>
+                   {
+                       double percent = ((double)count / length) * 100;
+                       int percentInt = (int)percent;
+                       int[] values = { percentInt, count, length, queue.Count, dict.Count, dictCount, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
+                       object a = (object)values;
+                       progressForm.Invoke(new MethodInvoker(() =>
+                       {
+                           if (progressValue != null)
+                           {
+                               progressValue.Report(a);
 
-                    });
-                    Task.WaitAll(progress);
-                }
+                           }
+                       }));
+
+                   });
+                   Task.WaitAll(progress);
+               }
             }, cts.Token);
 
             Task consumeBitmaps = Task.Factory.StartNew(() =>
@@ -619,7 +630,7 @@ namespace EXIFGeotagger
         {
             ThreadInfo threadInfo = a as ThreadInfo;
             Record r = threadInfo.Record;
-            string file = threadInfo.Folder + "\\" + threadInfo.Photo + ".jpg";
+            //string file = threadInfo.Folder + "\\" + threadInfo.Photo + ".jpg";
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
             string path;
@@ -634,25 +645,28 @@ namespace EXIFGeotagger
 
             r.PhotoName = photoRename; //new photo name 
             string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
-            //OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
-
-            //commandGeoTag.ExecuteNonQuery();
+            OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
+            
             path = outPath + "\\" + photoRename + ".jpg";
+            string uncPath = GetUNCPath(path);
             string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
-            //OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
-            //commandPath.ExecuteNonQuery();
-            path = outPath + "\\" + photoRename + ".jpg";
-            r.Path = path;
-            threadInfo.OutPath = path;
-            setMinMax(r.Latitude, r.Longitude);
-            //Task consumer = Task.Factory.StartNew(() => processImage(threadInfo));
-            //processImage(threadInfo);
+            OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+            //try
             //{
+                //commandGeoTag.ExecuteNonQuery();
+                //commandPath.ExecuteNonQuery();
+            //} catch (Exception ex)
+            //{
+
+            //}
+            r.Path = uncPath;
+            threadInfo.OutPath = uncPath;
+            setMinMax(r.Latitude, r.Longitude);
             try
             {
                 if (!threadInfo.Zip)
                 {
-                    bmp = new Bitmap(file);
+                    bmp = new Bitmap(threadInfo.Folder);
                     propItems = bmp.PropertyItems;
                     threadInfo.propItemLatRef = bmp.GetPropertyItem(0x0001);
                     threadInfo.propItemLat = bmp.GetPropertyItem(0x0002);
@@ -710,6 +724,11 @@ namespace EXIFGeotagger
             return r;
         }
 
+        //private async void updateDatabase(OleDbCommand command)
+        //{
+        //    await int rows = command.ExecuteNonQuery();
+        //}
+
         private async void processImage(object[] item)
         {
             try {
@@ -719,7 +738,6 @@ namespace EXIFGeotagger
                 } else {
                     //Thread.Sleep(10);
                 }
-
                 ThreadInfo threadInfo = item[0] as ThreadInfo;
                 Bitmap bmp = item[1] as Bitmap;
                 //Bitmap bmp = null;
@@ -766,13 +784,14 @@ namespace EXIFGeotagger
                 image.SetPropertyItem(propItemSat);
                 image.SetPropertyItem(propItemDateTime);
 
-                int totalCount;
-                
-                //totalCount = geoTagCount + errorCount + stationaryCount;
-
                 await saveFile(image, threadInfo.OutPath);
+                Stopwatch sw = threadInfo.Timer;
+                sw.Stop();
+                TimeSpan ts = sw.Elapsed;
+                
                 lock (obj)
                 {
+                    tagRate = (ts.Seconds * 1000) + ts.Milliseconds;
                     geoTagCount++;
 
                 }
@@ -785,7 +804,34 @@ namespace EXIFGeotagger
         }
     }
 
-    private async void incrementGeoTagError(object a)
+    [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern int WNetGetConnection([MarshalAs(UnmanagedType.LPTStr)] string localName,
+        [MarshalAs(UnmanagedType.LPTStr)] StringBuilder remoteName,
+    ref int length);
+        public static string GetUNCPath(string originalPath)
+        {
+            StringBuilder sb = new StringBuilder(512);
+            int size = sb.Capacity;
+
+            if (originalPath.Length > 2 && originalPath[1] == ':')
+            {
+                char c = originalPath[0];
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+                {
+                    int error = WNetGetConnection(originalPath.Substring(0, 2), sb, ref size);
+                    if (error == 0)
+                    {
+                        DirectoryInfo dir = new DirectoryInfo(originalPath);
+                        string path = Path.GetFullPath(originalPath).Substring(Path.GetPathRoot(originalPath).Length);
+                        return Path.Combine(sb.ToString().TrimEnd(), path);
+                    }
+                }
+            }
+
+            return originalPath;
+        }
+
+        private async void incrementGeoTagError(object a)
         {
             string s = a as string;
             await Task.Run(() =>

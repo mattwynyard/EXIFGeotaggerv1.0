@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO.Compression;
 using System.Linq;
@@ -33,6 +34,8 @@ namespace EXIFGeotagger
         public int QueueSize { get; set; }
 
         public Boolean Zip { get; set; }
+
+        public Stopwatch Timer { get; set; }
 
         public PropertyItem propItemLatRef { get; set; }
 
