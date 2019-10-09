@@ -49,6 +49,8 @@ namespace EXIFGeotagger
         private Boolean mZip;
         private int tagRate = -1;
 
+        private static ManualResetEvent mre = new ManualResetEvent(false);
+
 
         /// <summary>
         /// Default constructor
@@ -231,7 +233,7 @@ namespace EXIFGeotagger
                        Boolean found;
                        string folder = null;
                        found = photoDict.TryRemove(item.PhotoName, out folder);
-                       dictCount = photoDict.Count;
+                       //dictCount = photoDict.Count;
                        if (found)
                        {
                            Stopwatch stopWatch = new Stopwatch();
@@ -293,7 +295,7 @@ namespace EXIFGeotagger
                    {
                        double percent = ((double)count / length) * 100;
                        int percentInt = (int)percent;
-                       int[] values = { percentInt, count, length, queue.Count, dict.Count, dictCount, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
+                       int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
                        object a = (object)values;
                        progressForm.Invoke(new MethodInvoker(() =>
                        {
@@ -314,12 +316,11 @@ namespace EXIFGeotagger
                 foreach (var item in bitmapQueue.GetConsumingEnumerable())
                 {
                     processImage(item);
-
-                }
-                if (queue.IsCompleted && bitmapQueue.Count == 0)
-                {
-                    bitmapQueue.CompleteAdding();
-                }
+                    if (queue.IsCompleted && bitmapQueue.Count == 0)
+                    {
+                        bitmapQueue.CompleteAdding();
+                    }
+                }                
             });
 
             await Task.WhenAll(producer, consumer);
@@ -689,7 +690,6 @@ namespace EXIFGeotagger
                         string key = s.Substring(0, s.Length - 4);
                         using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Read))
                         {
-                            //string entry = s.Substring(0, s.Length - 4) + "/" + threadInfo.Photo + ".jpg";
                             string entry = threadInfo.Photo + ".jpg";
                             ZipArchiveEntry zip = archive.GetEntry(entry);
                             //ZipArchiveEntry zip = threadInfo.Entry;
@@ -720,7 +720,7 @@ namespace EXIFGeotagger
             }
             object[] o = { threadInfo, bmp };
             bitmapQueue.Add(o);
-            
+            mre.Set();
             return r;
         }
 
@@ -732,12 +732,12 @@ namespace EXIFGeotagger
         private async void processImage(object[] item)
         {
             try {
-                if (bitmapQueue.Count < 2)
+                if (bitmapQueue.Count < 1)
                 {
-                    Thread.Sleep(5000);
-                } else {
-                    //Thread.Sleep(10);
+                    mre.Reset();
                 }
+                    //Thread.Sleep(5000);
+                mre.WaitOne();
                 ThreadInfo threadInfo = item[0] as ThreadInfo;
                 Bitmap bmp = item[1] as Bitmap;
                 //Bitmap bmp = null;
@@ -785,15 +785,10 @@ namespace EXIFGeotagger
                 image.SetPropertyItem(propItemDateTime);
 
                 await saveFile(image, threadInfo.OutPath);
-                Stopwatch sw = threadInfo.Timer;
-                sw.Stop();
-                TimeSpan ts = sw.Elapsed;
                 
                 lock (obj)
                 {
-                    tagRate = (ts.Seconds * 1000) + ts.Milliseconds;
                     geoTagCount++;
-
                 }
                 image.Dispose();
                 image = null;
