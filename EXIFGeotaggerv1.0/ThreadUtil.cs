@@ -50,6 +50,7 @@ namespace EXIFGeotagger
         private int tagRate = -1;
 
         private static ManualResetEvent mre = new ManualResetEvent(false);
+        private static ManualResetEvent producerMRE = new ManualResetEvent(false);
 
 
         /// <summary>
@@ -200,16 +201,17 @@ namespace EXIFGeotagger
                         reader.GetValues(row);
                         Record r = await buildRecord(row);
                         queue.Add(r);
-                        if (queue.Count > 25000)
-                        {
-                            if (geotagging)
-                            {
-                                Thread.Sleep(400000);
-                            } else
-                            {
-                                Thread.Sleep(25000);
-                            }                          
-                        }                       
+                        //producerMRE.Set();
+                        //if (queue.Count > 25000)
+                        //{
+                        //    if (geotagging)
+                        //    {
+                        //        Thread.Sleep(400000);
+                        //    } else
+                        //    {
+                        //        Thread.Sleep(25000);
+                        //    }                          
+                        //}                       
                     }
                     reader.Close();
                     queue.CompleteAdding();
@@ -221,9 +223,8 @@ namespace EXIFGeotagger
             {
                 foreach (var item in queue.GetConsumingEnumerable())
                 {
-                //Parallel.ForEach(queue.GetConsumingEnumerable(), item =>
-               //{
-                   if (token.IsCancellationRequested)
+                    
+                    if (token.IsCancellationRequested)
                    {
                        token.ThrowIfCancellationRequested();
                    }
@@ -250,19 +251,11 @@ namespace EXIFGeotagger
                                {
                                    geotagging = true;
                                }
-                                //threadInfo.File = path;
+                                
                                 Record newRecord = null;
-                                //Task geotagQueue = Task.Factory.StartNew(() =>
-                                //{
-                                //Parallel.Invoke(() =>
-                                //{
                                 newRecord = ProcessFile(threadInfo);
+                                //mre.Set();
                                 dict.TryAdd(item.PhotoName, item);
-                                //});
-
-                                //geoTagCount++;
-                                //});
-                                //Task.WaitAll(geotagQueue);
                            }
                            else
                            {
@@ -307,24 +300,53 @@ namespace EXIFGeotagger
                        }));
 
                    });
-                   Task.WaitAll(progress);
-               }
+                   Task.WhenAll(progress);
+                }
+                
             }, cts.Token);
 
             Task consumeBitmaps = Task.Factory.StartNew(() =>
             {
+                
                 foreach (var item in bitmapQueue.GetConsumingEnumerable())
                 {
                     processImage(item);
-                    if (queue.IsCompleted && bitmapQueue.Count == 0)
+
+
+                    //if (bitmapQueue.Count == 0)
+                    //{
+                    //    mre.Reset();
+                    //}
+                    //mre.WaitOne();
+                    if (producer.IsCompleted && consumer.IsCompleted)
                     {
-                        bitmapQueue.CompleteAdding();
+                        
                     }
-                }                
+
+                }
+
             });
 
             await Task.WhenAll(producer, consumer);
-            await Task.WhenAll(consumeBitmaps);
+            //Task.WhenAll(progress);
+            bitmapQueue.CompleteAdding();
+            Task.WhenAll(consumeBitmaps);
+            //Task progress = Task.Factory.StartNew(() =>
+            //{
+            //    double percent = ((double)count / length) * 100;
+            //    int percentInt = (int)percent;
+            //    int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
+            //    object a = (object)values;
+            //    progressForm.Invoke(new MethodInvoker(() =>
+            //    {
+            //        if (progressValue != null)
+            //        {
+            //            progressValue.Report(a);
+
+            //        }
+            //    }));
+
+            //});
             progressForm.Close();
             return dict;
         }
@@ -720,7 +742,7 @@ namespace EXIFGeotagger
             }
             object[] o = { threadInfo, bmp };
             bitmapQueue.Add(o);
-            mre.Set();
+            
             return r;
         }
 
@@ -732,12 +754,7 @@ namespace EXIFGeotagger
         private async void processImage(object[] item)
         {
             try {
-                if (bitmapQueue.Count < 1)
-                {
-                    mre.Reset();
-                }
-                    //Thread.Sleep(5000);
-                mre.WaitOne();
+                
                 ThreadInfo threadInfo = item[0] as ThreadInfo;
                 Bitmap bmp = item[1] as Bitmap;
                 //Bitmap bmp = null;
