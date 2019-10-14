@@ -1360,21 +1360,21 @@ namespace EXIFGeotagger //v0._1
             refreshUI(overlay, color.Name);
         }
 
-        public async void geoTagComplete(int geotagCount, int stationaryCount, int errorCount)
+        public void geoTagComplete(GeotagReport report)
         {
-            await Task.Run(() =>
-            {
-                string title = "Finished";
-                string message = "Geotagging complete\n" + geotagCount + " of " + "fix" + " photos geotagged\n"
-                    + "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n"
-                    + "Time Taken: " + elapsedTime + "\n";
-                MessageBoxButtons buttons = MessageBoxButtons.OK;
-                DialogResult result = MessageBox.Show(message, title, buttons);
-                if (result == DialogResult.Yes)
-                {
-                    Close();
-                }
-            });
+            //await Task.Run(() =>
+            //{
+            //    string title = "Finished";
+            //    string message = "Geotagging complete\n" + geotagCount + " of " + "fix" + " photos geotagged\n"
+            //        + "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n"
+            //        + "Time Taken: " + elapsedTime + "\n";
+            //    MessageBoxButtons buttons = MessageBoxButtons.OK;
+            //    DialogResult result = MessageBox.Show(message, title, buttons);
+            //    if (result == DialogResult.Yes)
+            //    {
+            //        Close();
+            //    }
+            //});
         }
 
         #endregion

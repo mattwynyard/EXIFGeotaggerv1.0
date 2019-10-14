@@ -37,6 +37,8 @@ namespace EXIFGeotagger
 
         public Stopwatch Timer { get; set; }
 
+        public int StartCount { get; set; }
+
         public PropertyItem propItemLatRef { get; set; }
 
         public PropertyItem propItemLat { get; set; }
