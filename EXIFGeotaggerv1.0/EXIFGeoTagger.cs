@@ -1271,9 +1271,7 @@ namespace EXIFGeotagger //v0._1
         public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip)
         {
             ThreadUtil t = new ThreadUtil();
-            //connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}", "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
-            //connection = new OleDbConnection(connectionString);
-            //connection.Open();
+            t.geoTagComplete += geoTagComplete;
             resetMinMax();
             t.setMinMax += setMinMax;
             // = t.buildQueue(inPath);
@@ -1303,37 +1301,37 @@ namespace EXIFGeotagger //v0._1
                 ts.Hours, ts.Minutes, ts.Seconds,
                 ts.Milliseconds / 10);
             txtConsole.Text = elapsedTime;
-            if (dict.Count > 0)
-            {
-                stopWatch = new Stopwatch();
-                stopWatch.Start();
-                //mRecordDict = await t.writeGeoTag(dict, fileQueue, inPath, outPath);
-                //mRecordDict = await t.writeGeoTag(inPath, outPath);
-                stopWatch.Stop();
-                // Get the elapsed time as a TimeSpan value.
-                ts = stopWatch.Elapsed;
+            //if (dict.Count > 0)
+            //{
+            //    stopWatch = new Stopwatch();
+            //    stopWatch.Start();
+            //    //mRecordDict = await t.writeGeoTag(dict, fileQueue, inPath, outPath);
+            //    //mRecordDict = await t.writeGeoTag(inPath, outPath);
+            //    stopWatch.Stop();
+            //    // Get the elapsed time as a TimeSpan value.
+            //    ts = stopWatch.Elapsed;
 
-                // Format and display the TimeSpan value.
-                elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                    ts.Hours, ts.Minutes, ts.Seconds,
-                    ts.Milliseconds / 10);
-                txtConsole.Text = elapsedTime;
-                if (dict != null)
-                {
-                    setLayerAttributes();
-                    PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
-                    PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
-                    PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
-                    PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
-                    RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
-                    qt = new QuadTree(rect);
-                    if (qt != null)
-                    {
-                        mQuadTreeDict.Add(layer, qt);
-                    }
-                    plotLayer(layer, color);
-                }
-            }
+            //    // Format and display the TimeSpan value.
+            //    elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            //        ts.Hours, ts.Minutes, ts.Seconds,
+            //        ts.Milliseconds / 10);
+            //    txtConsole.Text = elapsedTime;
+            //    if (dict != null)
+            //    {
+            //        setLayerAttributes();
+            //        PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
+            //        PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
+            //        PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
+            //        PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
+            //        RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+            //        qt = new QuadTree(rect);
+            //        if (qt != null)
+            //        {
+            //            mQuadTreeDict.Add(layer, qt);
+            //        }
+            //        plotLayer(layer, color);
+            //    }
+            //}
         }
 
         public async void readGeoTagCallback(string inPath, string layer, Color color)
@@ -1347,7 +1345,7 @@ namespace EXIFGeotagger //v0._1
             GMapOverlay overlay = new GMapOverlay(layer);
             resetMinMax();
             overlay = await t.readGeoTag(fileQueue, inPath, layer, color.Name);
-            
+
             setLayerAttributes();
             //zoomToMarkers();
             PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
@@ -1362,27 +1360,34 @@ namespace EXIFGeotagger //v0._1
 
         public void geoTagComplete(GeotagReport report)
         {
-            //await Task.Run(() =>
-            //{
-            //    string title = "Finished";
-            //    string message = "Geotagging complete\n" + geotagCount + " of " + "fix" + " photos geotagged\n"
-            //        + "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n"
-            //        + "Time Taken: " + elapsedTime + "\n";
-            //    MessageBoxButtons buttons = MessageBoxButtons.OK;
-            //    DialogResult result = MessageBox.Show(message, title, buttons);
-            //    if (result == DialogResult.Yes)
-            //    {
-            //        Close();
-            //    }
-            //});
+            Task.Run(() =>
+            {
+                elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    report.Time.Hours, report.Time.Minutes, report.Time.Seconds,
+                    report.Time.Milliseconds / 10);
+                string title = "Finished";
+                string message = "Geotagging complete\n" + report.GeotagCount + " of " + report.TotalRecords + " photos geotagged\n"
+                    + "Photos with no record: " + report.NoRecordDictionary.Count + "\n" + "Records with no photo: " + report.NoPhotoDictionary.Count + "\n"
+                    + "Number of exceptions during execution: " + report.ErrorDictionary.Count + "\n"
+                    + "Time Taken: " + elapsedTime + "\n"
+                    + "\n" + "Select OK to save log file";
+                MessageBoxButtons buttons = MessageBoxButtons.OKCancel;
+
+                DialogResult result = MessageBox.Show(new Form { TopMost = true }, message, title, buttons);
+                
+                if (result == DialogResult.Yes)
+                {
+                    Close();
+                }
+            });
         }
 
         #endregion
 
         #region Threading
-        
 
-       
+
+
 
         private void MsgBox(string title, string message, MessageBoxButtons buttons)
         {

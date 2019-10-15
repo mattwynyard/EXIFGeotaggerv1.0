@@ -17,24 +17,24 @@ using System.Data;
 namespace EXIFGeotagger
 {
     [Serializable()]
-    class Record
+    public class Record
     {
-        protected string id;
-        protected string photo;
-        protected string photoRename;
-        protected double latitude;
-        protected double longitude;
-        protected double altitude;
-        protected double bearing;
-        protected double velocity;
-        protected int satellites;
-        protected double pdop;
-        protected string inspector;
-        protected DateTime timestamp;
-        protected bool geomark;
-        protected bool geotag;
-        protected bool uploaded;
-        protected string path;
+        public string id;
+        public string photo;
+        public string photoRename;
+        public double latitude;
+        public double longitude;
+        public double altitude;
+        public double bearing;
+        public double velocity;
+        public int satellites;
+        public double pdop;
+        public string inspector;
+        public DateTime timestamp;
+        public bool geomark;
+        public bool geotag;
+        public bool uploaded;
+        public string path;
 
        
         public Record()

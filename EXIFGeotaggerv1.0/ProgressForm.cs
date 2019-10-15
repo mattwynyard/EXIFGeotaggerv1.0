@@ -14,11 +14,19 @@ namespace EXIFGeotagger //v0._1
     {
         public event cancelDelegate cancel;
         public delegate void cancelDelegate(object sender, EventArgs e);
+        private GeotagReport report;
+        public event FinishDelegate Finish;
+        public delegate void FinishDelegate();
         public ProgressForm(string label)
         {
             InitializeComponent();
             lbMessage.Text = label;
             btnOK.Enabled = false;
+        }
+
+        public void setReport(GeotagReport report)
+        {
+            this.report = report;
         }
 
         public string Message
@@ -60,6 +68,7 @@ namespace EXIFGeotagger //v0._1
 
         private void BtnOK_Click(object sender, EventArgs e)
         {
+            Finish();
             Close(); ;
         }
     }

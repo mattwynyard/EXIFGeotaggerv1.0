@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EXIFGeotagger
 {
-    class GeotagReport
+    public class GeotagReport
     {
 
         public GeotagReport()
@@ -29,5 +29,6 @@ namespace EXIFGeotagger
         public int TotalRecords { get; set; }
 
         public TimeSpan Time { get; set; }
+
     }
 }

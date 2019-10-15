@@ -47,8 +47,8 @@ namespace EXIFGeotagger
         private BlockingCollection<object[]> bitmapQueue;
         private BlockingCollection<Record> queue;
         private ConcurrentDictionary<string, Exception> errorDict;
-        private ConcurrentDictionary<string, Record> noPhotoDict;
-        private ConcurrentDictionary<string, Record> dict;
+        public ConcurrentDictionary<string, Record> noPhotoDict;
+        public ConcurrentDictionary<string, Record> dict;
         private BlockingCollection<ThreadInfo> geoTagQueue;
         private Boolean geotagging = false;
         private Boolean mZip;
@@ -58,7 +58,7 @@ namespace EXIFGeotagger
         private static ManualResetEvent producerMRE = new ManualResetEvent(false);
 
         private Stopwatch stopwatch;
-        private TimeSpan ts;
+        public TimeSpan ts;
         public GeotagReport report;
 
 
@@ -156,6 +156,7 @@ namespace EXIFGeotagger
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
+            progressForm.Finish += Finish;
             cts = new CancellationTokenSource();
             var token = cts.Token;
             var progressHandler1 = new Progress<object>(a =>
@@ -268,8 +269,7 @@ namespace EXIFGeotagger
                                if (!geotagging)
                                {
                                    geotagging = true;
-                               }
-                                
+                               }                               
                                 Record newRecord = null;
                                 newRecord = ProcessFile(threadInfo);
                                 //mre.Set();
@@ -288,9 +288,28 @@ namespace EXIFGeotagger
                            lock (obj)
                            {
                                geotagging = false;
+                              
                                noPhotoDict.TryAdd(item.PhotoName, item);
-                           }
-                           Thread.Sleep(1);
+                              
+                            }
+                            Task progress = Task.Factory.StartNew(() =>
+                            {
+                                TimeSpan ts = stopwatch.Elapsed;
+                                double percent = ((double)count / length) * 100;
+                                int percentInt = (int)percent;
+                                int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
+                                object a = (object)values;
+                                progressForm.Invoke(new MethodInvoker(() =>
+                                {
+                                    if (progressValue != null)
+                                    {
+                                        progressValue.Report(a);
+
+                                    }
+                                }));
+                            });
+
+                            Thread.Sleep(1);
                        }
                    }
                    catch (Exception ex)
@@ -304,6 +323,25 @@ namespace EXIFGeotagger
 
                 }
                 bitmapQueue.CompleteAdding();
+
+                mre.Set();
+                //updateUI(count, length, progressValue);
+                Task progress2 = Task.Factory.StartNew(() =>
+                {
+                    TimeSpan ts = stopwatch.Elapsed;
+                    double percent = ((double)count / length) * 100;
+                    int percentInt = (int)percent;
+                    int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
+                    object a = (object)values;
+                    progressForm.Invoke(new MethodInvoker(() =>
+                    {
+                        if (progressValue != null)
+                        {
+                            progressValue.Report(a);
+
+                        }
+                    }));
+                });
             }, cts.Token);
 
             Task consumeBitmaps = Task.Factory.StartNew(() =>
@@ -312,13 +350,19 @@ namespace EXIFGeotagger
                 {
                     if (!bitmapQueue.IsCompleted)
                     {
+
                         mre.WaitOne();
+                        if(bitmapQueue.IsCompleted)
+                        {
+                            break;
+                        }
                         processImage(item);
                         if (bitmapQueue.Count == 0)
                         {
                             mre.Reset();
                         }
                     }
+                    //updateUI(count, length, progressValue);
                     Task progress = Task.Factory.StartNew(() =>
                     {
                         TimeSpan ts = stopwatch.Elapsed;
@@ -355,114 +399,43 @@ namespace EXIFGeotagger
             report.ProcessedRecords = count;
             report.TotalRecords = length;
             report.Time = ts;
-
-            geoTagComplete(report);
+            progressForm.setReport(report);
+            //geoTagComplete(report);
             return dict;
         }
 
-        public async Task<ConcurrentDictionary<string, Record>> WriteGeotag(BlockingCollection<string> queue, ConcurrentDictionary<string, Record> dict, string inPath, string outPath)
+        private void updateUI(int count, int length, IProgress<object> progressValue)
         {
-            int mQueueSize = queue.Count;
-
-            progressForm = new ProgressForm("Writing geotags to photos...");
-            //string[] _files = Directory.GetFiles(inPath);
-            progressForm.Show();
-            progressForm.BringToFront();
-            progressForm.cancel += cancelImport;
-            cts = new CancellationTokenSource();
-            var token = cts.Token;
-            var progressHandler1 = new Progress<object>(a =>
+            Task progress = Task.Factory.StartNew(() =>
             {
-                int[] values = (int[])a;
-                progressForm.ProgressValue = values[0];
-                progressForm.Message = "Geotagging, please wait... " + values[0].ToString() + "% completed\n" +
-                geoTagCount + " of " + mQueueSize + " photos geotagged\n" +
-               "Photos with no geomark: " + stationaryCount + "\n" + "Photos with no gps point: " + errorCount + "\n";
-            });
-            var progressValue = progressHandler1 as IProgress<object>;
-            geoTagCount = 0;
-            errorCount = 0;
-            stationaryCount = 0;
-            ConcurrentDictionary<string, Record> newRecordDict = new ConcurrentDictionary<string, Record>();
-
-            await Task.Factory.StartNew(() =>
-            {
-                foreach (var item in queue.GetConsumingEnumerable())
+                TimeSpan ts = stopwatch.Elapsed;
+                double percent = ((double)count / length) * 100;
+                int percentInt = (int)percent;
+                int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
+                object a = (object)values;
+                progressForm.Invoke(new MethodInvoker(() =>
                 {
-                    if (token.IsCancellationRequested)
+                    if (progressValue != null)
                     {
-                        token.ThrowIfCancellationRequested();
+                        progressValue.Report(a);
+
                     }
-                    Parallel.Invoke(() =>
-                   {
-                       try
-                       {
-                           ThreadInfo threadInfo = new ThreadInfo();
-                           threadInfo.OutPath = outPath;
-                           threadInfo.File = item;
-                           string key = Path.GetFileNameWithoutExtension(item);
-                           Record value;
-                           if (dict.TryGetValue(key, out value))
-                           {
-                               threadInfo.Record = value;
-                               //threadInfo.File = outPath + "\\" + item + ".jpg";
-                               //threadInfo.File = item;
-                               //Record r = dict[item];
-                               //threadInfo.Record = r;
-
-                               if (threadInfo.Record.GeoMark)
-                               {
-                                   Record newRecord = null;
-                                   //newRecord = ProcessFile(threadInfo).Result;
-                                   newRecordDict.TryAdd(threadInfo.Record.PhotoName, threadInfo.Record);
-                                   Task.Run(() =>
-                                   {
-                                       double percent = ((double)(mQueueSize - queue.Count) / mQueueSize) * 100;
-                                       int percentInt = (int)Math.Ceiling(percent);
-                                       int[] values = { percentInt };
-                                       object a = (object)values;
-                                       progressForm.Invoke(new MethodInvoker(() =>
-                                       {
-                                           if (progressValue != null)
-                                           {
-                                               progressValue.Report(a);
-
-                                           }
-                                       }));
-                                       Thread.Sleep(10);
-                                   });
-                               }
-                               else
-                               {
-                                   object a = "nogeomark";
-                                   incrementGeoTagError(a);
-                               }
-                           }
-                           else
-                           {
-
-                           }
-                       }
-                       catch (Exception ex2)
-                       {
-                           String s = ex2.StackTrace;
-                       }
-                   });
-                }
+                }));
             });
-
-            return newRecordDict;
         }
 
+        public void Finish()
+        {
+            geoTagComplete(report);
+        }
 
-
-        /// <summary>
-        /// Intialises a new Record and adds data extracted from access to each relevant field.
-        /// The record is then added to the Record Dictionary.
-        /// </summary>
-        /// <param name="i: the number of records read"></param>
-        /// <param name="row: the access record"></param>
-        private async Task<Record> buildRecord(Object[] row)
+            /// <summary>
+            /// Intialises a new Record and adds data extracted from access to each relevant field.
+            /// The record is then added to the Record Dictionary.
+            /// </summary>
+            /// <param name="i: the number of records read"></param>
+            /// <param name="row: the access record"></param>
+            private async Task<Record> buildRecord(Object[] row)
         {
             Record r = new Record((string)row[1]);
             await Task.Run(() =>
