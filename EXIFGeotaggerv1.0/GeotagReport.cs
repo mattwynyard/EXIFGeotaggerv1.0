@@ -30,5 +30,7 @@ namespace EXIFGeotagger
 
         public TimeSpan Time { get; set; }
 
+        public string Path { get; set; }
+
     }
 }

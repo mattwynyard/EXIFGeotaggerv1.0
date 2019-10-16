@@ -60,6 +60,7 @@ namespace EXIFGeotagger
         private Stopwatch stopwatch;
         public TimeSpan ts;
         public GeotagReport report;
+       
 
 
         /// <summary>
@@ -152,7 +153,7 @@ namespace EXIFGeotagger
 
         public async Task<ConcurrentDictionary<string, Record>> buildDictionary(string photoPath, string dbPath, string outPath, Boolean allRecords)
         {
-            ProgressForm progressForm = new ProgressForm("Processing...");
+            progressForm = new ProgressForm("Processing...");
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
@@ -268,11 +269,13 @@ namespace EXIFGeotagger
                            {
                                if (!geotagging)
                                {
-                                   geotagging = true;
+                                    lock (obj)
+                                    {
+                                        geotagging = true;
+                                    }
                                }                               
                                 Record newRecord = null;
                                 newRecord = ProcessFile(threadInfo);
-                                //mre.Set();
                                 dict.TryAdd(item.PhotoName, item);
                            }
                            else
@@ -287,28 +290,10 @@ namespace EXIFGeotagger
                        {
                            lock (obj)
                            {
-                               geotagging = false;
-                              
-                               noPhotoDict.TryAdd(item.PhotoName, item);
-                              
+                               geotagging = false;                             
+                               noPhotoDict.TryAdd(item.PhotoName, item);                            
                             }
-                            Task progress = Task.Factory.StartNew(() =>
-                            {
-                                TimeSpan ts = stopwatch.Elapsed;
-                                double percent = ((double)count / length) * 100;
-                                int percentInt = (int)percent;
-                                int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
-                                object a = (object)values;
-                                progressForm.Invoke(new MethodInvoker(() =>
-                                {
-                                    if (progressValue != null)
-                                    {
-                                        progressValue.Report(a);
-
-                                    }
-                                }));
-                            });
-
+                            Task progress = Task.Factory.StartNew(() => updateUI(count, length, progressValue));
                             Thread.Sleep(1);
                        }
                    }
@@ -320,28 +305,11 @@ namespace EXIFGeotagger
                    {
                        count++;
                    }
-
                 }
                 bitmapQueue.CompleteAdding();
-
                 mre.Set();
-                //updateUI(count, length, progressValue);
-                Task progress2 = Task.Factory.StartNew(() =>
-                {
-                    TimeSpan ts = stopwatch.Elapsed;
-                    double percent = ((double)count / length) * 100;
-                    int percentInt = (int)percent;
-                    int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
-                    object a = (object)values;
-                    progressForm.Invoke(new MethodInvoker(() =>
-                    {
-                        if (progressValue != null)
-                        {
-                            progressValue.Report(a);
+                Task progress2 = Task.Factory.StartNew(() => updateUI(count, length, progressValue));
 
-                        }
-                    }));
-                });
             }, cts.Token);
 
             Task consumeBitmaps = Task.Factory.StartNew(() =>
@@ -350,36 +318,29 @@ namespace EXIFGeotagger
                 {
                     if (!bitmapQueue.IsCompleted)
                     {
-
                         mre.WaitOne();
-                        if(bitmapQueue.IsCompleted)
+                        if(bitmapQueue.IsAddingCompleted)
                         {
-                            break;
-                        }
-                        processImage(item);
-                        if (bitmapQueue.Count == 0)
-                        {
-                            mre.Reset();
-                        }
-                    }
-                    //updateUI(count, length, progressValue);
-                    Task progress = Task.Factory.StartNew(() =>
-                    {
-                        TimeSpan ts = stopwatch.Elapsed;
-                        double percent = ((double)count / length) * 100;
-                        int percentInt = (int)percent;
-                        int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
-                        object a = (object)values;
-                        progressForm.Invoke(new MethodInvoker(() =>
-                        {
-                            if (progressValue != null)
+                            if (item != null)
                             {
-                                progressValue.Report(a);
-
+                                processImage(item);
                             }
-                        }));
-                    });
-                    //Task.WhenAll(progress);
+                            if (bitmapQueue.Count == 0) 
+                            {
+                                Task progressEnd = Task.Factory.StartNew(() => updateUI(count, length, progressValue));
+                                break;
+                            }
+                            
+                        } else
+                        {
+                            processImage(item);
+                            if (bitmapQueue.Count == 0)
+                            {
+                                mre.Reset();
+                            }
+                        }                     
+                    }
+                    Task progress = Task.Factory.StartNew(() => updateUI(count, length, progressValue));
                 }
             });
 
@@ -398,21 +359,21 @@ namespace EXIFGeotagger
             report.GeotagCount = geoTagCount;
             report.ProcessedRecords = count;
             report.TotalRecords = length;
+            report.Path = Path.GetDirectoryName(dbPath);
             report.Time = ts;
             progressForm.setReport(report);
-            //geoTagComplete(report);
             return dict;
         }
 
         private void updateUI(int count, int length, IProgress<object> progressValue)
         {
-            Task progress = Task.Factory.StartNew(() =>
-            {
                 TimeSpan ts = stopwatch.Elapsed;
                 double percent = ((double)count / length) * 100;
                 int percentInt = (int)percent;
                 int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
                 object a = (object)values;
+            try
+            {
                 progressForm.Invoke(new MethodInvoker(() =>
                 {
                     if (progressValue != null)
@@ -421,7 +382,10 @@ namespace EXIFGeotagger
 
                     }
                 }));
-            });
+            } catch (Exception ex)
+            {
+                String err = ex.StackTrace;
+            }
         }
 
         public void Finish()
@@ -650,12 +614,12 @@ namespace EXIFGeotagger
 
             r.PhotoName = photoRename; //new photo name 
             string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
-            OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
+            //OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
             
             path = outPath + "\\" + photoRename + ".jpg";
             string uncPath = GetUNCPath(path);
             string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
-            OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+            //OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
             //try
             //{
             //    commandGeoTag.ExecuteNonQuery();
@@ -783,16 +747,13 @@ namespace EXIFGeotagger
                 image.SetPropertyItem(propItemPDop);
                 image.SetPropertyItem(propItemSat);
                 image.SetPropertyItem(propItemDateTime);
-
-                await saveFile(image, threadInfo.OutPath);
-                
+                await saveFile(image, threadInfo.OutPath);               
                 lock (obj)
                 {
                     geoTagCount++;
                 }
                 image.Dispose();
-                image = null;
-               
+                image = null;               
             }
             catch (Exception ex)
             {

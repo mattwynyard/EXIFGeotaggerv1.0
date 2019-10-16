@@ -1377,6 +1377,10 @@ namespace EXIFGeotagger //v0._1
                 
                 if (result == DialogResult.Yes)
                 {
+
+                    Close();
+                } else
+                {
                     Close();
                 }
             });
