@@ -1284,54 +1284,25 @@ namespace EXIFGeotagger //v0._1
             {
                 t.photoReader(inPath, false);
             }
-            stopWatch.Stop();
-            //TimeSpan ts = stopWatch.Elapsed;
-            //elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            //    ts.Hours, ts.Minutes, ts.Seconds,
-            //        ts.Milliseconds / 10);
-            //Stopwatch stopWatch = new Stopwatch();
-            //stopWatch.Start();
-            stopWatch.Start();
-            ConcurrentDictionary<string, Record> dict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
-            stopWatch.Stop();
-            TimeSpan ts = stopWatch.Elapsed;
 
-            // Format and display the TimeSpan value.
-            elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                ts.Hours, ts.Minutes, ts.Seconds,
-                ts.Milliseconds / 10);
-            txtConsole.Text = elapsedTime;
-            //if (dict.Count > 0)
-            //{
-            //    stopWatch = new Stopwatch();
-            //    stopWatch.Start();
-            //    //mRecordDict = await t.writeGeoTag(dict, fileQueue, inPath, outPath);
-            //    //mRecordDict = await t.writeGeoTag(inPath, outPath);
-            //    stopWatch.Stop();
-            //    // Get the elapsed time as a TimeSpan value.
-            //    ts = stopWatch.Elapsed;
+            ConcurrentDictionary<string, Record> conDict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
+            mRecordDict = conDict.ToDictionary(pair => pair.Key, pair => pair.Value);
+            if (mRecordDict != null)
+            {
+                setLayerAttributes();
+                PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
+                PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
+                PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
+                PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
+                RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+                qt = new QuadTree(rect);
+                if (qt != null)
+                {
+                    mQuadTreeDict.Add(layer, qt);
+                }
+                plotLayer(layer, color);
+            }
 
-            //    // Format and display the TimeSpan value.
-            //    elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            //        ts.Hours, ts.Minutes, ts.Seconds,
-            //        ts.Milliseconds / 10);
-            //    txtConsole.Text = elapsedTime;
-            //    if (dict != null)
-            //    {
-            //        setLayerAttributes();
-            //        PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
-            //        PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
-            //        PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
-            //        PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
-            //        RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
-            //        qt = new QuadTree(rect);
-            //        if (qt != null)
-            //        {
-            //            mQuadTreeDict.Add(layer, qt);
-            //        }
-            //        plotLayer(layer, color);
-            //    }
-            //}
         }
 
         public async void readGeoTagCallback(string inPath, string layer, Color color)
@@ -1358,6 +1329,11 @@ namespace EXIFGeotagger //v0._1
             refreshUI(overlay, color.Name);
         }
 
+        /// <summary>
+        /// Callback which shows messagebox upon completion of geotegging
+        /// report 
+        /// </summary>
+        /// <param name="report - the geotag report "></param>
         public void geoTagComplete(GeotagReport report)
         {
             Task.Run(() =>
@@ -1372,13 +1348,12 @@ namespace EXIFGeotagger //v0._1
                     + "Time Taken: " + elapsedTime + "\n"
                     + "\n" + "Select OK to save log file";
                 MessageBoxButtons buttons = MessageBoxButtons.OKCancel;
-
                 DialogResult result = MessageBox.Show(new Form { TopMost = true }, message, title, buttons);
                 
-                if (result == DialogResult.Yes)
+                if (result == DialogResult.OK)
                 {
-
-                    Close();
+                    LogWriter csv = new LogWriter(report);
+                    csv.Save();
                 } else
                 {
                     Close();

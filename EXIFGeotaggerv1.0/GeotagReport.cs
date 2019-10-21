@@ -30,6 +30,9 @@ namespace EXIFGeotagger
 
         public TimeSpan Time { get; set; }
 
+        /// <summary>
+        /// The path of the folder containing the database
+        /// </summary>
         public string Path { get; set; }
 
     }

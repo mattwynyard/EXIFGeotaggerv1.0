@@ -71,7 +71,7 @@ namespace EXIFGeotagger
             intialise();
         }
 
-        private void intialise(int sizeRecord = 50000, int sizeBitmap = 100)
+        private void intialise(int sizeRecord = 50000, int sizeBitmap = 50)
         {
             startCount = 0;
             geoTagCount = 0;

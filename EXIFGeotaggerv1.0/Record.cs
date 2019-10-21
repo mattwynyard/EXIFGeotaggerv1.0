@@ -227,6 +227,20 @@ namespace EXIFGeotagger
 
         public int FaultID { get; set; }
 
-        
+        public override string ToString() {
+
+            StringBuilder s = new StringBuilder();
+            s.Append(id + ",");
+            s.Append(PhotoName + ",");
+            s.Append(PhotoRename + ",");
+            s.Append(Latitude + ",");
+            s.Append(Longitude + ",");
+            s.Append(Altitude + ",");
+            s.Append(Inspector + ",");
+            s.Append(TimeStamp);
+
+
+            return s.ToString();
+        }
     }
 }
