@@ -9,12 +9,12 @@ namespace EXIFGeotagger
 {
     class LogWriter
     {
-        Dictionary<string, object> noPhoto;
-        Dictionary<string, object> noRecord;
-        Dictionary<string, object> errors;
-        object[] dictionaries;
-        List<string> lines;
-        GeotagReport report;
+        private Dictionary<string, object> noPhoto;
+        private Dictionary<string, object> noRecord;
+        private Dictionary<string, object> errors;
+        private object[] dictionaries;
+        private List<string> lines;
+        private GeotagReport report;
 
         public LogWriter()
         {
@@ -28,21 +28,17 @@ namespace EXIFGeotagger
             noPhoto = report.NoPhotoDictionary.ToDictionary(noPhoto => noPhoto.Key, noPhoto => noPhoto.Value as object);
             noRecord = report.NoRecordDictionary.ToDictionary(noRecord => noRecord.Key, noRecord => noRecord.Value as object);
             errors = report.ErrorDictionary.ToDictionary(errors => errors.Key, errors => errors.Value as object);
-
-            
-
         }
 
         public void Save()
         {
             WriteHeader(report);
-            lines.Add("Records with no photo\n");
+            lines.Add("Records with no photo");
             WriteDictionary(noPhoto, "record");
-            lines.Add("Photos with no record\n");
+            lines.Add("Photos with no record");
             WriteDictionary(noRecord, "string");
             lines.Add("Exceptions thrown\n");
             WriteDictionary(errors, "exception");
-
             string path = report.Path + "\\log.txt";
             _Save(path, lines.ToArray());
         }
@@ -74,8 +70,6 @@ namespace EXIFGeotagger
                     lines.Add(item.Value as string);
                 }
             }
-
-
         }
 
         private void _Save(string path, string[] lines)

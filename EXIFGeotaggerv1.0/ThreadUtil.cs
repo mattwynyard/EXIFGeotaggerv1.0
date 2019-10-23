@@ -61,8 +61,6 @@ namespace EXIFGeotagger
         public TimeSpan ts;
         public GeotagReport report;
        
-
-
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -78,7 +76,7 @@ namespace EXIFGeotagger
             this.sizeRecord = sizeRecord;
             this.sizeBitmap = sizeBitmap;
             dict = new ConcurrentDictionary<string, Record>();
-            queue = new BlockingCollection<Record>(sizeRecord); //100,000 upper bound
+            queue = new BlockingCollection<Record>(sizeRecord); 
             geoTagQueue = new BlockingCollection<ThreadInfo>();
             noPhotoDict = new ConcurrentDictionary<string, Record>();
             bitmapQueue = new BlockingCollection<object[]>(sizeBitmap);
@@ -104,8 +102,6 @@ namespace EXIFGeotagger
 
         public void photoReader(string path, Boolean zip)
         {
-            //String files = 
-            //photoDict = new ConcurrentDictionary<string, string>();
             mZip = zip;
             Task build = Task.Factory.StartNew(() =>
             {
@@ -125,7 +121,7 @@ namespace EXIFGeotagger
                                     string s = entry.FullName;
                                     string[] tokens = s.Split('/');
                                     s = tokens[tokens.Length - 1];
-                                    if (s.Substring(s.Length - 3) == ("jpg"))
+                                    if (s.Substring(s.Length - 3) == "jpg")
                                         
                                     {
                                         string key = s.Substring(0, s.Length - 4);
@@ -173,7 +169,6 @@ namespace EXIFGeotagger
                     rate = values[1] / ts.TotalSeconds;
                     tagRate = (int)Math.Round(rate);
                 }
-
                 progressForm.ProgressValue = values[0];
                 progressForm.Message = "Database read, please wait... " + values[0].ToString() + "% completed\n" +
                 values[1] + " of " + values[2] + " records processed\n" +
@@ -184,22 +179,16 @@ namespace EXIFGeotagger
                 "Geotag count: " + values[7] + "......Processing " + tagRate.ToString() + " items/sec" + "\n" +
                 "No photo: " + values[9] + "\n" +
                 "Elapsed Time: " + elapsedTime;
-
             });
             var progressValue = progressHandler1 as IProgress<object>;
             int length = 0;
             int count = 0;
             int noGeomark = 0;
-           
-            int dictCount = 0;
-            int queueCount = 0;
-            int noRecord = 0;
-
             string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
                 "Microsoft.Jet.OLEDB.4.0", dbPath, 5);
             connection = new OleDbConnection(connectionString);
             string strSQL;
-            string strRecord = null;
+            //string strRecord;
             string lengthSQL; //sql count string
 
             if (allRecords)
@@ -209,17 +198,17 @@ namespace EXIFGeotagger
             }
             else
             {
-                strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true AND PhotoList.Inspector = 'IN';";
-                lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true  AND PhotoList.Inspector = 'IN';";
-                strRecord = "SELECT * FROM PhotoList WHERE PhotoID = @photo AND PhotoList.GeoMark = true;";
+                //strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true AND PhotoList.Inspector = 'IN';";
+                strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
+                //lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true  AND PhotoList.Inspector = 'IN';";
+                lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true;";
+                //strRecord = "SELECT * FROM PhotoList WHERE PhotoID = @photo AND PhotoList.GeoMark = true;";
             }
             OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
             //OleDbCommand command = new OleDbCommand(strSQL, connection);
             connection.Open();
             length = Convert.ToInt32(commandLength.ExecuteScalar());
             commandLength.Dispose();
-            
-
             string[] files = Directory.GetFiles(photoPath);
  
             Task producer = Task.Factory.StartNew(async () =>
@@ -343,11 +332,9 @@ namespace EXIFGeotagger
                     Task progress = Task.Factory.StartNew(() => updateUI(count, length, progressValue));
                 }
             });
-
             await Task.WhenAll(producer, consumer);
             //Task.WhenAll(progress);
             await Task.WhenAll(consumeBitmaps);
-            //Thread.Sleep(500);
             stopwatch.Stop();
             progressForm.enableOK();
             progressForm.disableCancel();
@@ -379,7 +366,6 @@ namespace EXIFGeotagger
                     if (progressValue != null)
                     {
                         progressValue.Report(a);
-
                     }
                 }));
             } catch (Exception ex)
@@ -393,13 +379,12 @@ namespace EXIFGeotagger
             geoTagComplete(report);
         }
 
-            /// <summary>
-            /// Intialises a new Record and adds data extracted from access to each relevant field.
-            /// The record is then added to the Record Dictionary.
-            /// </summary>
-            /// <param name="i: the number of records read"></param>
-            /// <param name="row: the access record"></param>
-            private async Task<Record> buildRecord(Object[] row)
+        /// <summary>
+        /// Intialises a new Record and adds data extracted from access to each relevant field.
+        /// The record is then added to the Record Dictionary.
+        /// </summary>
+        /// <param name="row: the access record"></param>
+        private async Task<Record> buildRecord(Object[] row)
         {
             Record r = new Record((string)row[1]);
             await Task.Run(() =>
@@ -429,10 +414,8 @@ namespace EXIFGeotagger
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.StackTrace);
-                   
-                }
-                
+                    Console.WriteLine(e.StackTrace);                  
+                }               
             });
             return r;
         }
@@ -578,17 +561,6 @@ namespace EXIFGeotagger
             return r;
         }
 
-    
-
-        private void MsgBox(string title, string message, MessageBoxButtons buttons)
-        {
-            DialogResult result = MessageBox.Show(message, title, buttons);
-            if (result == DialogResult.OK)
-            {
-               
-            }
-        }
-
         private void cancelImport(object sender, EventArgs e)
         {
             if (cts != null)
@@ -599,36 +571,17 @@ namespace EXIFGeotagger
         {
             ThreadInfo threadInfo = a as ThreadInfo;
             Record r = threadInfo.Record;
-            //string file = threadInfo.Folder + "\\" + threadInfo.Photo + ".jpg";
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
             string path;
             Bitmap bmp = null;
             PropertyItem[] propItems = null;
             r.GeoTag = true;
-
             string photoName = r.PhotoName;
             string photoRename = r.PhotoRename;
-            //string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
-            //OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
-
-            r.PhotoName = photoRename; //new photo name 
-            string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE Photo_Camera = '" + photoName + "';";
-            //OleDbCommand commandGeoTag = new OleDbCommand(geotagSQL, connection);
-            
+            r.PhotoName = photoRename; //new photo name          
             path = outPath + "\\" + photoRename + ".jpg";
-            string uncPath = GetUNCPath(path);
-            string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
-            //OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
-            //try
-            //{
-            //    commandGeoTag.ExecuteNonQuery();
-            //    commandPath.ExecuteNonQuery();
-            //}
-            //catch (Exception ex)
-            //{
-
-            //}
+            string uncPath = GetUNCPath(path);           
             r.Path = uncPath;
             threadInfo.OutPath = uncPath;
             setMinMax(r.Latitude, r.Longitude);
@@ -661,7 +614,6 @@ namespace EXIFGeotagger
                         {
                             string entry = threadInfo.Photo + ".jpg";
                             ZipArchiveEntry zip = archive.GetEntry(entry);
-                            //ZipArchiveEntry zip = threadInfo.Entry;
                             Stream stream = zip.Open();
                             Image img = Image.FromStream(stream);
                             propItems = img.PropertyItems;
@@ -696,6 +648,20 @@ namespace EXIFGeotagger
         //private async void updateDatabase(OleDbCommand command)
         //{
         //    await int rows = command.ExecuteNonQuery();
+
+        //string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
+        //OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
+
+        //string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
+        //OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+        //try
+        //{
+        //    commandGeoTag.ExecuteNonQuery();
+        //    commandPath.ExecuteNonQuery();
+        //}
+        //catch (Exception ex)
+        //{
+        //}
         //}
 
         private async void processImage(object[] item)
@@ -720,10 +686,11 @@ namespace EXIFGeotagger
                 PropertyItem propItemDateTime = RecordUtil.getEXIFDateTime(threadInfo.propItemDateTime);
                 RecordUtil = null;
                 Image image = null;
-                //do image correction
-                //CLAHE correction
+                
                 try
                 {
+                    //do image correction
+                    //CLAHE correction
                     Image<Bgr, Byte> img = new Image<Bgr, Byte>(bmp);
                     Mat src = img.Mat;
                     Image<Bgr, Byte> emguImage = CorrectionUtil.ClaheCorrection(src, 0.5);
@@ -762,7 +729,7 @@ namespace EXIFGeotagger
     }
 
     [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern int WNetGetConnection([MarshalAs(UnmanagedType.LPTStr)] string localName,
+        public static extern int WNetGetConnection([MarshalAs(UnmanagedType.LPTStr)] string localName,
         [MarshalAs(UnmanagedType.LPTStr)] StringBuilder remoteName,
     ref int length);
         public static string GetUNCPath(string originalPath)
@@ -784,30 +751,7 @@ namespace EXIFGeotagger
                     }
                 }
             }
-
             return originalPath;
-        }
-
-        private async void incrementGeoTagError(object a)
-        {
-            string s = a as string;
-            await Task.Run(() =>
-            {
-                if (s.Equals("nokey"))
-                {
-                    lock (obj)
-                    {
-                        errorCount++;            
-                    }
-                }
-                else
-                {
-                    lock (obj)
-                    {
-                        stationaryCount++;
-                    }
-                }
-            });
         }
 
         private async Task saveFile(Image image, string path)
