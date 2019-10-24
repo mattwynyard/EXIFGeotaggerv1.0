@@ -25,7 +25,7 @@ namespace EXIFGeotagger //v0._1
         private OpenFileDialog openFileDialog;
         private string filter;
         public event writeGeoTagDelegate writeGeoTag;
-        public delegate void writeGeoTagDelegate(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip);
+        public delegate void writeGeoTagDelegate(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip, string inspector);
 
         private Boolean mMirror;
         private Boolean mGamma;
@@ -128,8 +128,18 @@ namespace EXIFGeotagger //v0._1
         private void btnGeotag_Click(object sender, EventArgs e)
         {
             Close();
-            mParent.BringToFront();;
-            writeGeoTag(mDataPath, mInPath, mOutPath, mLayer, mColor, mAllRecords, mZip);
+            mParent.BringToFront();
+            string inspector;
+            try
+            {
+                inspector = cbInspector.SelectedItem.ToString();
+
+            } catch (NullReferenceException ex)
+            {
+                inspector = "";
+            }
+
+            writeGeoTag(mDataPath, mInPath, mOutPath, mLayer, mColor, mAllRecords, mZip, inspector);
         }
 
         private void txtDataSource_TextChanged(object sender, EventArgs e)

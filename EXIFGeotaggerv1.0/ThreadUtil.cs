@@ -53,6 +53,7 @@ namespace EXIFGeotagger
         private Boolean geotagging = false;
         private Boolean mZip;
         private int tagRate = -1;
+        private string outPath;
 
         private static ManualResetEvent mre = new ManualResetEvent(false);
         private static ManualResetEvent producerMRE = new ManualResetEvent(false);
@@ -147,7 +148,7 @@ namespace EXIFGeotagger
             Task.WaitAll(build);
         }
 
-        public async Task<ConcurrentDictionary<string, Record>> buildDictionary(string photoPath, string dbPath, string outPath, Boolean allRecords)
+        public async Task<ConcurrentDictionary<string, Record>> buildDictionary(string photoPath, string dbPath, string outPath, Boolean allRecords, string inspector)
         {
             progressForm = new ProgressForm("Processing...");
             progressForm.Show();
@@ -155,6 +156,7 @@ namespace EXIFGeotagger
             progressForm.cancel += cancelImport;
             progressForm.Finish += Finish;
             cts = new CancellationTokenSource();
+            this.outPath = outPath;
             var token = cts.Token;
             var progressHandler1 = new Progress<object>(a =>
             {
@@ -191,6 +193,7 @@ namespace EXIFGeotagger
             //string strRecord;
             string lengthSQL; //sql count string
 
+            string _inspector = getInspector(inspector);
             if (allRecords)
             {
                 strSQL = "SELECT * FROM PhotoList";
@@ -198,11 +201,16 @@ namespace EXIFGeotagger
             }
             else
             {
-                //strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true AND PhotoList.Inspector = 'IN';";
-                strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
-                //lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true  AND PhotoList.Inspector = 'IN';";
-                lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true;";
-                //strRecord = "SELECT * FROM PhotoList WHERE PhotoID = @photo AND PhotoList.GeoMark = true;";
+                if (_inspector == "")
+                {
+                    strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true;";
+                    lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true;";
+                }
+                else
+                {
+                    strSQL = "SELECT * FROM PhotoList WHERE PhotoList.GeoMark = true AND PhotoList.Inspector = '" + _inspector + "';";
+                    lengthSQL = "SELECT Count(PhotoID) FROM PhotoList WHERE PhotoList.GeoMark = true  AND PhotoList.Inspector = '" + _inspector + "';";
+                }
             }
             OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
             //OleDbCommand command = new OleDbCommand(strSQL, connection);
@@ -338,6 +346,7 @@ namespace EXIFGeotagger
             stopwatch.Stop();
             progressForm.enableOK();
             progressForm.disableCancel();
+            
             report = new GeotagReport();
             report.RecordDictionary = dict;
             report.ErrorDictionary = errorDict;
@@ -354,11 +363,11 @@ namespace EXIFGeotagger
 
         private void updateUI(int count, int length, IProgress<object> progressValue)
         {
-                TimeSpan ts = stopwatch.Elapsed;
-                double percent = ((double)count / length) * 100;
-                int percentInt = (int)percent;
-                int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
-                object a = (object)values;
+            TimeSpan ts = stopwatch.Elapsed;
+            double percent = ((double)count / length) * 100;
+            int percentInt = (int)percent;
+            int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
+            object a = (object)values;
             try
             {
                 progressForm.Invoke(new MethodInvoker(() =>
@@ -377,6 +386,7 @@ namespace EXIFGeotagger
         public void Finish()
         {
             geoTagComplete(report);
+            updateDatabase(dict, outPath);
         }
 
         /// <summary>
@@ -645,24 +655,89 @@ namespace EXIFGeotagger
             return r;
         }
 
-        //private async void updateDatabase(OleDbCommand command)
-        //{
-        //    await int rows = command.ExecuteNonQuery();
+        private async void writeCSV(ConcurrentDictionary<string, Record> dict, string folder)
+        {
 
-        //string photoSQL = "SELECT Photo_Geotag FROM PhotoList WHERE Photo_Camera = '" + photoName + "';";
-        //OleDbCommand commandGetPhoto = new OleDbCommand(photoSQL, connection);
+            await Task.Factory.StartNew(() =>
+            {
+                List<string> lines;
+                Parallel.ForEach(dict, item =>
+                {
+                    Record r = item.Value;
+                    string name = r.PhotoRename;
+                    string outPath = GetUNCPath(folder + "\\" + name + ".jpg");
+                    r.Path = outPath;
+                    string line = r.ToString();
+                });
+            });
+        }
 
-        //string pathSQL = "UPDATE PhotoList SET Path = '" + path + "' WHERE Photo_Camera = '" + photoName + "';";
-        //OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
-        //try
-        //{
-        //    commandGeoTag.ExecuteNonQuery();
-        //    commandPath.ExecuteNonQuery();
-        //}
-        //catch (Exception ex)
-        //{
-        //}
-        //}
+        private async void updateDatabase(ConcurrentDictionary<string, Record> dict ,string folder)
+        {
+            int length = dict.Count;
+            int count = 0;
+            progressForm = new ProgressForm("Updating database.....please wait");
+            progressForm.Show();
+            progressForm.BringToFront();
+            progressForm.cancel += cancelImport;
+            progressForm.Finish += Finish;
+            cts = new CancellationTokenSource();
+            var token = cts.Token;
+            var progressHandler1 = new Progress<object>(a =>
+            {
+                int[] values = (int[])a;
+                progressForm.ProgressValue = values[0];
+                progressForm.Message = "Updating database, please wait... " + values[0].ToString() + "% completed\n" +
+                values[1] + " of " + values[2] + " records processed\n";
+               
+            });
+            var progressValue = progressHandler1 as IProgress<object>;
+            connection.Open();
+            Task updateDB =  Task.Factory.StartNew(() =>
+            {
+                Parallel.ForEach (dict, item =>
+                {
+                    try
+                    {
+
+                        double percent = ((double)count / length) * 100;
+                        int percentInt = (int)percent;
+                        int[] values = { percentInt, count, length };
+                        object a = (object)values;
+
+                        progressForm.Invoke(new MethodInvoker(() =>
+                        {
+                            if (progressValue != null)
+                            {
+                                progressValue.Report(a);
+                            }
+                        }));
+
+                        Record r = item.Value;
+                        string name = r.PhotoRename;
+                        string outPath = GetUNCPath(folder + "\\" + name + ".jpg");
+                        string pathSQL = "UPDATE PhotoList SET Path = '" + outPath + "' WHERE PhotoList.Photo_Geotag = '" + name + "'";
+                        OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+                        commandPath.ExecuteNonQuery();
+                        lock (obj)
+                        {
+                            count++;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                });
+                connection.Close();
+                
+            });
+            await Task.WhenAll(updateDB);
+            progressForm.enableOK();
+            progressForm.disableCancel();
+
+        }
 
         private async void processImage(object[] item)
         {
@@ -752,6 +827,25 @@ namespace EXIFGeotagger
                 }
             }
             return originalPath;
+        }
+
+        private string getInspector(string inspector)
+        {
+            switch (inspector)
+            {
+                case "Ïan Nobel":
+                    return "IN";
+                case "Karen Croft":
+                    return "KC";
+                case "Ross Baker":
+                    return "RB";
+                case "Scott Fraser":
+                    return "SF";
+                case "Paul Newman":
+                    return "PN";
+                default:
+                    return "";
+            }
         }
 
         private async Task saveFile(Image image, string path)

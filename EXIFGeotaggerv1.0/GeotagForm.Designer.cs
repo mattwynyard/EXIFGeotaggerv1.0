@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GeotagForm));
             this.txtInputPath = new System.Windows.Forms.TextBox();
             this.txtOutputPath = new System.Windows.Forms.TextBox();
             this.btnBrowse1 = new System.Windows.Forms.Button();
@@ -52,8 +51,8 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.btnCorrect = new System.Windows.Forms.Button();
             this.ckZip = new System.Windows.Forms.CheckBox();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.cbInspector = new System.Windows.Forms.ComboBox();
+            this.lbInspector = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // txtInputPath
@@ -189,7 +188,7 @@
             // ckBoxGeoMark
             // 
             this.ckBoxGeoMark.AutoSize = true;
-            this.ckBoxGeoMark.Location = new System.Drawing.Point(283, 213);
+            this.ckBoxGeoMark.Location = new System.Drawing.Point(231, 221);
             this.ckBoxGeoMark.Name = "ckBoxGeoMark";
             this.ckBoxGeoMark.Size = new System.Drawing.Size(176, 17);
             this.ckBoxGeoMark.TabIndex = 14;
@@ -278,21 +277,38 @@
             this.ckZip.UseVisualStyleBackColor = true;
             this.ckZip.CheckStateChanged += new System.EventHandler(this.CkZip_CheckedStateChanged);
             // 
-            // pictureBox1
+            // cbInspector
             // 
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(530, 200);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(275, 180);
-            this.pictureBox1.TabIndex = 24;
-            this.pictureBox1.TabStop = false;
+            this.cbInspector.FormattingEnabled = true;
+            this.cbInspector.Items.AddRange(new object[] {
+            "",
+            "Ian Nobel",
+            "Karen Croft",
+            "Scott Fraser",
+            "Ross Baker",
+            "Paul Newman"});
+            this.cbInspector.Location = new System.Drawing.Point(436, 222);
+            this.cbInspector.Name = "cbInspector";
+            this.cbInspector.Size = new System.Drawing.Size(121, 21);
+            this.cbInspector.TabIndex = 24;
+            // 
+            // lbInspector
+            // 
+            this.lbInspector.AutoSize = true;
+            this.lbInspector.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbInspector.Location = new System.Drawing.Point(461, 197);
+            this.lbInspector.Name = "lbInspector";
+            this.lbInspector.Size = new System.Drawing.Size(76, 20);
+            this.lbInspector.TabIndex = 25;
+            this.lbInspector.Text = "Inspector";
             // 
             // GeotagForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(845, 394);
-            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.lbInspector);
+            this.Controls.Add(this.cbInspector);
             this.Controls.Add(this.ckZip);
             this.Controls.Add(this.btnCorrect);
             this.Controls.Add(this.textBox1);
@@ -318,7 +334,6 @@
             this.Name = "GeotagForm";
             this.Text = "GeotagForm";
             this.Load += new System.EventHandler(this.GeotagForm_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -349,6 +364,7 @@
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button btnCorrect;
         private System.Windows.Forms.CheckBox ckZip;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ComboBox cbInspector;
+        private System.Windows.Forms.Label lbInspector;
     }
 }

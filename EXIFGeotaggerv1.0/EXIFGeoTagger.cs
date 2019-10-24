@@ -1268,7 +1268,7 @@ namespace EXIFGeotagger //v0._1
             geotagForm.writeGeoTag += writeGeoTagCallback;
         }
 
-        public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip)
+        public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip, string inspector)
         {
             ThreadUtil t = new ThreadUtil();
             t.geoTagComplete += geoTagComplete;
@@ -1285,7 +1285,7 @@ namespace EXIFGeotagger //v0._1
                 t.photoReader(inPath, false);
             }
 
-            ConcurrentDictionary<string, Record> conDict = await t.buildDictionary(inPath, dbPath, outPath, allRecords);
+            ConcurrentDictionary<string, Record> conDict = await t.buildDictionary(inPath, dbPath, outPath, allRecords, inspector);
             mRecordDict = conDict.ToDictionary(pair => pair.Key, pair => pair.Value);
             if (mRecordDict != null)
             {
