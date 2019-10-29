@@ -24,6 +24,8 @@ namespace EXIFGeotagger //v0._1
             btnOK.Enabled = false;
         }
 
+        public Boolean callFinish { get; set; } 
+
         public void setReport(GeotagReport report)
         {
             this.report = report;
@@ -68,7 +70,10 @@ namespace EXIFGeotagger //v0._1
 
         private void BtnOK_Click(object sender, EventArgs e)
         {
-            Finish();
+            if (callFinish)
+            {
+                Finish();
+            }
             Close(); ;
         }
     }

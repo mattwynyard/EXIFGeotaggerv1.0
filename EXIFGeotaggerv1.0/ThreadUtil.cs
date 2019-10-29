@@ -155,6 +155,7 @@ namespace EXIFGeotagger
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
             progressForm.Finish += Finish;
+            progressForm.callFinish = true;
             cts = new CancellationTokenSource();
             this.outPath = outPath;
             var token = cts.Token;
@@ -680,8 +681,8 @@ namespace EXIFGeotagger
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
-            progressForm.Finish += Finish;
-            cts = new CancellationTokenSource();
+            progressForm.callFinish = false;
+           cts = new CancellationTokenSource();
             var token = cts.Token;
             var progressHandler1 = new Progress<object>(a =>
             {
@@ -705,6 +706,21 @@ namespace EXIFGeotagger
                         int[] values = { percentInt, count, length };
                         object a = (object)values;
 
+                       
+
+                        Record r = item.Value;
+                        string name = r.PhotoRename;
+                        string outPath = GetUNCPath(folder + "\\" + name + ".jpg");
+                        string pathSQL = "UPDATE PhotoList SET Path = '" + outPath + "' WHERE PhotoList.Photo_Geotag = '" + name + "'";
+                        string geotagSQL = "UPDATE PhotoList SET PhotoList.GeoTag = True WHERE PhotoList.Photo_Geotag  = '" + name + "'";
+                        OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
+                        OleDbCommand commandTag = new OleDbCommand(geotagSQL, connection);
+                        commandPath.ExecuteNonQuery();
+                        commandTag.ExecuteNonQuery();
+                        lock (obj)
+                        {
+                            count++;
+                        }
                         progressForm.Invoke(new MethodInvoker(() =>
                         {
                             if (progressValue != null)
@@ -712,17 +728,6 @@ namespace EXIFGeotagger
                                 progressValue.Report(a);
                             }
                         }));
-
-                        Record r = item.Value;
-                        string name = r.PhotoRename;
-                        string outPath = GetUNCPath(folder + "\\" + name + ".jpg");
-                        string pathSQL = "UPDATE PhotoList SET Path = '" + outPath + "' WHERE PhotoList.Photo_Geotag = '" + name + "'";
-                        OleDbCommand commandPath = new OleDbCommand(pathSQL, connection);
-                        commandPath.ExecuteNonQuery();
-                        lock (obj)
-                        {
-                            count++;
-                        }
 
                     }
                     catch (Exception ex)
@@ -833,7 +838,7 @@ namespace EXIFGeotagger
         {
             switch (inspector)
             {
-                case "Ïan Nobel":
+                case "Ian Nobel":
                     return "IN";
                 case "Karen Croft":
                     return "KC";
