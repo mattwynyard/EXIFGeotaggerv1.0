@@ -70,6 +70,22 @@ namespace EXIFGeotagger
             intialise();
         }
 
+        /// <summary>
+        /// Constructor which sets the record queue size and bitmap queue size
+        /// </summary>
+        /// <param name="sizeRecord">the size of the record queue</param>
+        /// <param name="sizeBitmap">the size of the bitmap queue</param>
+        public ThreadUtil(int sizeRecord, int sizeBitmap)
+        {
+            intialise(sizeRecord, sizeBitmap);
+        }
+
+
+        /// <summary>
+        /// Intialises the queue sizes and common data structures used in geotagging
+        /// </summary>
+        /// <param name="sizeRecord">the record queue size - default 50000 items</param>
+        /// <param name="sizeBitmap"> the bitmap queue size - default 50 bitmaps</param>
         private void intialise(int sizeRecord = 50000, int sizeBitmap = 50)
         {
             startCount = 0;
@@ -85,21 +101,21 @@ namespace EXIFGeotagger
             stopwatch = Stopwatch.StartNew();
         }
 
-        public BlockingCollection<string> buildQueue(string path)
-        {
-            BlockingCollection<string> fileQueue = new BlockingCollection<string>();
-            string[] files = Directory.GetFiles(path);
-            Task producer = Task.Factory.StartNew(() =>
-            {
-                foreach (string file in files)
-                {
-                    fileQueue.Add(file);
-                }
-                fileQueue.CompleteAdding();
-            });
-            Task.WaitAll(producer);
-            return fileQueue;
-        }
+        //public BlockingCollection<string> buildQueue(string path)
+        //{
+        //    BlockingCollection<string> fileQueue = new BlockingCollection<string>();
+        //    string[] files = Directory.GetFiles(path);
+        //    Task producer = Task.Factory.StartNew(() =>
+        //    {
+        //        foreach (string file in files)
+        //        {
+        //            fileQueue.Add(file);
+        //        }
+        //        fileQueue.CompleteAdding();
+        //    });
+        //    Task.WaitAll(producer);
+        //    return fileQueue;
+        //}
 
         public void photoReader(string path, Boolean zip)
         {
@@ -214,7 +230,6 @@ namespace EXIFGeotagger
                 }
             }
             OleDbCommand commandLength = new OleDbCommand(lengthSQL, connection);
-            //OleDbCommand command = new OleDbCommand(strSQL, connection);
             connection.Open();
             length = Convert.ToInt32(commandLength.ExecuteScalar());
             commandLength.Dispose();
@@ -346,8 +361,7 @@ namespace EXIFGeotagger
             await Task.WhenAll(consumeBitmaps);
             stopwatch.Stop();
             progressForm.enableOK();
-            progressForm.disableCancel();
-            
+            progressForm.disableCancel();           
             report = new GeotagReport();
             report.RecordDictionary = dict;
             report.ErrorDictionary = errorDict;
@@ -673,7 +687,12 @@ namespace EXIFGeotagger
             });
         }
 
-        private async void updateDatabase(ConcurrentDictionary<string, Record> dict ,string folder)
+        /// <summary>
+        /// Updates path of geotagged photo and whether photo was geotagged in access database
+        /// </summary>
+        /// <param name="dict"> the dictionary conatining the records</param>
+        /// <param name="folder">flder path of the access database</param>
+        private async void updateDatabase(ConcurrentDictionary<string, Record> dict, string folder)
         {
             int length = dict.Count;
             int count = 0;
@@ -700,14 +719,10 @@ namespace EXIFGeotagger
                 {
                     try
                     {
-
                         double percent = ((double)count / length) * 100;
                         int percentInt = (int)percent;
                         int[] values = { percentInt, count, length };
-                        object a = (object)values;
-
-                       
-
+                        object a = values;
                         Record r = item.Value;
                         string name = r.PhotoRename;
                         string outPath = GetUNCPath(folder + "\\" + name + ".jpg");
@@ -735,13 +750,28 @@ namespace EXIFGeotagger
 
                     }
                 });
-                connection.Close();
-                
+                connection.Close();              
             });
-            await Task.WhenAll(updateDB);
+            Task t = Task.WhenAll(updateDB);
+            try
+            {
+                t.Wait();
+                double percent = ((double)count / length) * 100;
+                int percentInt = (int)percent;
+                int[] values = { percentInt, count, length };
+                object a = values;
+                progressForm.Invoke(new MethodInvoker(() =>
+                {
+                    if (progressValue != null)
+                    {
+                        progressValue.Report(a);
+                    }
+                }));
+            }
+            catch { }
+
             progressForm.enableOK();
             progressForm.disableCancel();
-
         }
 
         private async void processImage(object[] item)
@@ -750,7 +780,6 @@ namespace EXIFGeotagger
                 
                 ThreadInfo threadInfo = item[0] as ThreadInfo;
                 Bitmap bmp = item[1] as Bitmap;
-                //Bitmap bmp = null;
                 string file = threadInfo.Folder + "\\" + threadInfo.Photo + ".jpg";
                 RecordUtil RecordUtil = new RecordUtil(threadInfo.Record);
                 PropertyItem propItemLat = RecordUtil.getEXIFCoordinate("latitude", threadInfo.propItemLat);

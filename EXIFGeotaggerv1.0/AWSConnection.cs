@@ -84,68 +84,69 @@ namespace Amazon
 
             });
             var progressValue = progressHandler1 as IProgress<int>;
-            int i = 0; 
-            foreach (S3Bucket bucket in buckets)
+            int i = 0;
+            await Task.Factory.StartNew(() =>
             {
-                await Task.Factory.StartNew(() => 
+            Parallel.ForEach (buckets, (bucket) =>
+            {
+                if (token.IsCancellationRequested)
                 {
-                    if (token.IsCancellationRequested)
+                    token.ThrowIfCancellationRequested();
+                }
+                List<string> folders = new List<string>();
+                folderDict.Add(bucket.BucketName, folders);
+                ListObjectsRequest request = new ListObjectsRequest();
+                request.BucketName = bucket.BucketName;
+                request.Delimiter = ".jpg";
+                try
+                {
+                    ListObjectsResponse response;
+                    do
                     {
-                        token.ThrowIfCancellationRequested();
-                    }
-                    List<string> folders = new List<string>();
-                    folderDict.Add(bucket.BucketName, folders);
-                    ListObjectsRequest request = new ListObjectsRequest();
-                    request.BucketName = bucket.BucketName;                 
-                    request.Delimiter = ".jpg";
-                    try
-                    {
-                        ListObjectsResponse response;
-                        do
+                        response = mClient.ListObjects(request);
+                        IEnumerable<S3Object> linqResponse = response.S3Objects.Where(x =>
+                                                            (x.Key.EndsWith(@"/") && x.Size == 0) || x.Key.Contains(".exf"));
+
+                        Parallel.ForEach(linqResponse, (S3obj) =>
                         {
-                            response = mClient.ListObjects(request);
-                            IEnumerable<S3Object> f = response.S3Objects.Where(x =>
-                                                                (x.Key.EndsWith(@"/") && x.Size == 0) || x.Key.Contains(".exf"));
-                            
-                            foreach (S3Object x in f)
-                            {
-                                folders.Add(x.Key);
-                                
-                            }
-                            if (response.IsTruncated)
-                            {
-                                request.Marker = response.NextMarker;    
-                            }
-                            else
-                            {
-                                request = null;
-                            }
-                            
-                        } while (request != null);
-                      
-                    }
-                    catch (AmazonS3Exception exAWS)
-                    {
+                            folders.Add(S3obj.Key);
 
-                    }
-                    catch (Exception ex)
-                    {
+                        });
+                        if (response.IsTruncated)
+                        {
+                            request.Marker = response.NextMarker;
+                        }
+                        else
+                        {
+                            request = null;
+                        }
 
-                    }
+                    } while (request != null);
 
-                    folderDict[bucket.BucketName] = folders;
-                    lock (obj)
-                    {
-                        i++;
-                    }
-                    int percent = (i / buckets.Count) * 100;
-                    if (progressValue != null)
-                    {
-                        progressValue.Report(percent);
+                }
+                catch (AmazonS3Exception exAWS)
+                {
+                    string s = exAWS.Message;
+                }
+                catch (Exception ex)
+                {
 
-                    }
-                }, cts.Token);            
-            }     
+                }
+
+                //folderDict[bucket.BucketName] = folders;
+                lock (obj)
+                {
+                    i++;
+                }
+                int percent = (i / buckets.Count) * 100;
+                if (progressValue != null)
+                {
+                    progressValue.Report(percent);
+
+                }
+
+            });
+            }, cts.Token);
             return folderDict;
         }
         public async Task<List<S3Bucket>> requestBuckets()
@@ -156,7 +157,7 @@ namespace Amazon
                 foreach (S3Bucket b in response.Buckets)
                 {
                     string bucket = b.BucketName;
-                    DateTime dt = new DateTime(2019, 6, 1);
+                    DateTime dt = new DateTime(2019, 8, 1);
                     if (b.CreationDate >= dt)
                     {
                         clientBuckets.Add(b);
