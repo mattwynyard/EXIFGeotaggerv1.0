@@ -79,9 +79,12 @@ namespace EXIFGeotagger
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.geotagToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuRunGeoTag = new System.Windows.Forms.ToolStripMenuItem();
+            this.writeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.readToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mirrorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.colorCorrectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.equaliseHistogramToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gammaCorrectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnArrow = new System.Windows.Forms.Button();
@@ -90,7 +93,6 @@ namespace EXIFGeotagger
             this.panel8 = new System.Windows.Forms.Panel();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.gammaCorrectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -516,6 +518,7 @@ namespace EXIFGeotagger
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(96, 22);
             this.saveToolStripMenuItem.Text = "Add";
+            this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // markersToolStripMenuItem
             // 
@@ -528,7 +531,6 @@ namespace EXIFGeotagger
             this.photosToolStripMenuItem1.Name = "photosToolStripMenuItem1";
             this.photosToolStripMenuItem1.Size = new System.Drawing.Size(116, 22);
             this.photosToolStripMenuItem1.Text = "Photos";
-            this.photosToolStripMenuItem1.Click += new System.EventHandler(this.PhotosToolStripMenuItem1_Click);
             // 
             // plotToolStripMenuItem
             // 
@@ -605,10 +607,27 @@ namespace EXIFGeotagger
             // 
             // menuRunGeoTag
             // 
+            this.menuRunGeoTag.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.writeToolStripMenuItem,
+            this.readToolStripMenuItem});
             this.menuRunGeoTag.Name = "menuRunGeoTag";
             this.menuRunGeoTag.Size = new System.Drawing.Size(180, 22);
-            this.menuRunGeoTag.Text = "Geotag";
+            this.menuRunGeoTag.Text = "Geotagging";
             this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
+            // 
+            // writeToolStripMenuItem
+            // 
+            this.writeToolStripMenuItem.Name = "writeToolStripMenuItem";
+            this.writeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.writeToolStripMenuItem.Text = "Write";
+            this.writeToolStripMenuItem.Click += new System.EventHandler(this.writeToolStripMenuItem_Click);
+            // 
+            // readToolStripMenuItem
+            // 
+            this.readToolStripMenuItem.Name = "readToolStripMenuItem";
+            this.readToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.readToolStripMenuItem.Text = "Read";
+            this.readToolStripMenuItem.Click += new System.EventHandler(this.readToolStripMenuItem_Click);
             // 
             // mirrorToolStripMenuItem
             // 
@@ -630,6 +649,13 @@ namespace EXIFGeotagger
             this.equaliseHistogramToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.equaliseHistogramToolStripMenuItem.Text = "Equalise Histogram";
             this.equaliseHistogramToolStripMenuItem.Click += new System.EventHandler(this.EqualiseHistogramToolStripMenuItem_Click);
+            // 
+            // gammaCorrectionToolStripMenuItem
+            // 
+            this.gammaCorrectionToolStripMenuItem.Name = "gammaCorrectionToolStripMenuItem";
+            this.gammaCorrectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.gammaCorrectionToolStripMenuItem.Text = "Gamma Correction";
+            this.gammaCorrectionToolStripMenuItem.Click += new System.EventHandler(this.GammaCorrectionToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -703,13 +729,6 @@ namespace EXIFGeotagger
             this.deleteLayerToolStripMenuItem.Name = "deleteLayerToolStripMenuItem";
             this.deleteLayerToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.deleteLayerToolStripMenuItem.Text = "Delete Layer";
-            // 
-            // gammaCorrectionToolStripMenuItem
-            // 
-            this.gammaCorrectionToolStripMenuItem.Name = "gammaCorrectionToolStripMenuItem";
-            this.gammaCorrectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.gammaCorrectionToolStripMenuItem.Text = "Gamma Correction";
-            this.gammaCorrectionToolStripMenuItem.Click += new System.EventHandler(this.GammaCorrectionToolStripMenuItem_Click);
             // 
             // EXIFGeoTagger
             // 
@@ -812,6 +831,8 @@ namespace EXIFGeotagger
         private System.Windows.Forms.ToolStripMenuItem colorCorrectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem equaliseHistogramToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gammaCorrectionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem writeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem readToolStripMenuItem;
     }
 }
 

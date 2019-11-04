@@ -59,6 +59,7 @@ namespace EXIFGeotagger //v0._1
         private string mSelectedLayer;
         private Boolean isLayerSelected = false;
         private Dictionary<string, Record> mRecordDict;
+        private ConcurrentDictionary<string, Record> mConRecordDict;
 
         private Dictionary<string, ESRIShapeFile> mShapeDict;
         private static readonly Object obj = new Object();
@@ -146,6 +147,7 @@ namespace EXIFGeotagger //v0._1
             gMap.OnRouteClick += gMap_OnRouteClick;
             gMap.Leave += gMap_onLeave;
             mOverlayDict = new Dictionary<string, GMapMarker[]>();
+            mConRecordDict = new ConcurrentDictionary<string, Record>();
             mShapeDict = new Dictionary<string, ESRIShapeFile>();
             //layerItem = new ListViewItem();
             imageList = new ImageList();
@@ -304,15 +306,15 @@ namespace EXIFGeotagger //v0._1
                     boundary.Add(bottomLeft);
                     int count = markers.Length;
                     int step;
-                    //if (count > 5000)
-                    //{
+                    if (count > 100000)
+                    {
                         step = getStep(size);
-                    //}
-                    //else
-                    //{
-                        //step = 1;
-                    //}
-                    Dictionary<string, string> dict = tag.Dictionary;
+                    }
+                        else
+                    {
+                        step = 1;
+                    }
+                Dictionary<string, string> dict = tag.Dictionary;
                     Bitmap bitmap = null;
                     if (dict == null)
                     {
@@ -382,7 +384,14 @@ namespace EXIFGeotagger //v0._1
             zoomRect.Add(topRight);
             zoomRect.Add(bottomRight);
             zoomRect.Add(bottomLeft);
-            gMap.SetZoomToFitRect(polygonToRect(zoomRect));
+            RectLatLng rect = polygonToRect(zoomRect);
+            try
+            {
+                gMap.SetZoomToFitRect(rect);
+            } catch (Exception ex)
+            {
+                string s = ex.StackTrace;
+            }
             zoomRect.Clear();
         }
 
@@ -414,7 +423,7 @@ namespace EXIFGeotagger //v0._1
             {
                 foreach (GMapOverlay overlay in overlays)
                 {
-                    rebuildMarkers(overlay, 8);
+                    rebuildMarkers(overlay, 4);
                 }
             }
             else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 15)
@@ -424,13 +433,13 @@ namespace EXIFGeotagger //v0._1
                     rebuildMarkers(overlay, 8);
                 }
             }
-            else if ((int)gMap.Zoom < 20 && (int)gMap.Zoom >= 18)
-            {
-                foreach (GMapOverlay overlay in overlays)
-                {
-                    rebuildMarkers(overlay, 12);
-                }
-            }
+            //else if ((int)gMap.Zoom < 20 && (int)gMap.Zoom >= 18)
+            //{
+            //    foreach (GMapOverlay overlay in overlays)
+            //    {
+            //        rebuildMarkers(overlay, 12);
+            //    }
+            //}
             else
             {
                 foreach (GMapOverlay overlay in overlays)
@@ -481,7 +490,7 @@ namespace EXIFGeotagger //v0._1
             //}           
         }
 
-        private void gMap_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+        private void gMap_MouseMove(object sender, MouseEventArgs e)
         {
             if (mouseDown)// && mZoom)
             {
@@ -838,14 +847,14 @@ namespace EXIFGeotagger //v0._1
         }
         
 
-            private void PhotosToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            ImportDataForm importForm = new ImportDataForm("photos");
-            mRecordDict = new Dictionary<string, Record>();
-            importForm.mParent = this;
-            importForm.Show();
-            importForm.importData += readGeoTagCallback;
-        }
+        //    private void PhotosToolStripMenuItem1_Click(object sender, EventArgs e)
+        //{
+        //    ImportDataForm importForm = new ImportDataForm("photos");
+        //    mRecordDict = new Dictionary<string, Record>();
+        //    importForm.mParent = this;
+        //    importForm.Show();
+        //    importForm.importData += readGeoTagCallback;
+        //}
 
 
         private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
@@ -1258,13 +1267,13 @@ namespace EXIFGeotagger //v0._1
             currentKey = newKey;
         }
 
-        private void menuRunGeoTag_Click(object sender, EventArgs e)
-        {
-            GeotagForm geotagForm = new GeotagForm();
-            geotagForm.mParent = this;
-            geotagForm.Show();
-            geotagForm.writeGeoTag += writeGeoTagCallback;
-        }
+        //private void menuRunGeoTag_Click(object sender, EventArgs e)
+        //{
+        //    GeotagForm geotagForm = new GeotagForm();
+        //    geotagForm.mParent = this;
+        //    geotagForm.Show();
+        //    geotagForm.writeGeoTag += writeGeoTagCallback;
+        //}
 
         public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip, string inspector)
         {
@@ -1272,8 +1281,6 @@ namespace EXIFGeotagger //v0._1
             t.geoTagComplete += geoTagComplete;
             resetMinMax();
             t.setMinMax += setMinMax;
-            // = t.buildQueue(inPath);
-            //t.zipReader(inPath);
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             if (zip) {
@@ -1283,9 +1290,9 @@ namespace EXIFGeotagger //v0._1
                 t.photoReader(inPath, false);
             }
 
-            ConcurrentDictionary<string, Record> conDict = await t.buildDictionary(inPath, dbPath, outPath, allRecords, inspector);
+            ConcurrentDictionary<string, Record> conDict = await t.writeGeotag(inPath, dbPath, outPath, allRecords, inspector);
             mRecordDict = conDict.ToDictionary(pair => pair.Key, pair => pair.Value);
-            if (mRecordDict != null)
+            if (mRecordDict != null && mRecordDict.Count > 0)
             {
                 setLayerAttributes();
                 PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
@@ -1310,7 +1317,7 @@ namespace EXIFGeotagger //v0._1
             t.setMinMax += setMinMax;
             t.addRecord += addRecord;
             t.geoTagComplete += geoTagComplete;
-            //fileQueue = await t.buildQueue(inPath);
+            BlockingCollection<string> fileQueue = t.buildQueue(inPath);
             GMapOverlay overlay = new GMapOverlay(layer);
             resetMinMax();
             overlay = await t.readGeoTag(fileQueue, inPath, layer, color.Name);
@@ -1400,9 +1407,14 @@ namespace EXIFGeotagger //v0._1
                 min_lng = lng;
         }
 
+        /// <summary>
+        /// Callback from threadutil
+        /// </summary>
+        /// <param name="photo"></param>
+        /// <param name="record"></param>
         private void addRecord(string photo, Record record)
         {
-            mRecordDict.Add(photo, record);
+            mConRecordDict.TryAdd(photo, record);
         }
         private void setLayerAttributes() {
             mLayerAttributes = new LayerAttributes();
@@ -1797,6 +1809,33 @@ namespace EXIFGeotagger //v0._1
         {
             OpenCVManager cv = new OpenCVManager();
             cv.GammaCorrection();
+        }
+
+        private void writeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GeotagForm geotagForm = new GeotagForm();
+            geotagForm.mParent = this;
+            geotagForm.Show();
+            geotagForm.writeGeoTag += writeGeoTagCallback;
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void menuRunGeoTag_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void readToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ImportDataForm importForm = new ImportDataForm("photos");
+            mRecordDict = new Dictionary<string, Record>();
+            importForm.mParent = this;
+            importForm.Show();
+            importForm.importData += readGeoTagCallback;
         }
     } //end class   
 } //end namespace

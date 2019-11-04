@@ -101,21 +101,21 @@ namespace EXIFGeotagger
             stopwatch = Stopwatch.StartNew();
         }
 
-        //public BlockingCollection<string> buildQueue(string path)
-        //{
-        //    BlockingCollection<string> fileQueue = new BlockingCollection<string>();
-        //    string[] files = Directory.GetFiles(path);
-        //    Task producer = Task.Factory.StartNew(() =>
-        //    {
-        //        foreach (string file in files)
-        //        {
-        //            fileQueue.Add(file);
-        //        }
-        //        fileQueue.CompleteAdding();
-        //    });
-        //    Task.WaitAll(producer);
-        //    return fileQueue;
-        //}
+        public BlockingCollection<string> buildQueue(string path)
+        {
+            BlockingCollection<string> fileQueue = new BlockingCollection<string>();
+            string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
+            Task producer = Task.Factory.StartNew(() =>
+            {
+                foreach (string file in files)
+                {
+                    fileQueue.Add(file);
+                }
+                fileQueue.CompleteAdding();
+            });
+            Task.WaitAll(producer);
+            return fileQueue;
+        }
 
         public void photoReader(string path, Boolean zip)
         {
@@ -142,7 +142,11 @@ namespace EXIFGeotagger
                                         
                                     {
                                         string key = s.Substring(0, s.Length - 4);
-                                        photoDict.TryAdd(key, file);
+                                        bool added = photoDict.TryAdd(key, file);
+                                        if (!added)
+                                        {
+                                            string photo = file;
+                                        }
                                     }
                                 }
                             }
@@ -156,15 +160,19 @@ namespace EXIFGeotagger
                     foreach (var file in files)
                     {
                         string key = Path.GetFileNameWithoutExtension(file);
-                        
-                        photoDict.TryAdd(key, file);
+
+                        bool added = photoDict.TryAdd(key, file);
+                        if (!added)
+                        {
+                            string photo = file;
+                        }
                     }
                 }
             });
             Task.WaitAll(build);
         }
 
-        public async Task<ConcurrentDictionary<string, Record>> buildDictionary(string photoPath, string dbPath, string outPath, Boolean allRecords, string inspector)
+        public async Task<ConcurrentDictionary<string, Record>> writeGeotag(string photoPath, string dbPath, string outPath, Boolean allRecords, string inspector)
         {
             progressForm = new ProgressForm("Processing...");
             progressForm.Show();
@@ -246,7 +254,7 @@ namespace EXIFGeotagger
                         row = new Object[reader.FieldCount];
                         reader.GetValues(row);
                         Record r = await buildRecord(row);
-                        queue.Add(r);                       
+                        queue.Add(r);
                     }
                     reader.Close();
                     queue.CompleteAdding();
@@ -303,8 +311,11 @@ namespace EXIFGeotagger
                        {
                            lock (obj)
                            {
-                               geotagging = false;                             
-                               noPhotoDict.TryAdd(item.PhotoName, item);                            
+                               geotagging = false;
+                                if (item.GeoMark)
+                                {
+                                    noPhotoDict.TryAdd(item.PhotoName, item);
+                                }
                             }
                             Task progress = Task.Factory.StartNew(() => updateUI(count, length, progressValue));
                             Thread.Sleep(1);
@@ -466,38 +477,55 @@ namespace EXIFGeotagger
             {
                 progressForm.ProgressValue = value;
                 progressForm.Message = "Import in progress, please wait... " + value.ToString() + "% completed\n" +
-                geoTagCount + " of " + mQueueSize + " photos geotagged";
+                geoTagCount + " of " + mQueueSize + " photos read";
 
             });
             var progressValue = progressHandler1 as IProgress<int>;
-            await Task.Factory.StartNew(() =>
+            Task produce = Task.Factory.StartNew(() =>
             {            
                 try
-                {                 
-                    while (fileQueue.Count != 0)
+                {
+                    //Parallel.ForEach(fileQueue.GetConsumingEnumerable(), (item) =>
+                    //{
+                    foreach (var item in fileQueue.GetConsumingEnumerable())
                     {
                         if (token.IsCancellationRequested)
                         {
                             token.ThrowIfCancellationRequested();
                         }
-                        Parallel.Invoke(
-                            () =>
-                            {
-                                ThreadInfo threadInfo = new ThreadInfo();
-                                threadInfo.Length = mQueueSize;
-                                threadInfo.ProgressHandler = progressHandler1;
-                                threadInfo.File = fileQueue.Take();
-                                Record r = null;
-                                r = readData(threadInfo);                              
-                                MarkerTag tag = new MarkerTag(color, id);
-                                GMapMarker marker = new GMarkerGoogle(new PointLatLng(r.Latitude, r.Longitude), bitmap);
-                                marker.Tag = tag;
-                                tag.Size = 4;
-                                tag.PhotoName = r.PhotoName;
-                                tag.Record = r;
-                                tag.Path = Path.GetFullPath(r.Path);
-                                overlay.Markers.Add(marker);
-                            });
+                        //Parallel.Invoke(() =>
+                        //{
+                        ThreadInfo threadInfo = new ThreadInfo();
+                        threadInfo.Length = mQueueSize;
+                        threadInfo.ProgressHandler = progressHandler1;
+                        threadInfo.File = item;
+                        Record r = null;
+                        r = readData(threadInfo);
+                        addRecord(r.PhotoName, r);
+                        MarkerTag tag = new MarkerTag(color, id);
+                        GMapMarker marker;
+                        lock (obj)
+                        {
+                            marker = new GMarkerGoogle(new PointLatLng(r.Latitude, r.Longitude), bitmap);
+                            setMinMax(r.latitude, r.longitude);
+                        }
+                        marker.Tag = tag;
+                        tag.Size = 4;
+                        tag.PhotoName = r.PhotoName;
+                        tag.Record = r;
+                        tag.Path = Path.GetFullPath(r.Path);
+                        overlay.Markers.Add(marker);
+                        double percent = ((double)geoTagCount / length) * 100;
+                        int percentInt = (int)(Math.Round(percent));
+                        if (progressValue != null)
+                        {
+                            //progressValue = threadInfo.ProgressHandler;
+                            progressForm.Invoke(
+                                new MethodInvoker(() => progressValue.Report(percentInt)
+                            ));
+                        }
+                        //});
+                        //});
                     }
                 }
                 catch (OperationCanceledException)
@@ -506,6 +534,7 @@ namespace EXIFGeotagger
                     cts.Dispose();
                 }
             }, cts.Token);
+            await Task.WhenAll(produce);
             progressForm.Close();
             return overlay;
         }
@@ -549,7 +578,6 @@ namespace EXIFGeotagger
                 double longitude = byteToDegrees(lonBytes);
                 double altitude = byteToDecimal(altBytes);
                 DateTime dateTime = byteToDate(dateTimeBytes);
-
                 if (latitudeRef.Equals("S\0"))
                 {
                     latitude = -latitude;
@@ -568,21 +596,12 @@ namespace EXIFGeotagger
                 r.TimeStamp = dateTime;
                 r.Path = Path.GetFullPath(file);
                 r.Id = id.ToString();   
-                addRecord(photo, r);
+
                 lock (obj)
                 {
                     geoTagCount++;
-                }
-                setMinMax(latitude, longitude);
-                double percent = ((double)geoTagCount / length) * 100;
-                int percentInt = (int)(Math.Round(percent));
-                if (progressValue != null)
-                {
-                    progressValue = threadInfo.ProgressHandler;
-                    progressForm.Invoke(
-                        new MethodInvoker(() => progressValue.Report(percentInt)
-                    ));
-                }
+                    
+                }               
             return r;
         }
 
@@ -753,22 +772,22 @@ namespace EXIFGeotagger
                 connection.Close();              
             });
             Task t = Task.WhenAll(updateDB);
-            try
-            {
-                t.Wait();
-                double percent = ((double)count / length) * 100;
-                int percentInt = (int)percent;
-                int[] values = { percentInt, count, length };
-                object a = values;
-                progressForm.Invoke(new MethodInvoker(() =>
-                {
-                    if (progressValue != null)
-                    {
-                        progressValue.Report(a);
-                    }
-                }));
-            }
-            catch { }
+            //try
+            //{
+            //    t.Wait();
+            //    double percent = ((double)count / length) * 100;
+            //    int percentInt = (int)percent;
+            //    int[] values = { percentInt, count, length };
+            //    object a = values;
+            //    progressForm.Invoke(new MethodInvoker(() =>
+            //    {
+            //        if (progressValue != null)
+            //        {
+            //            progressValue.Report(a);
+            //        }
+            //    }));
+            //}
+            //catch { }
 
             progressForm.enableOK();
             progressForm.disableCancel();
