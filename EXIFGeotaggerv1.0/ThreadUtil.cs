@@ -409,6 +409,10 @@ namespace EXIFGeotagger
             }
         }
 
+
+        /// <summary>
+        /// Called by progress form when user clicks OK
+        /// </summary>
         public void Finish()
         {
             geoTagComplete(report);
@@ -445,8 +449,6 @@ namespace EXIFGeotagger
                     r.Carriageway = Convert.ToInt32(row[21]);
                     r.ERP = Convert.ToInt32(row[22]);
                     r.FaultID = Convert.ToInt32(row[23]);
-                    //r.TACode = Convert.ToInt32(row[24]);
-                    //DataRow dRow = new DataRow()
                 }
                 catch (Exception e)
                 {
@@ -465,6 +467,7 @@ namespace EXIFGeotagger
             progressForm.Show();
             progressForm.BringToFront();
             progressForm.cancel += cancelImport;
+            Stopwatch sw = Stopwatch.StartNew();
             cts = new CancellationTokenSource();
             var token = cts.Token;
             geoTagCount = 0;
@@ -473,14 +476,19 @@ namespace EXIFGeotagger
             int length = files.Length;
             Bitmap bitmap = ColorTable.getBitmap(color, 4);
             Dictionary<string, Record> recordDict = new Dictionary<string, Record>();
-            var progressHandler1 = new Progress<int>(value =>
+            var progressHandler1 = new Progress<object>(a =>
             {
-                progressForm.ProgressValue = value;
-                progressForm.Message = "Import in progress, please wait... " + value.ToString() + "% completed\n" +
-                geoTagCount + " of " + mQueueSize + " photos read";
+                TimeSpan ts = stopwatch.Elapsed;
+                var elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                int[] values = (int[])a;
+                progressForm.ProgressValue = values[0];
+                progressForm.Message = "Import in progress, please wait... " + values[0].ToString() + "% completed\n" +
+                geoTagCount + " of " + mQueueSize + " photos read\n" +
+                "Elapsed Time: " + elapsedTime;
 
             });
-            var progressValue = progressHandler1 as IProgress<int>;
+            var progressValue = progressHandler1 as IProgress<object>;
             Task produce = Task.Factory.StartNew(() =>
             {            
                 try
@@ -497,7 +505,7 @@ namespace EXIFGeotagger
                         //{
                         ThreadInfo threadInfo = new ThreadInfo();
                         threadInfo.Length = mQueueSize;
-                        threadInfo.ProgressHandler = progressHandler1;
+                        //threadInfo.ProgressHandler = progressHandler1;
                         threadInfo.File = item;
                         Record r = null;
                         r = readData(threadInfo);
@@ -519,9 +527,11 @@ namespace EXIFGeotagger
                         int percentInt = (int)(Math.Round(percent));
                         if (progressValue != null)
                         {
-                            //progressValue = threadInfo.ProgressHandler;
+                            
+                            int[] values = { percentInt };
+                            object a = values;
                             progressForm.Invoke(
-                                new MethodInvoker(() => progressValue.Report(percentInt)
+                                new MethodInvoker(() => progressValue.Report(a)
                             ));
                         }
                         //});
@@ -535,6 +545,7 @@ namespace EXIFGeotagger
                 }
             }, cts.Token);
             await Task.WhenAll(produce);
+            sw.Stop();
             progressForm.Close();
             return overlay;
         }
