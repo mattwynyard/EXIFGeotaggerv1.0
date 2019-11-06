@@ -78,7 +78,10 @@ namespace EXIFGeotagger //v0._1
         private int layerCount;
         private ImageList imageList;
 
+        private ContextMenu mapContextMenu;
+        private MenuItem itemCopy;
         private Boolean mouseDown = false;
+        private Boolean panning = false;
         private PointLatLng topLeft;
         private PointLatLng bottomRight;
         private List<PointLatLng> zoomRect;
@@ -133,12 +136,11 @@ namespace EXIFGeotagger //v0._1
             gMap.Zoom = 10;
             gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
            
-            gMap.MouseMove += gMap_OnMouseMoved;
+            gMap.MouseMove += gMap_MouseMove;
             gMap.DragButton = MouseButtons.Right;
             gMap.OnMapZoomChanged += gMap_OnMapZoomChanged;
             gMap.MouseDown += gMap_MouseDown;
             gMap.MouseUp += gMap_MouseUp;
-            gMap.MouseMove += gMap_MouseMove;
             gMap.MouseClick += gMap_MouseClick;
             gMap.MapScaleInfoEnabled = true;
             gMap.PreviewKeyDown += gMap_KeyDown;
@@ -155,7 +157,8 @@ namespace EXIFGeotagger //v0._1
             selectedMarkersOverlay = new GMapOverlay("selected");
             zoomToMarkersOverlay = new GMapOverlay("zoomTo");
             mQuadTreeDict = new Dictionary<string, QuadTree>();
-            
+            mapContextMenu  = new ContextMenu();
+
 
         }
 
@@ -203,7 +206,7 @@ namespace EXIFGeotagger //v0._1
 
             newOverlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
-            zoomToMarkers();
+            //zoomToMarkers();
             
         }
 
@@ -245,6 +248,7 @@ namespace EXIFGeotagger //v0._1
                     id++;
                 }
             }
+            mQuadTreeDict.Add(overlay.Id, qt);
             overlay.IsVisibile = true;
             return overlay;
         }
@@ -260,12 +264,63 @@ namespace EXIFGeotagger //v0._1
             return marker;
         }
 
+        //private void rebuildMarkers(GMapOverlay overlay, int size)
+        //{
+
+        //}
+
+        private RectangleXY getBoundaryRectangle()
+        {
+            Rectangle bounds = gMap.Bounds;
+            PointLatLng _upperLeft = gMap.FromLocalToLatLng(bounds.X, bounds.Y);
+            PointLatLng _upperRight = gMap.FromLocalToLatLng(bounds.Right, bounds.Y);
+            PointLatLng _bottomRight = gMap.FromLocalToLatLng(bounds.Right, bounds.Bottom);
+            PointLatLng _bottomLeft = gMap.FromLocalToLatLng(bounds.X, bounds.Bottom);
+
+            PointXY upperLeft = new PointXY(_upperLeft.Lng, _upperLeft.Lat);
+            PointXY upperRight = new PointXY(_upperRight.Lng, _upperRight.Lat);
+            PointXY bottomRight = new PointXY(_bottomRight.Lng, _bottomRight.Lat);
+            PointXY bottomLeft = new PointXY(_bottomLeft.Lng, _bottomLeft.Lat);
+            RectangleXY rect = new RectangleXY(upperLeft, upperRight, bottomRight, bottomLeft);
+            return rect;
+        }
+
+        private void buildMarkers(GMapOverlay overlay, int size)
+        {
+            QuadTree qt = mQuadTreeDict[overlay.Id];
+            RectangleXY rect = getBoundaryRectangle();
+            List<GMapMarker> markersList = qt.queryRange(rect);
+            GMapMarker[] markers = markersList.ToArray();
+            MarkerTag tag = (MarkerTag)markers[0].Tag;
+            Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
+
+            for (int i = 0; i < markers.Length; i ++)
+            {                
+                tag = (MarkerTag)markers[i].Tag;
+                tag.Size = size;
+                GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
+
+                if (markers[i].Tag != null)
+                {
+                    newMarker.Tag = markers[i].Tag;
+                }
+                newMarker = setToolTip(newMarker);
+                overlay.Markers.Add(newMarker);
+
+
+            }
+        }
+
         private void rebuildMarkers(GMapOverlay overlay, int size)
         {
             overlay.Markers.Clear();
             try
             {
-                GMapMarker[] markers = mOverlayDict[overlay.Id];
+                //GMapMarker[] markers = mOverlayDict[overlay.Id];
+                QuadTree qt = mQuadTreeDict[overlay.Id];
+                RectangleXY rect = getBoundaryRectangle();
+                List<GMapMarker> markersList = qt.queryRange(rect);
+                GMapMarker[] markers = markersList.ToArray();
                 MarkerTag tag = (MarkerTag)markers[0].Tag;
                 if (tag == null)
                 {
@@ -412,41 +467,35 @@ namespace EXIFGeotagger //v0._1
 
             GMapOverlay[] overlays = gMap.Overlays.ToArray<GMapOverlay>();
 
-            if ((int)gMap.Zoom < 11)
+            foreach (GMapOverlay overlay in overlays)
             {
-                foreach (GMapOverlay overlay in overlays)
+                if (overlay.Id != "zoom")
                 {
-                    rebuildMarkers(overlay, 4);
+                    if ((int)gMap.Zoom < 11)
+                    {
+                        //rebuildMarkers(overlay, 4);
+                        buildMarkers(overlay, 4);
+                    }
+                    else if ((int)gMap.Zoom < 15 && (int)gMap.Zoom >= 11)
+                    {
+
+                        //rebuildMarkers(overlay, 4);
+                        buildMarkers(overlay, 4);
+                    }
+                    else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 15)
+                    {
+                        //rebuildMarkers(overlay, 8);
+                        buildMarkers(overlay, 4);
+                    }
+                    else
+                    {
+                        //rebuildMarkers(overlay, 12);
+                        buildMarkers(overlay, 4);
+                    }
                 }
             }
-            else if ((int)gMap.Zoom < 15 && (int)gMap.Zoom >= 11)
-            {
-                foreach (GMapOverlay overlay in overlays)
-                {
-                    rebuildMarkers(overlay, 4);
-                }
-            }
-            else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 15)
-            {
-                foreach (GMapOverlay overlay in overlays)
-                {
-                    rebuildMarkers(overlay, 8);
-                }
-            }
-            //else if ((int)gMap.Zoom < 20 && (int)gMap.Zoom >= 18)
-            //{
-            //    foreach (GMapOverlay overlay in overlays)
-            //    {
-            //        rebuildMarkers(overlay, 12);
-            //    }
-            //}
-            else
-            {
-                foreach (GMapOverlay overlay in overlays)
-                {
-                    rebuildMarkers(overlay, 16);
-                }
-            }
+           
+            
         }
 
         private void gMap_KeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -475,11 +524,10 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void gMap_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        private void gMap_MouseDown(object sender, MouseEventArgs e)
         {
-            //if (mZoom)
-            //{
-                mouseDown = true;
+            //mapContextMenu.MenuItems.Clear();
+            mouseDown = true;
                 zoomOverlay = new GMapOverlay("zoom");
 
                 topLeft = gMap.FromLocalToLatLng(e.X, e.Y);
@@ -490,12 +538,17 @@ namespace EXIFGeotagger //v0._1
             //}           
         }
 
+        private void gMap_onMapDrag()
+        {
+            gMap_OnMapZoomChanged();
+            panning = true;
+        }
+
         private void gMap_MouseMove(object sender, MouseEventArgs e)
         {
-            if (mouseDown)// && mZoom)
-            {
+            if (mouseDown)
+            {               
                 zoomRect.Clear();
-
                 bottomRight = gMap.FromLocalToLatLng(e.X, e.Y);
                 zoomRect.Add(topLeft);
 
@@ -518,11 +571,21 @@ namespace EXIFGeotagger //v0._1
                 gMap.Overlays.Add(zoomOverlay);
             }
             var point = gMap.FromLocalToLatLng(e.X, e.Y);
-            //txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
+            lbPosition.Text = "latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6);
         }
 
-        private void gMap_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        private void gMap_MouseUp(object sender, MouseEventArgs e)
         {
+
+            if (!panning && e.Button == MouseButtons.Right)
+            {
+                point = gMap.FromLocalToLatLng(e.X, e.Y);
+               
+                itemCopy = mapContextMenu.MenuItems.Add("Copy position to clipboard");
+                ContextMenu = mapContextMenu;
+                itemCopy.Click += copyToClipBoard;
+            }
+
             if (e.Button == MouseButtons.Left)
             {
                 if (mouseDown && mZoom)
@@ -536,8 +599,7 @@ namespace EXIFGeotagger //v0._1
                     if (zoomRect.Count == 4)
                     {
                         gMap.SetZoomToFitRect(polygonToRect(zoomRect));
-                    }
-                    
+                    }                   
                     zoomRect.Clear();
                 }
                 else if (mouseDown && !mZoom)
@@ -570,8 +632,14 @@ namespace EXIFGeotagger //v0._1
                         clearOverlay(selectedMarkersOverlay);
                     }                
                 }
-            }           
+            }
+            
             mouseDown = false;
+            if (panning)
+            {
+                panning = false;
+            }
+            
         }
 
         private void clearOverlay(GMapOverlay overlay)
@@ -611,8 +679,13 @@ namespace EXIFGeotagger //v0._1
         /// <param name="e"></param>
         private void gMap_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
+            mapContextMenu.MenuItems.Clear();
             if (mouseInBounds && e.Button == MouseButtons.Left)
-            {
+            {               
+                if (panning)
+                {
+                    panning = false;
+                }
                 if (selectedMarker != null)
                 {                 
                     MarkerTag currentTag = (MarkerTag)selectedMarker.Tag;
@@ -625,14 +698,7 @@ namespace EXIFGeotagger //v0._1
                     selectedMarkersList = null;
                 }
             }
-            if (mouseInBounds && e.Button == MouseButtons.Right)
-            {
-                point = gMap.FromLocalToLatLng(e.X, e.Y);
-                ContextMenu mapContextMenu = new ContextMenu();
-                var itemCopy = mapContextMenu.MenuItems.Add("Copy position to clipboard");              
-                ContextMenu = mapContextMenu;
-                itemCopy.Click += copyToClipBoard;
-            }
+            
         }
 
         private void copyToClipBoard(object sender, EventArgs e)
@@ -642,13 +708,13 @@ namespace EXIFGeotagger //v0._1
             System.Windows.Clipboard.SetText(lat + " " + lng);
         }
 
-        private void gMap_OnMouseMoved(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            var point = gMap.FromLocalToLatLng(e.X, e.Y);
+        //private void gMap_OnMouseMoved(object sender, System.Windows.Forms.MouseEventArgs e)
+        //{
+        //    var point = gMap.FromLocalToLatLng(e.X, e.Y);
 
-            lbPosition.Text = "latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6);
-            //gMap.MouseHover += gMap_OnMouseHoverChanged;
-        }
+        //    lbPosition.Text = "latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6);
+        //    //gMap.MouseHover += gMap_OnMouseHoverChanged;
+        //}
 
         private void gMap_onMarkerDoubleClick(GMapMarker marker, System.Windows.Forms.MouseEventArgs e)
         {
@@ -1226,6 +1292,7 @@ namespace EXIFGeotagger //v0._1
             qt = new QuadTree(rect);
             //mQuadTreeDict.Add(layer, qt);
             plotLayer(layer, color.Name);
+            zoomToMarkers();
         }
 
         public async void exfDownloadCallback(string layer, Color color)

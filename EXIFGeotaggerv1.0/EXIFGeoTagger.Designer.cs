@@ -142,8 +142,8 @@ namespace EXIFGeotagger
             this.gMap.Zoom = 10D;
             this.gMap.OnMarkerClick += new GMap.NET.WindowsForms.MarkerClick(this.gMap_OnMarkerClick);
             this.gMap.OnRouteClick += new GMap.NET.WindowsForms.RouteClick(this.gMap_OnRouteClick);
+            this.gMap.OnMapDrag += new GMap.NET.MapDrag(this.gMap_onMapDrag);
             this.gMap.Load += new System.EventHandler(this.gMap_Load);
-            this.gMap.MouseMove += new System.Windows.Forms.MouseEventHandler(this.gMap_OnMouseMoved);
             // 
             // txtConsole
             // 
@@ -611,49 +611,49 @@ namespace EXIFGeotagger
             this.writeToolStripMenuItem,
             this.readToolStripMenuItem});
             this.menuRunGeoTag.Name = "menuRunGeoTag";
-            this.menuRunGeoTag.Size = new System.Drawing.Size(180, 22);
+            this.menuRunGeoTag.Size = new System.Drawing.Size(176, 22);
             this.menuRunGeoTag.Text = "Geotagging";
             this.menuRunGeoTag.Click += new System.EventHandler(this.menuRunGeoTag_Click);
             // 
             // writeToolStripMenuItem
             // 
             this.writeToolStripMenuItem.Name = "writeToolStripMenuItem";
-            this.writeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.writeToolStripMenuItem.Size = new System.Drawing.Size(102, 22);
             this.writeToolStripMenuItem.Text = "Write";
             this.writeToolStripMenuItem.Click += new System.EventHandler(this.writeToolStripMenuItem_Click);
             // 
             // readToolStripMenuItem
             // 
             this.readToolStripMenuItem.Name = "readToolStripMenuItem";
-            this.readToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.readToolStripMenuItem.Size = new System.Drawing.Size(102, 22);
             this.readToolStripMenuItem.Text = "Read";
             this.readToolStripMenuItem.Click += new System.EventHandler(this.readToolStripMenuItem_Click);
             // 
             // mirrorToolStripMenuItem
             // 
             this.mirrorToolStripMenuItem.Name = "mirrorToolStripMenuItem";
-            this.mirrorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.mirrorToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             this.mirrorToolStripMenuItem.Text = "Mirror";
             this.mirrorToolStripMenuItem.Click += new System.EventHandler(this.MirrorToolStripMenuItem_Click);
             // 
             // colorCorrectToolStripMenuItem
             // 
             this.colorCorrectToolStripMenuItem.Name = "colorCorrectToolStripMenuItem";
-            this.colorCorrectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.colorCorrectToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             this.colorCorrectToolStripMenuItem.Text = "Clahe Correct";
             this.colorCorrectToolStripMenuItem.Click += new System.EventHandler(this.ColorCorrectToolStripMenuItem_Click);
             // 
             // equaliseHistogramToolStripMenuItem
             // 
             this.equaliseHistogramToolStripMenuItem.Name = "equaliseHistogramToolStripMenuItem";
-            this.equaliseHistogramToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.equaliseHistogramToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             this.equaliseHistogramToolStripMenuItem.Text = "Equalise Histogram";
             this.equaliseHistogramToolStripMenuItem.Click += new System.EventHandler(this.EqualiseHistogramToolStripMenuItem_Click);
             // 
             // gammaCorrectionToolStripMenuItem
             // 
             this.gammaCorrectionToolStripMenuItem.Name = "gammaCorrectionToolStripMenuItem";
-            this.gammaCorrectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.gammaCorrectionToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             this.gammaCorrectionToolStripMenuItem.Text = "Gamma Correction";
             this.gammaCorrectionToolStripMenuItem.Click += new System.EventHandler(this.GammaCorrectionToolStripMenuItem_Click);
             // 
