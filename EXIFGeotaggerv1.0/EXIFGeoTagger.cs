@@ -185,7 +185,8 @@ namespace EXIFGeotagger //v0._1
         private void plotLayer(string layer, string color)
         {
             GMapOverlay newOverlay = new GMapOverlay(layer);
-            newOverlay = buildMarkers(newOverlay, color);
+            QuadTree tree = mQuadTreeDict[layer];
+            newOverlay = buildMarkers(tree, newOverlay, color);
             gMap.Overlays.Add(newOverlay);
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
             mOverlayDict.Add(newOverlay.Id, markers);
@@ -206,7 +207,7 @@ namespace EXIFGeotagger //v0._1
 
             newOverlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
-            //zoomToMarkers();
+            zoomToMarkers();
             
         }
 
@@ -217,7 +218,7 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="overlay - the intial overlay that markers will be added to"></param>
         /// <returns>the GPOverlay containing the markers</returns>
-        private GMapOverlay buildMarkers(GMapOverlay overlay, string color)
+        private GMapOverlay buildMarkers(QuadTree tree, GMapOverlay overlay, string color)
         {
             int id = 0;
             if (mRecordDict != null)
@@ -225,30 +226,26 @@ namespace EXIFGeotagger //v0._1
                 Bitmap bitmap = ColorTable.getBitmap(color, 4);
                 foreach (KeyValuePair<string, Record> record in mRecordDict)
                 {
+                    id++;
                     MarkerTag tag = new MarkerTag(color, id);
                     tag.PhotoName = record.Value.PhotoName;
                     tag.Path = record.Value.Path;
                     tag.Size = 4;
                     tag.PhotoName = record.Key;
                     tag.Record = record.Value;
-                    Double lat = record.Value.Latitude;
-                    Double lon = record.Value.Longitude;
-                    //PointXY p = new PointXY(lon, lat);
-                    
+                    double lat = record.Value.Latitude;
+                    double lon = record.Value.Longitude;
                     GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
-
-                    if (qt != null)
+                    if (tree != null)
                     {
-                        qt.insert(marker);
+                        tree.insert(marker);
                     }
                     marker.Tag = tag;
-          
                     marker = setToolTip(marker);
                     overlay.Markers.Add(marker);
-                    id++;
+                    
                 }
             }
-            mQuadTreeDict.Add(overlay.Id, qt);
             overlay.IsVisibile = true;
             return overlay;
         }
@@ -263,12 +260,6 @@ namespace EXIFGeotagger //v0._1
             marker.ToolTipMode = MarkerTooltipMode.OnMouseOver;
             return marker;
         }
-
-        //private void rebuildMarkers(GMapOverlay overlay, int size)
-        //{
-
-        //}
-
         private RectangleXY getBoundaryRectangle()
         {
             Rectangle bounds = gMap.Bounds;
@@ -1290,9 +1281,9 @@ namespace EXIFGeotagger //v0._1
             PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
             RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
             qt = new QuadTree(rect);
-            //mQuadTreeDict.Add(layer, qt);
+            mQuadTreeDict.Add(layer, qt);
             plotLayer(layer, color.Name);
-            zoomToMarkers();
+            
         }
 
         public async void exfDownloadCallback(string layer, Color color)
