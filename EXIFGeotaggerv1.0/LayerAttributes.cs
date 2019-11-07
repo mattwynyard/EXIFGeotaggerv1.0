@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace EXIFGeotagger
     class LayerAttributes
     {
 
+        Dictionary<string, Record> mData;
         public LayerAttributes()
         {
 
@@ -31,6 +33,16 @@ namespace EXIFGeotagger
             MinLng = minLng;
         }
 
-        public Dictionary<string, Record> Data { get; set; }
+        public ConcurrentDictionary<string, Record> getData()
+        {
+
+            ConcurrentDictionary<string, Record> dict = new ConcurrentDictionary<string, Record>(mData);
+            return dict;
+        }
+
+        public void setData(ConcurrentDictionary<string, Record> dict)
+        {
+            mData = dict.ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
     }
 }

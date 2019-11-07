@@ -49,31 +49,6 @@ namespace EXIFGeotagger
             height = topLeft.y - bottomLeft.y;
         }
 
-        ///// <summary>
-        ///// Checks if point is with a rectangel
-        ///// </summary>
-        ///// <param name="point"> the point to check</param>
-        ///// <returns>true if point is with in rectangle</returns>
-        //public Boolean contains(PointXY point)
-        //{
-        //    if ((point.x > topLeft.x) && (point.x < (topLeft.x + width)))
-        //    {
-        //        if ((point.y < topLeft.y) && (point.y > (topLeft.y - height)))
-        //        {
-        //            return true;
-        //        }
-        //        else
-        //        {
-        //            return false;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        return false;
-        //    }
-        //}
-
-
         /// <summary>
         /// Checks is map marker is within a rectangle
         /// </summary>
@@ -128,7 +103,11 @@ namespace EXIFGeotagger
         // Points in this quad tree node
         List<GMapMarker> points = new List<GMapMarker>();
 
-
+        //data extents
+        private double min_lat;
+        private double min_lng;
+        private double max_lat;
+        private double max_lng;
         // Children
         public QuadTree northWest;
         public QuadTree northEast;
@@ -228,49 +207,30 @@ namespace EXIFGeotagger
                 return false;
             }
         }
-        //public Boolean insert(PointXY p)
+
+        public double MaxLat { get; set; }
+        public double MinLat { get; set; }
+
+        public double MaxLng { get; set; }
+        public double MinLng { get; set; }
+
+        public RectangleXY getBoundary()
+        {
+            PointXY topLeft = new PointXY(max_lat, min_lng);
+            PointXY topRight = new PointXY(max_lat, max_lng);
+            PointXY bottomRight = new PointXY(min_lat, max_lng);
+            PointXY bottomLeft = new PointXY(min_lat, min_lng);
+            RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+            return rect;
+        }
+
+        //public RectLatLng getBoundary()
         //{
-        //    // Ignore objects that do not belong in this quad tree
-        //    if (!boundary.contains(p))
-        //    {
-        //        return false;
-        //    }
-        //    // If there is space in this quad tree and if doesn't have subdivisions, add the object here
-        //    if (points.Count < QT_NODE_CAPACITY && northWest == null)
-        //    {
-        //        points.Add(p);
-        //        return true;
-        //    }
-        //    else // Otherwise, subdivide and then add the point to whichever node will accept it
-        //    {
-        //        if (northWest == null)
-        //        {
-        //            subdivide();
-        //        }
-        //        //We have to add the points/data contained into this quad array to the new quads if we want that only 
-        //        //the last node holds the data 
-        //        if (northWest.insert(p))
-        //        {
-        //            return true;
-        //        }
-        //        else if (northEast.insert(p))
-        //        {
-        //            return true;
-        //        }
-        //        else if (southWest.insert(p))
-        //        {
-        //            return true;
-        //        }
-        //        else if (southEast.insert(p))
-        //        {
-        //            return true;
-        //        }
-        //        // Otherwise, the point cannot be inserted for some unknown reason (this should never happen)
-        //        else
-        //        {
-        //            return false;
-        //        }
-        //    }
+        //    PointLatLng topLeft = new PointLatLng(max_lat, min_lng);
+        //    PointLatLng topRight = new PointLatLng(max_lat, max_lng);
+        //    PointLatLng bottomRight = new PointLatLng(min_lat, max_lng);
+        //    PointLatLng bottomLeft = new PointLatLng(min_lat, min_lng);
+        //    RectLatLng rect = new RectLatLng()
         //}
 
         public List<GMapMarker> queryRange(RectangleXY range)
@@ -339,6 +299,8 @@ namespace EXIFGeotagger
             }
             return pointsInRange;
         }
+
+
     }
 }
 

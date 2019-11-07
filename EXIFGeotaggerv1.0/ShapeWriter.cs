@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace ShapeFile
     class ShapeWriter
     {
 
-        Dictionary<string, Record> data;
+        ConcurrentDictionary<string, Record> data;
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -20,7 +21,7 @@ namespace ShapeFile
 
         public ShapeWriter(LayerAttributes data)
         {
-            this.data = data.Data;
+            this.data = data.getData();
         }
 
         public void readEXF()

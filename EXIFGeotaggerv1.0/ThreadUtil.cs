@@ -891,7 +891,7 @@ namespace EXIFGeotagger
                 }
             }
             return originalPath;
-        }
+        }     
 
         private string getInspector(string inspector)
         {

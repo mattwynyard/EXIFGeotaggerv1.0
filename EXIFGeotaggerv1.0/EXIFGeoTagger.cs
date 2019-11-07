@@ -46,6 +46,7 @@ namespace EXIFGeotagger //v0._1
         private OleDbConnection connection;
         private Dictionary<string, GMapMarker[]> mOverlayDict;
         private Dictionary<string, QuadTree> mQuadTreeDict;
+        private ConcurrentDictionary<string, QuadTree> mQuadDict;
         private QuadTree qt;
         private GMapOverlay mOverlay; //the currently active overlay
         private GMapOverlay selectedMarkersOverlay; //overlay containing selected markers
@@ -157,6 +158,7 @@ namespace EXIFGeotagger //v0._1
             selectedMarkersOverlay = new GMapOverlay("selected");
             zoomToMarkersOverlay = new GMapOverlay("zoomTo");
             mQuadTreeDict = new Dictionary<string, QuadTree>();
+            mQuadDict = new ConcurrentDictionary<string, QuadTree>();
             mapContextMenu  = new ContextMenu();
 
 
@@ -182,12 +184,17 @@ namespace EXIFGeotagger //v0._1
         /// Called from <see cref="importAccessData(object sender, EventArgs e)"/> creates new overaly and adds it to overlays in map control
         /// Intialises new MarkerTag which sets colour and inital size of the icon and sets the bitmap for the marker
         /// </summary>
-        private void plotLayer(string layer, string color)
+        private void plotLayer(ConcurrentDictionary<string, Record> dict, QuadTree tree, string layer, string color)
         {
             GMapOverlay newOverlay = new GMapOverlay(layer);
-            QuadTree tree = mQuadTreeDict[layer];
-            newOverlay = buildMarkers(tree, newOverlay, color);
+            tree.MaxLat = max_lat;
+            tree.MaxLng = max_lng;
+            tree.MinLat = min_lat;
+            tree.MinLng = min_lng;
+            zoomToMarkers(tree.MaxLat, tree.MinLat, tree.MaxLng, tree.MinLng);
+            newOverlay = buildMarkers(dict, tree, newOverlay, color);
             gMap.Overlays.Add(newOverlay);
+
             GMapMarker[] markers = newOverlay.Markers.ToArray<GMapMarker>();
             mOverlayDict.Add(newOverlay.Id, markers);
             mOverlay = newOverlay;
@@ -207,7 +214,8 @@ namespace EXIFGeotagger //v0._1
 
             newOverlay.IsVisibile = true;
             mOverlay.IsVisibile = true;
-            zoomToMarkers();
+            //gMap.Refresh();
+            
             
         }
 
@@ -218,34 +226,42 @@ namespace EXIFGeotagger //v0._1
         /// </summary>
         /// <param name="overlay - the intial overlay that markers will be added to"></param>
         /// <returns>the GPOverlay containing the markers</returns>
-        private GMapOverlay buildMarkers(QuadTree tree, GMapOverlay overlay, string color)
+        private GMapOverlay buildMarkers(ConcurrentDictionary<string, Record> dict, QuadTree tree, GMapOverlay overlay, string color)
         {
             int id = 0;
-            if (mRecordDict != null)
-            {
-                Bitmap bitmap = ColorTable.getBitmap(color, 4);
-                foreach (KeyValuePair<string, Record> record in mRecordDict)
-                {
-                    id++;
-                    MarkerTag tag = new MarkerTag(color, id);
-                    tag.PhotoName = record.Value.PhotoName;
-                    tag.Path = record.Value.Path;
-                    tag.Size = 4;
-                    tag.PhotoName = record.Key;
-                    tag.Record = record.Value;
-                    double lat = record.Value.Latitude;
-                    double lon = record.Value.Longitude;
-                    GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
-                    if (tree != null)
+            //Task build = Task.Factory.StartNew(() =>
+            //{
+            //    if (mRecordDict != null)
+            //    {
+                    Bitmap bitmap = ColorTable.getBitmap(color, 4);
+                    foreach(KeyValuePair<string, Record> item in dict)
                     {
-                        tree.insert(marker);
+                       
+                        MarkerTag tag = new MarkerTag(color, id);
+                        tag.PhotoName = item.Value.PhotoName;
+                        tag.Path = item.Value.Path;
+                        tag.Size = 4;
+                        tag.PhotoName = item.Key;
+                        tag.Record = item.Value;
+                        double lat = item.Value.Latitude;
+                        double lon = item.Value.Longitude;
+                        //lock (obj)
+                        //{
+                             id++;
+                            GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
+                            marker.Tag = tag;
+                            marker = setToolTip(marker);
+                            if (tree != null)
+                            {
+                                tree.insert(marker);
+                            }
+                            overlay.Markers.Add(marker);
+                        //}                      
                     }
-                    marker.Tag = tag;
-                    marker = setToolTip(marker);
-                    overlay.Markers.Add(marker);
-                    
-                }
-            }
+                    mQuadDict.TryAdd(overlay.Id, tree);
+                //}
+            //});
+            //await Task.WhenAll(build);
             overlay.IsVisibile = true;
             return overlay;
         }
@@ -278,28 +294,32 @@ namespace EXIFGeotagger //v0._1
 
         private void buildMarkers(GMapOverlay overlay, int size)
         {
-            QuadTree qt = mQuadTreeDict[overlay.Id];
+            overlay.Clear();
+            QuadTree qt = mQuadDict[overlay.Id];
             RectangleXY rect = getBoundaryRectangle();
             List<GMapMarker> markersList = qt.queryRange(rect);
             GMapMarker[] markers = markersList.ToArray();
-            MarkerTag tag = (MarkerTag)markers[0].Tag;
-            Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
+            if (markers.Length != 0)
+            {
+                MarkerTag tag = (MarkerTag)markers[0].Tag;
+                Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
 
-            for (int i = 0; i < markers.Length; i ++)
-            {                
-                tag = (MarkerTag)markers[i].Tag;
-                tag.Size = size;
-                GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
-
-                if (markers[i].Tag != null)
+                for (int i = 0; i < markers.Length; i++)
                 {
-                    newMarker.Tag = markers[i].Tag;
+                    tag = (MarkerTag)markers[i].Tag;
+                    tag.Size = size;
+                    GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
+
+                    if (markers[i].Tag != null)
+                    {
+                        newMarker.Tag = markers[i].Tag;
+                    }
+                    newMarker = setToolTip(newMarker);
+                    overlay.Markers.Add(newMarker);
                 }
-                newMarker = setToolTip(newMarker);
-                overlay.Markers.Add(newMarker);
-
-
             }
+
+            
         }
 
         private void rebuildMarkers(GMapOverlay overlay, int size)
@@ -431,13 +451,23 @@ namespace EXIFGeotagger //v0._1
             zoomRect.Add(bottomRight);
             zoomRect.Add(bottomLeft);
             RectLatLng rect = polygonToRect(zoomRect);
-            try
-            {
-                gMap.SetZoomToFitRect(rect);
-            } catch (Exception ex)
-            {
-                string s = ex.StackTrace;
-            }
+            gMap.SetZoomToFitRect(rect);
+            zoomRect.Clear();
+        }
+
+        private void zoomToMarkers(double maxLat, double minLat, double maxLng, double minLng)
+        {
+            zoomRect = new List<PointLatLng>();
+            PointLatLng topLeft = new PointLatLng(maxLat, minLng);
+            PointLatLng topRight = new PointLatLng(maxLat, maxLng);
+            PointLatLng bottomRight = new PointLatLng(minLat, maxLng);
+            PointLatLng bottomLeft = new PointLatLng(minLat, minLng);
+            zoomRect.Add(topLeft);
+            zoomRect.Add(topRight);
+            zoomRect.Add(bottomRight);
+            zoomRect.Add(bottomLeft);
+            RectLatLng rect = polygonToRect(zoomRect);
+            gMap.SetZoomToFitRect(rect);
             zoomRect.Clear();
         }
 
@@ -476,12 +506,12 @@ namespace EXIFGeotagger //v0._1
                     else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 15)
                     {
                         //rebuildMarkers(overlay, 8);
-                        buildMarkers(overlay, 4);
+                        buildMarkers(overlay, 8);
                     }
                     else
                     {
                         //rebuildMarkers(overlay, 12);
-                        buildMarkers(overlay, 4);
+                        buildMarkers(overlay, 12);
                     }
                 }
             }
@@ -1269,7 +1299,7 @@ namespace EXIFGeotagger //v0._1
         {
             Serializer s = new Serializer(folderPath);
             mLayerAttributes = s.deserialize();
-            mRecordDict = mLayerAttributes.Data;
+            ConcurrentDictionary<string, Record> dict = mLayerAttributes.getData();
               
             max_lat = mLayerAttributes.MaxLat;
             min_lat = mLayerAttributes.MinLat;
@@ -1281,16 +1311,15 @@ namespace EXIFGeotagger //v0._1
             PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
             RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
             qt = new QuadTree(rect);
-            mQuadTreeDict.Add(layer, qt);
-            plotLayer(layer, color.Name);
-            
+            plotLayer(dict, qt, layer, color.Name);
+
         }
 
         public async void exfDownloadCallback(string layer, Color color)
         {
             //Serializer s = new Serializer(mStream);
             LayerAttributes attributes = await client.getDataFile(mSelectedFile);
-            mRecordDict = attributes.Data;
+            ConcurrentDictionary<string, Record> dict = attributes.getData();
 
             foreach (KeyValuePair<string, Record> entry in mRecordDict)
             {
@@ -1308,8 +1337,8 @@ namespace EXIFGeotagger //v0._1
             PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
             RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
             qt = new QuadTree(rect);
-            mQuadTreeDict.Add(layer, qt);
-            plotLayer(layer, color.Name);
+            
+            plotLayer(dict, qt, layer, color.Name);
         }
 
         private void setBucketCallback(string bucket, string key)
@@ -1348,24 +1377,15 @@ namespace EXIFGeotagger //v0._1
                 t.photoReader(inPath, false);
             }
 
-            ConcurrentDictionary<string, Record> conDict = await t.writeGeotag(inPath, dbPath, outPath, allRecords, inspector);
-            mRecordDict = conDict.ToDictionary(pair => pair.Key, pair => pair.Value);
-            if (mRecordDict != null && mRecordDict.Count > 0)
-            {
-                setLayerAttributes();
-                PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
-                PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
-                PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
-                PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
-                RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
-                qt = new QuadTree(rect);
-                if (qt != null)
-                {
-                    mQuadTreeDict.Add(layer, qt);
-                }
-                plotLayer(layer, color);
-            }
-
+            ConcurrentDictionary<string, Record> dict = await t.writeGeotag(inPath, dbPath, outPath, allRecords, inspector);
+            setLayerAttributes(dict);
+            PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
+            PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
+            PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
+            PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
+            RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
+            qt = new QuadTree(rect);               
+            plotLayer(dict, qt, layer, color);            
         }
 
         public async void readGeoTagCallback(string inPath, string layer, Color color)
@@ -1380,7 +1400,7 @@ namespace EXIFGeotagger //v0._1
             resetMinMax();
             overlay = await t.readGeoTag(fileQueue, inPath, layer, color.Name);
 
-            setLayerAttributes();
+            //setLayerAttributes();
             //zoomToMarkers();
             PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
             PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
@@ -1474,9 +1494,18 @@ namespace EXIFGeotagger //v0._1
         {
             mConRecordDict.TryAdd(photo, record);
         }
-        private void setLayerAttributes() {
+
+        //private void setLayerAttributes()
+        //{
+        //    mLayerAttributes = new LayerAttributes();
+        //    mLayerAttributes.Data = mRecordDict;
+        //    mLayerAttributes.setMinMax(max_lat, min_lat, max_lng, min_lng);
+        //}
+
+        private void setLayerAttributes(ConcurrentDictionary<string, Record> dict)
+        {
             mLayerAttributes = new LayerAttributes();
-            mLayerAttributes.Data = mRecordDict;
+            mLayerAttributes.setData(dict);
             mLayerAttributes.setMinMax(max_lat, min_lat, max_lng, min_lng);
         }
 
@@ -1894,6 +1923,11 @@ namespace EXIFGeotagger //v0._1
             importForm.mParent = this;
             importForm.Show();
             importForm.importData += readGeoTagCallback;
+        }
+
+        private void menuOpen_Click(object sender, EventArgs e)
+        {
+
         }
     } //end class   
 } //end namespace
