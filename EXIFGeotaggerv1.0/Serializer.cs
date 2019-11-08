@@ -54,7 +54,7 @@ namespace EXIFGeotagger
             {
                 IFormatter formatter = new BinaryFormatter();
                 
-                stream = new FileStream(path, FileMode.Append, FileAccess.Write);
+                stream = new FileStream(path, FileMode.Create, FileAccess.Write);
 
                 formatter.Serialize(stream, mLayer);
 
