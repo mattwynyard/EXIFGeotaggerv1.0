@@ -303,23 +303,24 @@ namespace EXIFGeotagger //v0._1
             {
                 MarkerTag tag = (MarkerTag)markers[0].Tag;
                 Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
-
-                for (int i = 0; i < markers.Length; i++)
+                Parallel.ForEach(markers, (marker) =>
                 {
-                    tag = (MarkerTag)markers[i].Tag;
+                    tag = (MarkerTag)marker.Tag;
                     tag.Size = size;
-                    GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
-
-                    if (markers[i].Tag != null)
+                    lock (obj)
                     {
-                        newMarker.Tag = markers[i].Tag;
+                        Bitmap bmp = bitmap;
+                        GMapMarker newMarker = new GMarkerGoogle(marker.Position, bmp);
+                        if (marker.Tag != null)
+                        {
+                            newMarker.Tag = marker.Tag;
+                        }
+                        newMarker = setToolTip(newMarker);
+                        overlay.Markers.Add(newMarker);
                     }
-                    newMarker = setToolTip(newMarker);
-                    overlay.Markers.Add(newMarker);
-                }
-            }
 
-            
+                });
+            }          
         }
 
         private void rebuildMarkers(GMapOverlay overlay, int size)
