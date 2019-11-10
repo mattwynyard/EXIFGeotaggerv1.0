@@ -229,39 +229,28 @@ namespace EXIFGeotagger //v0._1
         private GMapOverlay buildMarkers(ConcurrentDictionary<string, Record> dict, QuadTree tree, GMapOverlay overlay, string color)
         {
             int id = 0;
-            //Task build = Task.Factory.StartNew(() =>
-            //{
-            //    if (mRecordDict != null)
-            //    {
-                    Bitmap bitmap = ColorTable.getBitmap(color, 4);
-                    foreach(KeyValuePair<string, Record> item in dict)
-                    {
-                       
-                        MarkerTag tag = new MarkerTag(color, id);
-                        tag.PhotoName = item.Value.PhotoName;
-                        tag.Path = item.Value.Path;
-                        tag.Size = 4;
-                        tag.PhotoName = item.Key;
-                        tag.Record = item.Value;
-                        double lat = item.Value.Latitude;
-                        double lon = item.Value.Longitude;
-                        //lock (obj)
-                        //{
-                             id++;
-                            GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
-                            marker.Tag = tag;
-                            marker = setToolTip(marker);
-                            if (tree != null)
-                            {
-                                tree.insert(marker);
-                            }
-                            overlay.Markers.Add(marker);
-                        //}                      
-                    }
-                    mQuadDict.TryAdd(overlay.Id, tree);
-                //}
-            //});
-            //await Task.WhenAll(build);
+            Bitmap bitmap = ColorTable.getBitmap(color, 4);
+            foreach(KeyValuePair<string, Record> item in dict)
+            {                      
+                MarkerTag tag = new MarkerTag(color, id);
+                tag.PhotoName = item.Value.PhotoName;
+                tag.Path = item.Value.Path;
+                tag.Size = 4;
+                tag.PhotoName = item.Key;
+                tag.Record = item.Value;
+                double lat = item.Value.Latitude;
+                double lon = item.Value.Longitude;
+                id++;
+                GMapMarker marker = new GMarkerGoogle(new PointLatLng(lat, lon), bitmap);
+                marker.Tag = tag;
+                marker = setToolTip(marker);
+                if (tree != null)
+                {
+                    tree.insert(marker);
+                }
+                overlay.Markers.Add(marker);                   
+            }
+            mQuadDict.TryAdd(overlay.Id, tree);
             overlay.IsVisibile = true;
             return overlay;
         }
@@ -315,7 +304,7 @@ namespace EXIFGeotagger //v0._1
                         {
                             newMarker.Tag = marker.Tag;
                         }
-                        newMarker = setToolTip(newMarker);
+                        //newMarker = setToolTip(newMarker);
                         overlay.Markers.Add(newMarker);
                     }
 
@@ -1399,18 +1388,15 @@ namespace EXIFGeotagger //v0._1
             BlockingCollection<string> fileQueue = t.buildQueue(inPath);
             GMapOverlay overlay = new GMapOverlay(layer);
             resetMinMax();
-            overlay = await t.readGeoTag(fileQueue, inPath, layer, color.Name);
-
-            //setLayerAttributes();
-            //zoomToMarkers();
+            ConcurrentDictionary<string, Record> dict = await t.readGeoTag(fileQueue, inPath, layer, color.Name);
+            setLayerAttributes(dict);
             PointXY topLeft = new PointXY(min_lng - BUFFER, max_lat + BUFFER);
             PointXY topRight = new PointXY(max_lng + BUFFER, max_lat + BUFFER);
             PointXY bottomRight = new PointXY(max_lng + BUFFER, min_lat - BUFFER);
             PointXY bottomLeft = new PointXY(min_lng - BUFFER, min_lat - BUFFER);
             RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
             qt = new QuadTree(rect);
-            mQuadTreeDict.Add(layer, qt);
-            refreshUI(overlay, color.Name);
+            plotLayer(dict, qt, layer, color.Name);
         }
 
         /// <summary>

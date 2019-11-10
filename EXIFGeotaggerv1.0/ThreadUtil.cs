@@ -458,7 +458,7 @@ namespace EXIFGeotagger
             return r;
         }
 
-        public async Task<GMapOverlay> readGeoTag(BlockingCollection<string> fileQueue, string folderPath, string layer, string color)
+        public async Task<ConcurrentDictionary<string, Record>> readGeoTag(BlockingCollection<string> fileQueue, string folderPath, string layer, string color)
         {
             int mQueueSize = fileQueue.Count;
             string[] files = Directory.GetFiles(folderPath);
@@ -489,54 +489,35 @@ namespace EXIFGeotagger
 
             });
             var progressValue = progressHandler1 as IProgress<object>;
-            Task produce = Task.Factory.StartNew(() =>
+            queue = new BlockingCollection<Record>();
+            Task producer = Task.Factory.StartNew(() =>
             {            
                 try
                 {
-                    //Parallel.ForEach(fileQueue.GetConsumingEnumerable(), (item) =>
-                    //{
-                    foreach (var item in fileQueue.GetConsumingEnumerable())
+                    Parallel.ForEach(fileQueue.GetConsumingEnumerable(), (item) =>
                     {
                         if (token.IsCancellationRequested)
                         {
                             token.ThrowIfCancellationRequested();
                         }
-                        //Parallel.Invoke(() =>
-                        //{
                         ThreadInfo threadInfo = new ThreadInfo();
                         threadInfo.Length = mQueueSize;
-                        //threadInfo.ProgressHandler = progressHandler1;
                         threadInfo.File = item;
                         Record r = null;
                         r = readData(threadInfo);
-                        addRecord(r.PhotoName, r);
-                        MarkerTag tag = new MarkerTag(color, id);
-                        GMapMarker marker;
-                        lock (obj)
-                        {
-                            marker = new GMarkerGoogle(new PointLatLng(r.Latitude, r.Longitude), bitmap);
-                            setMinMax(r.latitude, r.longitude);
-                        }
-                        marker.Tag = tag;
-                        tag.Size = 4;
-                        tag.PhotoName = r.PhotoName;
-                        tag.Record = r;
-                        tag.Path = Path.GetFullPath(r.Path);
-                        overlay.Markers.Add(marker);
-                        double percent = ((double)geoTagCount / length) * 100;
+                        dict.TryAdd(r.PhotoName, r);
+                        double percent = ((double)geoTagCount / threadInfo.Length) * 100;
                         int percentInt = (int)(Math.Round(percent));
                         if (progressValue != null)
                         {
-                            
+
                             int[] values = { percentInt };
                             object a = values;
                             progressForm.Invoke(
                                 new MethodInvoker(() => progressValue.Report(a)
                             ));
                         }
-                        //});
-                        //});
-                    }
+                        });
                 }
                 catch (OperationCanceledException)
                 {
@@ -544,75 +525,75 @@ namespace EXIFGeotagger
                     cts.Dispose();
                 }
             }, cts.Token);
-            await Task.WhenAll(produce);
+            await Task.WhenAll(producer);
             sw.Stop();
             progressForm.Close();
-            return overlay;
+            return dict;
         }
 
         private Record readData(ThreadInfo threadInfo)
         {
-            //string path = threadInfo.OutPath + "\\" + item.PhotoName + ".jpg";
             string outPath = threadInfo.OutPath;
             int length = threadInfo.Length;
             string file = Path.GetFullPath(threadInfo.File);
             string photo = Path.GetFileNameWithoutExtension(file);
             Image image = new Bitmap(file);
             Record r = new Record(photo);
-                var progressValue = threadInfo.ProgressHandler as IProgress<int>;
+            
+            var progressValue = threadInfo.ProgressHandler as IProgress<int>;
+            lock (obj)
+            {
+                id++;
+            }
+            PropertyItem[] propItems = image.PropertyItems;
+            PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
+            PropertyItem propItemLat = image.GetPropertyItem(0x0002);
+            PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
+            PropertyItem propItemLon = image.GetPropertyItem(0x0004);
+            PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
+            PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
+            PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
 
-                lock (obj)
-                {
-                    id++;
-                }
-                PropertyItem[] propItems = image.PropertyItems;
-                PropertyItem propItemLatRef = image.GetPropertyItem(0x0001);
-                PropertyItem propItemLat = image.GetPropertyItem(0x0002);
-                PropertyItem propItemLonRef = image.GetPropertyItem(0x0003);
-                PropertyItem propItemLon = image.GetPropertyItem(0x0004);
-                PropertyItem propItemAltRef = image.GetPropertyItem(0x0005);
-                PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
-                PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
-
-                image.Dispose();
-                byte[] latBytes = propItemLat.Value;
-                byte[] latRefBytes = propItemLatRef.Value;
-                byte[] lonBytes = propItemLon.Value;
-                byte[] lonRefBytes = propItemLonRef.Value;
-                byte[] altRefBytes = propItemAltRef.Value;
-                byte[] altBytes = propItemAlt.Value;
-                byte[] dateTimeBytes = propItemDateTime.Value;
-                string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
-                string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
-                string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
-                double latitude = byteToDegrees(latBytes);
-                double longitude = byteToDegrees(lonBytes);
-                double altitude = byteToDecimal(altBytes);
-                DateTime dateTime = byteToDate(dateTimeBytes);
-                if (latitudeRef.Equals("S\0"))
-                {
-                    latitude = -latitude;
-                }
-                if (longitudeRef.Equals("W\0"))
-                {
-                    longitude = -longitude;
-                }
-                if (!altRef.Equals("\0"))
-                {
-                    altitude = -altitude;
-                }
-                r.Latitude = latitude;
-                r.Longitude = longitude;
-                r.Altitude = altitude;
-                r.TimeStamp = dateTime;
-                r.Path = Path.GetFullPath(file);
-                r.Id = id.ToString();   
-
-                lock (obj)
-                {
-                    geoTagCount++;
+            image.Dispose();
+            byte[] latBytes = propItemLat.Value;
+            byte[] latRefBytes = propItemLatRef.Value;
+            byte[] lonBytes = propItemLon.Value;
+            byte[] lonRefBytes = propItemLonRef.Value;
+            byte[] altRefBytes = propItemAltRef.Value;
+            byte[] altBytes = propItemAlt.Value;
+            byte[] dateTimeBytes = propItemDateTime.Value;
+            string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
+            string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
+            string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
+            double latitude = byteToDegrees(latBytes);
+            double longitude = byteToDegrees(lonBytes);
+            double altitude = byteToDecimal(altBytes);
+            DateTime dateTime = byteToDate(dateTimeBytes);
+            if (latitudeRef.Equals("S\0"))
+            {
+                latitude = -latitude;
+            }
+            if (longitudeRef.Equals("W\0"))
+            {
+                //longitude = -longitude;
+            }
+            if (!altRef.Equals("\0"))
+            {
+                altitude = -altitude;
+            }
+            r.Latitude = latitude;
+            r.Longitude = longitude;
+            r.Altitude = altitude;
+            r.TimeStamp = dateTime;
+            r.Path = Path.GetFullPath(file);
+            r.Id = id.ToString();
+            
+            lock (obj)
+            {
+                setMinMax(r.Latitude, r.Longitude);
+                geoTagCount++;
                     
-                }               
+            }               
             return r;
         }
 
@@ -924,8 +905,8 @@ namespace EXIFGeotagger
         {
             try
             {
-                int year = byteToDateInt(b, 0, 4);
                 string dateTime = Encoding.UTF8.GetString(b);
+                int year = byteToDateInt(b, 0, 4);              
                 int month = byteToDateInt(b, 5, 2);
                 int day = byteToDateInt(b, 8, 2);
                 int hour = byteToDateInt(b, 11, 2);
