@@ -288,28 +288,41 @@ namespace EXIFGeotagger //v0._1
             RectangleXY rect = getBoundaryRectangle();
             List<GMapMarker> markersList = qt.queryRange(rect);
             GMapMarker[] markers = markersList.ToArray();
-            if (markers.Length != 0)
+            MarkerTag tag = (MarkerTag)markers[0].Tag;
+            if (tag == null)
             {
-                MarkerTag tag = (MarkerTag)markers[0].Tag;
-                Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
-                Parallel.ForEach(markers, (marker) =>
+                Bitmap redBitmap = ColorTable.getBitmap("Red", size);
+                GMapMarker[] redMarkers = mOverlayDict["selected"];
+                int redCount = redMarkers.Length;
+                for (int j = 0; j < redCount; j += 1)
                 {
-                    tag = (MarkerTag)marker.Tag;
-                    tag.Size = size;
-                    lock (obj)
+                    GMapMarker newMarker = new GMarkerGoogle(redMarkers[j].Position, redBitmap);
+                    overlay.Markers.Add(newMarker);
+                }
+            } else
+            {
+                if (markers.Length != 0)
+                {
+                    Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
+                    Parallel.ForEach(markers, (marker) =>
                     {
-                        Bitmap bmp = bitmap;
-                        GMapMarker newMarker = new GMarkerGoogle(marker.Position, bmp);
-                        if (marker.Tag != null)
+                        tag = (MarkerTag)marker.Tag;
+                        tag.Size = size;
+                        lock (obj)
                         {
-                            newMarker.Tag = marker.Tag;
+                            Bitmap bmp = bitmap;
+                            GMapMarker newMarker = new GMarkerGoogle(marker.Position, bmp);
+                            if (marker.Tag != null)
+                            {
+                                newMarker.Tag = marker.Tag;
+                            }
+                            //newMarker = setToolTip(newMarker);
+                            overlay.Markers.Add(newMarker);
                         }
-                        //newMarker = setToolTip(newMarker);
-                        overlay.Markers.Add(newMarker);
-                    }
-
-                });
-            }          
+                    });
+                }
+            }
+            
         }
 
         private void rebuildMarkers(GMapOverlay overlay, int size)
@@ -370,7 +383,7 @@ namespace EXIFGeotagger //v0._1
                     {
                         step = 1;
                     }
-                Dictionary<string, string> dict = tag.Dictionary;
+                    Dictionary<string, string> dict = tag.Dictionary;
                     Bitmap bitmap = null;
                     if (dict == null)
                     {
@@ -386,15 +399,13 @@ namespace EXIFGeotagger //v0._1
                             tag = (MarkerTag)markers[i].Tag;
                             tag.Size = size;
                             GMapMarker newMarker = new GMarkerGoogle(markers[i].Position, bitmap);
-
-                            if (markers[i].Tag != null)
+                           if (markers[i].Tag != null)
                             {
                                 newMarker.Tag = markers[i].Tag;
                             }
                             newMarker = setToolTip(newMarker);
                             overlay.Markers.Add(newMarker);
-                        }
-                       
+                        }                      
                     }
                 }
             } catch (KeyNotFoundException ex)
