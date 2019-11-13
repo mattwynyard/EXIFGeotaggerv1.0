@@ -297,32 +297,35 @@ namespace EXIFGeotagger //v0._1
             }
             else
             {
-                QuadTree qt = mQuadDict[overlay.Id];
-                RectangleXY rect = getBoundaryRectangle();
-                List<GMapMarker> markersList = qt.queryRange(rect);
-                GMapMarker[] markers = markersList.ToArray();               
-                if (markers.Length != 0)
-                {
-                    MarkerTag tag = (MarkerTag)markers[0].Tag;
-                    Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
-                    //step = getStep(size);
-                    Parallel.ForEach(markers, (marker) =>
+                //Task.Factory.StartNew(() =>
+                //{
+                    QuadTree qt = mQuadDict[overlay.Id];
+                    RectangleXY rect = getBoundaryRectangle();
+                    List<GMapMarker> markersList = qt.queryRange(rect);
+                    GMapMarker[] markers = markersList.ToArray();
+                    if (markers.Length != 0)
                     {
-                        tag = (MarkerTag)marker.Tag;
-                        tag.Size = size;
-                        lock (obj)
+                        MarkerTag tag = (MarkerTag)markers[0].Tag;
+                        Bitmap bitmap = ColorTable.getBitmap(tag.Color, size);
+                        //step = getStep(size);
+                        Parallel.ForEach(markers, (marker) =>
                         {
-                            Bitmap bmp = bitmap;
-                            GMapMarker newMarker = new GMarkerGoogle(marker.Position, bmp);
-                            if (marker.Tag != null)
+                            tag = (MarkerTag)marker.Tag;
+                            tag.Size = size;
+                            lock (obj)
                             {
-                                newMarker.Tag = marker.Tag;
+                                Bitmap bmp = bitmap;
+                                GMapMarker newMarker = new GMarkerGoogle(marker.Position, bmp);
+                                if (marker.Tag != null)
+                                {
+                                    newMarker.Tag = marker.Tag;
+                                }
+                                //newMarker = setToolTip(newMarker);
+                                overlay.Markers.Add(newMarker);
                             }
-                            //newMarker = setToolTip(newMarker);
-                            overlay.Markers.Add(newMarker);
-                        }
-                    });
-                }
+                        });
+                    }
+                //});
             }          
         }
 
