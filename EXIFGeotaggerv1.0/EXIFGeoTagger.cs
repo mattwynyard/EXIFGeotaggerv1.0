@@ -345,22 +345,6 @@ namespace EXIFGeotagger //v0._1
             stream.Close();
         }
 
-        private void zoomToMarkers()
-        {
-            zoomRect = new List<PointLatLng>();
-            PointLatLng topLeft = new PointLatLng(max_lat, min_lng);
-            PointLatLng topRight = new PointLatLng(max_lat, max_lng);
-            PointLatLng bottomRight = new PointLatLng(min_lat, max_lng);
-            PointLatLng bottomLeft = new PointLatLng(min_lat, min_lng);
-            zoomRect.Add(topLeft);
-            zoomRect.Add(topRight);
-            zoomRect.Add(bottomRight);
-            zoomRect.Add(bottomLeft);
-            RectLatLng rect = polygonToRect(zoomRect);
-            gMap.SetZoomToFitRect(rect);
-            zoomRect.Clear();
-        }
-
         private void zoomToMarkers(double maxLat, double minLat, double maxLng, double minLng)
         {
             zoomRect = new List<PointLatLng>();
@@ -386,14 +370,10 @@ namespace EXIFGeotagger //v0._1
             txtConsole.Clear();
             txtConsole.AppendText(gMap.Zoom.ToString());
             double metersPerPx = 156543.03392 * Math.Cos(gMap.ViewArea.LocationMiddle.Lat * Math.PI / 180) / Math.Pow(2, gMap.Zoom);
-            //txtConsole.AppendText("Scale: " + metersPerPx + Environment.NewLine);
             double scale = metersPerPx * (96 / 0.0254);
             txtConsole.AppendText("Scale 1:" + scale + "m" + Environment.NewLine);
-
             lbScale.Text = "Scale 1: " + Math.Round(scale);
-
             GMapOverlay[] overlays = gMap.Overlays.ToArray<GMapOverlay>();
-
             foreach (GMapOverlay overlay in overlays)
             {
                 if (overlay.Id != "zoom")
@@ -408,12 +388,10 @@ namespace EXIFGeotagger //v0._1
                     }
                     else if ((int)gMap.Zoom < 18 && (int)gMap.Zoom >= 15)
                     {
-                        //rebuildMarkers(overlay, 8);
                         reBuildMarkers(overlay, 8);
                     }
                     else
                     {
-                        //rebuildMarkers(overlay, 12);
                         reBuildMarkers(overlay, 12);
                     }
                 }
@@ -450,16 +428,14 @@ namespace EXIFGeotagger //v0._1
         /// <param name="e"></param>
         private void gMap_MouseDown(object sender, MouseEventArgs e)
         {
-            //mapContextMenu.MenuItems.Clear();
             mouseDown = true;
-                zoomOverlay = new GMapOverlay("zoom");
+            zoomOverlay = new GMapOverlay("zoom");
+            topLeft = gMap.FromLocalToLatLng(e.X, e.Y);
+            zoomRect = new List<PointLatLng>();
+            var point = gMap.FromLocalToLatLng(e.X, e.Y);
+            txtConsole.Clear();
+            txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
 
-                topLeft = gMap.FromLocalToLatLng(e.X, e.Y);
-                zoomRect = new List<PointLatLng>();
-                var point = gMap.FromLocalToLatLng(e.X, e.Y);
-                txtConsole.Clear();
-                txtConsole.AppendText("latitude: " + Math.Round(point.Lat, 6) + " longitude: " + Math.Round(point.Lng, 6));
-            //}           
         }
 
         private void gMap_onMapDrag()
@@ -500,11 +476,9 @@ namespace EXIFGeotagger //v0._1
 
         private void gMap_MouseUp(object sender, MouseEventArgs e)
         {
-
             if (!panning && e.Button == MouseButtons.Right)
             {
-                point = gMap.FromLocalToLatLng(e.X, e.Y);
-               
+                point = gMap.FromLocalToLatLng(e.X, e.Y);               
                 itemCopy = mapContextMenu.MenuItems.Add("Copy position to clipboard");
                 ContextMenu = mapContextMenu;
                 itemCopy.Click += copyToClipBoard;
@@ -553,7 +527,7 @@ namespace EXIFGeotagger //v0._1
                         rect = null;                  
                     } else
                     {
-                        clearOverlay(selectedMarkersOverlay);
+                        //clearOverlay(selectedMarkersOverlay);
                     }                
                 }
             }
@@ -610,12 +584,10 @@ namespace EXIFGeotagger //v0._1
                 {
                     panning = false;
                 }
+                
                 if (selectedMarker != null)
                 {
-                    MarkerTag currentTag = (MarkerTag)selectedMarker.Tag;
-                    currentTag.IsSelected = false;
-                    selectedMarkersOverlay.Clear();
-                    mOverlayDict.Remove("selected");
+                    clearOverlay(selectedMarkersOverlay);
                     selectedMarker = null;
                 }
                 else if (selectedMarkersList != null)
@@ -649,77 +621,25 @@ namespace EXIFGeotagger //v0._1
 
         private void gMap_OnMarkerClick(GMapMarker marker, MouseEventArgs e)
         {
-            MarkerTag tag = (MarkerTag)marker.Tag;
-            if (tag.IsSelected)
-            {
-                tag.IsSelected = false;
-
-            } else
-            {
-                tag.IsSelected = true;
-                Bitmap bitmap = ColorTable.getBitmap("Red", tag.Size);
-                GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
-                selectedMarkersOverlay.Markers.Add(newMarker);
-                gMap.Overlays.Add(selectedMarkersOverlay);
-                GMapMarker[] selectedMarkers = selectedMarkersOverlay.Markers.ToArray<GMapMarker>();
-                mOverlayDict.Add("selected", selectedMarkers);
-                getPicture(marker);
-                gMap_OnMapZoomChanged();
-            }
-            
-            
-            //clearOverlay(selectedMarkersOverlay);
-
-            ////newMarker.Offset = marker.Offset;
-
-
-            //if (selectedMarker == null)
-            //{
-            //    Bitmap bitmap = ColorTable.getBitmap("Red", tag.Size);
-            //    GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
-            //    newMarker.LocalPosition = marker.LocalPosition;
-            //    selectedMarkersOverlay.Markers.Add(newMarker);
-            //    gMap.Overlays.Add(selectedMarkersOverlay);
-            //    GMapMarker[] selectedMarkers = selectedMarkersOverlay.Markers.ToArray<GMapMarker>();
-            //    mOverlayDict.Add("selected", selectedMarkers);
-            //    selectedMarker = marker;
-            //    MarkerTag currentTag = (MarkerTag)selectedMarker.Tag;
-            //    currentTag.IsSelected = true;
-            //    getPicture(selectedMarker);
-            //}
-            //else
-            //{
-            //    if (tag == null)
-            //    {
-            //        selectedMarkersOverlay.Clear();
-            //        gMap.Overlays.Remove(selectedMarkersOverlay);
-            //        mOverlayDict.Remove("selected");
-            //    }
-            //    else
-            //    {
-            //        if (tag.IsSelected == true) //deselects marker
-            //        {
-            //            selectedMarkersOverlay.Clear();
-            //            gMap.Overlays.Remove(selectedMarkersOverlay);
-            //            mOverlayDict.Remove("selected");
-            //            tag.IsSelected = false;
-            //            selectedMarker = null;
-            //        }
-            //        else
-            //        {
-            //            selectedMarkersOverlay.Clear(); //selects a new marker
-            //            gMap.Overlays.Remove(selectedMarkersOverlay);
-            //            mOverlayDict.Remove("selected");
-            //            selectedMarker = marker;
-            //            MarkerTag currentTag = (MarkerTag)selectedMarker.Tag;
-            //            currentTag.IsSelected = true;
-            //            getPicture(selectedMarker);
-            //        }
-            //    }
-            //}
+            selectedMarker = selectMarker(marker);
+            getPicture(selectedMarker);
+         
         }
 
-        private void gMap_OnRouteClick(GMapRoute route, System.Windows.Forms.MouseEventArgs e)
+        private GMapMarker selectMarker(GMapMarker marker)
+        {
+            MarkerTag tag = (MarkerTag)marker.Tag;
+            Bitmap bitmap = ColorTable.getBitmap("Red", tag.Size);
+            GMapMarker newMarker = new GMarkerGoogle(marker.Position, bitmap);
+            newMarker.LocalPosition = marker.LocalPosition;
+            selectedMarkersOverlay.Markers.Add(newMarker);
+            gMap.Overlays.Add(selectedMarkersOverlay);
+            GMapMarker[] selectedMarkers = selectedMarkersOverlay.Markers.ToArray<GMapMarker>();
+            mOverlayDict.Add("selected", selectedMarkers);
+            return marker;
+        }
+
+        private void gMap_OnRouteClick(GMapRoute route, MouseEventArgs e)
         {
 
             GMapOverlay overaly = route.Overlay;
@@ -860,17 +780,6 @@ namespace EXIFGeotagger //v0._1
             gMap.Overlays.Remove(zoomToMarkersOverlay);
 
         }
-        
-
-        //    private void PhotosToolStripMenuItem1_Click(object sender, EventArgs e)
-        //{
-        //    ImportDataForm importForm = new ImportDataForm("photos");
-        //    mRecordDict = new Dictionary<string, Record>();
-        //    importForm.mParent = this;
-        //    importForm.Show();
-        //    importForm.importData += readGeoTagCallback;
-        //}
-
 
         private void fileMenuOpen_Click(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -1577,12 +1486,72 @@ namespace EXIFGeotagger //v0._1
 
         private void BtnLeft_Click(object sender, EventArgs e)
         {
+            incrementPhoto("left");
+        }
 
+        private void incrementPhoto(string button)
+        {
+            if (selectedMarker != null)
+            {
+                MarkerTag tag = selectedMarker.Tag as MarkerTag;
+                string photo = tag.PhotoName;
+                string[] tokens = photo.Split('_');
+                string suffix = tokens[tokens.Length - 1];
+                int number;
+                if (button == "left")
+                {
+                    number = Int32.Parse(suffix) - 1;
+                } else
+                {
+                    number = Int32.Parse(suffix) + 1;
+                }
+                string newSuffix = number.ToString();
+                GMapMarker[] markers = mOverlay.Markers.ToArray<GMapMarker>();
+                clearOverlay(selectedMarkersOverlay);
+                GMapMarker marker = findMarker(number, markers, button);
+                selectedMarker = selectMarker(marker);
+                getPicture(selectedMarker);
+            }
+        }
+
+        private GMapMarker findMarker(int suffix, GMapMarker[] markers, string button)
+        {
+            try
+            {
+                if (suffix == 0 || markers.Length == 0)
+                {
+                    return null;
+                }
+                string suffixToFind = suffix.ToString();
+                foreach (var marker in markers)
+                {
+                    MarkerTag tag = marker.Tag as MarkerTag;
+                    string photo = tag.PhotoName;
+                    string[] tokens = photo.Split('_');
+                    if (suffixToFind == tokens[tokens.Length - 1])
+                    {
+                        return marker;
+                    }
+                }
+                if (button == "left")
+                {
+                    return findMarker(suffix - 1, markers, button);
+
+                }
+                else
+                {
+                    return findMarker(suffix + 1, markers, button);
+                }
+            } catch (StackOverflowException ex)
+            {
+                string s = ex.Message;
+                return null;
+            }
         }
 
         private void BtnRight_Click(object sender, EventArgs e)
         {
-
+            incrementPhoto("right");
         }
         private void EXIFGeoTagger_Load(object sender, EventArgs e)
         {
