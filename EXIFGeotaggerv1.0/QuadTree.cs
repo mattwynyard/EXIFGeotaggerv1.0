@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Drawing;
-using GMap.NET;
 using GMap.NET.WindowsForms;
 
 namespace EXIFGeotagger
@@ -101,8 +98,7 @@ namespace EXIFGeotagger
         RectangleXY boundary;
 
         // Points in this quad tree node
-        List<GMapMarker> points = new List<GMapMarker>();
-
+        List<GMapMarker> points;
         //data extents
         private double min_lat;
         private double min_lng;
@@ -115,12 +111,13 @@ namespace EXIFGeotagger
         public QuadTree southEast;
 
         // Methods
-
         public QuadTree(RectangleXY rect)
         {
             boundary = rect;
+            points = new List<GMapMarker>();
         }
 
+        // Methods
 
         private void subdivide(QuadTree parent)
         {
@@ -133,7 +130,6 @@ namespace EXIFGeotagger
             parent.southEast = new QuadTree(new RectangleXY(se, parent.boundary.width / 2.0, parent.boundary.height / 2.0));
             parent.southWest = new QuadTree(new RectangleXY(sw, parent.boundary.width / 2.0, parent.boundary.height / 2.0));
         }
-
 
         public int count()
         {
@@ -164,7 +160,6 @@ namespace EXIFGeotagger
             }
             return count;
         }
-
 
         public Boolean insert(GMapMarker marker)
         {
@@ -223,15 +218,6 @@ namespace EXIFGeotagger
             RectangleXY rect = new RectangleXY(topLeft, topRight, bottomRight, bottomLeft);
             return rect;
         }
-
-        //public RectLatLng getBoundary()
-        //{
-        //    PointLatLng topLeft = new PointLatLng(max_lat, min_lng);
-        //    PointLatLng topRight = new PointLatLng(max_lat, max_lng);
-        //    PointLatLng bottomRight = new PointLatLng(min_lat, max_lng);
-        //    PointLatLng bottomLeft = new PointLatLng(min_lat, min_lng);
-        //    RectLatLng rect = new RectLatLng()
-        //}
 
         public List<GMapMarker> queryRange(RectangleXY range)
         {
@@ -299,8 +285,6 @@ namespace EXIFGeotagger
             }
             return pointsInRange;
         }
-
-
     }
 }
 

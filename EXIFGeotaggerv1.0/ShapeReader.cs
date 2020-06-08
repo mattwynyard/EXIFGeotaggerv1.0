@@ -340,7 +340,11 @@ namespace ShapeFile
             string fileName = Path.GetFileNameWithoutExtension(path) + ".dbf";
             string oldPath = dbPath + fileName;
             string newPath = dbPath + "data.dbf";
-            File.Move(oldPath, newPath);
+            if (File.Exists(newPath))
+            {
+                File.Delete(newPath);
+            }
+            File.Copy(oldPath, newPath);
             string constr = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + dbPath + ";Extended Properties=dBASE IV";
             await Task.Run(() =>
             {
@@ -363,7 +367,7 @@ namespace ShapeFile
                         string data = row[0].ToString();
                     }
                 }
-                File.Move(newPath, oldPath);
+                File.Delete(newPath);
             });
                
             return dt;

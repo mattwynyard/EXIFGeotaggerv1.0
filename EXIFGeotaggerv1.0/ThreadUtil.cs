@@ -32,7 +32,7 @@ namespace EXIFGeotagger
         public delegate void GeoTagCompleteDelegate(GeotagReport report);
         //properties
         private OleDbConnection connection;
-        private static readonly Object obj = new Object();
+        private static readonly object obj = new object();
         private ProgressForm progressForm;
         private int geoTagCount;
         private int errorCount;
@@ -56,8 +56,7 @@ namespace EXIFGeotagger
         private string outPath;
 
         private static ManualResetEvent mre = new ManualResetEvent(false);
-        private static ManualResetEvent producerMRE = new ManualResetEvent(false);
-
+        //private static ManualResetEvent producerMRE = new ManualResetEvent(false);
         private Stopwatch stopwatch;
         public TimeSpan ts;
         public GeotagReport report;
@@ -248,10 +247,10 @@ namespace EXIFGeotagger
                 OleDbCommand command = new OleDbCommand(strSQL, connection);
                 using (OleDbDataReader reader = command.ExecuteReader())
                 {
-                    Object[] row;
+                    object[] row;
                     while (reader.Read())
                     {
-                        row = new Object[reader.FieldCount];
+                        row = new object[reader.FieldCount];
                         reader.GetValues(row);
                         Record r = await buildRecord(row);
                         queue.Add(r);
@@ -368,7 +367,6 @@ namespace EXIFGeotagger
                 }
             });
             await Task.WhenAll(producer, consumer);
-            //Task.WhenAll(progress);
             await Task.WhenAll(consumeBitmaps);
             stopwatch.Stop();
             progressForm.enableOK();
@@ -393,7 +391,7 @@ namespace EXIFGeotagger
             double percent = ((double)count / length) * 100;
             int percentInt = (int)percent;
             int[] values = { percentInt, count, length, queue.Count, dict.Count, photoDict.Count, bitmapQueue.Count, geoTagCount, tagRate, noPhotoDict.Count };
-            object a = (object)values;
+            object a = values;
             try
             {
                 progressForm.Invoke(new MethodInvoker(() =>
@@ -405,7 +403,7 @@ namespace EXIFGeotagger
                 }));
             } catch (Exception ex)
             {
-                String err = ex.StackTrace;
+                string err = ex.StackTrace;
             }
         }
 
@@ -764,23 +762,6 @@ namespace EXIFGeotagger
                 connection.Close();              
             });
             Task t = Task.WhenAll(updateDB);
-            //try
-            //{
-            //    t.Wait();
-            //    double percent = ((double)count / length) * 100;
-            //    int percentInt = (int)percent;
-            //    int[] values = { percentInt, count, length };
-            //    object a = values;
-            //    progressForm.Invoke(new MethodInvoker(() =>
-            //    {
-            //        if (progressValue != null)
-            //        {
-            //            progressValue.Report(a);
-            //        }
-            //    }));
-            //}
-            //catch { }
-
             progressForm.enableOK();
             progressForm.disableCancel();
         }

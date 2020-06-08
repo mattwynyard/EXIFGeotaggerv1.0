@@ -31,12 +31,9 @@ namespace EXIFGeotagger //v0._1
 
         public delegate Task<GMapOverlay> ReadGeoTagDelegate(string folderPath, string layer, Color color);
 
-        Stopwatch stopWatch;
-
+        private Stopwatch stopWatch;
         private readonly double BUFFER = 0.1; //degrees to enlarge encompassing rectangle to handle boundary conditions
-
         private string connectionString;
-
         private Image image; //photo in photo viewer
         public string mDBPath;
         public string mLayer; //imported layer
@@ -284,6 +281,7 @@ namespace EXIFGeotagger //v0._1
         private void reBuildMarkers(GMapOverlay overlay, int size)
         {
             overlay.Clear();
+            GMapMarker[] markers = null;
             if (overlay.Id == "selected")
             {
                 Bitmap redBitmap = ColorTable.getBitmap("Red", size);
@@ -297,12 +295,12 @@ namespace EXIFGeotagger //v0._1
             }
             else
             {
-                //Task.Factory.StartNew(() =>
-                //{
+                try
+                {
                     QuadTree qt = mQuadDict[overlay.Id];
                     RectangleXY rect = getBoundaryRectangle();
                     List<GMapMarker> markersList = qt.queryRange(rect);
-                    GMapMarker[] markers = markersList.ToArray();
+                    markers = markersList.ToArray();
                     if (markers.Length != 0)
                     {
                         MarkerTag tag = (MarkerTag)markers[0].Tag;
@@ -325,7 +323,11 @@ namespace EXIFGeotagger //v0._1
                             }
                         });
                     }
-                //});
+
+                } catch (KeyNotFoundException ex)
+                {
+                    //markers = mOverlayDict[overlay.Id];
+                }
             }          
         }
 
