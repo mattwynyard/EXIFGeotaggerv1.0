@@ -1112,6 +1112,7 @@ namespace EXIFGeotagger //v0._1
             }
             addListItem(ColorTable.ColorCrossDict, overlay, color.Name);
 
+
             await Task.Run(() =>
             {
                 DataTable table = reader.readDBF().Result;
@@ -1199,7 +1200,7 @@ namespace EXIFGeotagger //v0._1
         //    geotagForm.writeGeoTag += writeGeoTagCallback;
         //}
 
-        public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip, string inspector)
+        public async void writeGeoTagCallback(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip, string inspector, DateTime start, DateTime end)
         {
             ThreadUtil t = new ThreadUtil();
             t.geoTagComplete += geoTagComplete;
@@ -1514,6 +1515,14 @@ namespace EXIFGeotagger //v0._1
             }
         }
 
+
+        /// <summary>
+        /// searches for next marker to move to based on the name of the photo
+        /// </summary>
+        /// <param name="suffix">the photo number</param>
+        /// <param name="markers"> array of markers in screen boundary</param>
+        /// <param name="button">whether user clicked forward or back</param>
+        /// <returns>the next marker to move to</returns>
         private GMapMarker findMarker(int suffix, GMapMarker[] markers, string button)
         {
             try
@@ -1536,7 +1545,6 @@ namespace EXIFGeotagger //v0._1
                 if (button == "left")
                 {
                     return findMarker(suffix - 1, markers, button);
-
                 }
                 else
                 {

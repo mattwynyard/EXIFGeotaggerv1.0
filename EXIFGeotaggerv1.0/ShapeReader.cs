@@ -14,12 +14,14 @@ namespace ShapeFile
 
     public struct Point
     {
+        public int id;
         public double x;
         public double y;
     }
 
     public struct MultiPoint
     {
+        public int id;
         public double[] box;
         public int num;
         public PointLatLng[] points;
@@ -49,6 +51,7 @@ namespace ShapeFile
     /// </summary>
     public struct PolyLineZ
     {
+        public int id;
         public double[] box;
         public int numParts;
         public int numPoints;
@@ -62,6 +65,7 @@ namespace ShapeFile
 
     public struct PolyLine
     {
+        public int id;
         public double[] box;
         public int numParts;
         public int numPoints;
@@ -71,6 +75,7 @@ namespace ShapeFile
 
     public struct Polygon
     {
+        public int id;
         public double[] box;
         public int numParts;
         public int numPoints;
@@ -214,6 +219,7 @@ namespace ShapeFile
                     else if (shapeType == 13) //polylineZ
                     {
                         PolyLineZ pl = new PolyLineZ();
+                        pl.id = record;
                         pl.box = getBoundingBox(shpData, ref offset);
                         pl.numParts = readInt(shpData, ref offset);
                         pl.numPoints = readInt(shpData, ref offset);
@@ -349,11 +355,8 @@ namespace ShapeFile
                     var sql = "SELECT * FROM " + "data.dbf";
                     OleDbCommand cmd = new OleDbCommand(sql, con);
                     con.Open();
-
-
                     OleDbDataAdapter da = new OleDbDataAdapter(cmd);
                     da.Fill(dt);
-
                     foreach (DataColumn column in dt.Columns)
                     {
                         string data = column.ToString();

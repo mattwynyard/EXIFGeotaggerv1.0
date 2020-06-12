@@ -25,12 +25,15 @@ namespace EXIFGeotagger //v0._1
         private OpenFileDialog openFileDialog;
         private string filter;
         public event writeGeoTagDelegate writeGeoTag;
-        public delegate void writeGeoTagDelegate(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip, string inspector);
+        public delegate void writeGeoTagDelegate(string dbPath, string inPath, string outPath, string layer, string color, Boolean allRecords, Boolean zip, string inspector,  DateTime startDate, DateTime endDate);
 
         private Boolean mMirror;
         private Boolean mGamma;
         private Boolean mContrast;
         private Boolean mZip;
+        private int days;
+        private DateTime startDate;
+        private DateTime endDate;
 
         public GeotagForm()
         {
@@ -46,6 +49,15 @@ namespace EXIFGeotagger //v0._1
             btnColor.BackColor = colorDialog1.Color;
             mColor = "ffff8080";
             mLayer = txtLayer.Text;
+            datePickerStart.Enabled = false;
+            datePickerEnd.Enabled = false;
+            datePickerStart.MaxDate = DateTime.Now;
+            datePickerEnd.MaxDate = DateTime.Now;
+            //startDate = datePickerStart.Value;
+            datePickerEnd.MinDate = startDate = datePickerStart.Value;
+            endDate = datePickerEnd.Value;
+            days = (datePickerStart.Value - datePickerEnd.Value).Days;
+
         }
 
         private void btnBrowse0_Click(object sender, EventArgs e)
@@ -139,7 +151,7 @@ namespace EXIFGeotagger //v0._1
                 inspector = "";
             }
 
-            writeGeoTag(mDataPath, mInPath, mOutPath, mLayer, mColor, mAllRecords, mZip, inspector);
+            writeGeoTag(mDataPath, mInPath, mOutPath, mLayer, mColor, mAllRecords, mZip, inspector, startDate, endDate);
         }
 
         private void txtDataSource_TextChanged(object sender, EventArgs e)
@@ -153,41 +165,6 @@ namespace EXIFGeotagger //v0._1
             mLayer = txtLayer.Text;
         }
 
-        private void CkContrast_CheckedStateChanged(object sender, EventArgs e)
-        {
-            if (ckContrast.Checked)
-            {
-                mContrast = true;
-            }
-            else
-            {
-                mContrast = false;
-            }
-        }
-
-        private void CkGamma_CheckedStateChanged(object sender, EventArgs e)
-        {
-            if (ckGamma.Checked)
-            {
-                mGamma = true;
-            }
-            else
-            {
-                mGamma = false;
-            }
-        }
-
-        private void CkMirror_CheckedStateChanged(object sender, EventArgs e)
-        {
-            if (ckMirror.Checked)
-            {
-                mMirror = true;
-            }
-            else
-            {
-                mMirror = false;
-            }
-        }
 
         private void CkZip_CheckedStateChanged(object sender, EventArgs e)
         {
@@ -225,5 +202,20 @@ namespace EXIFGeotagger //v0._1
             CorrectionUtil.ClaheCorrection(photo, 0.5);
 
         }
+
+        private void datePickerStart_ValueChanged(object sender, EventArgs e)
+        {
+            datePickerEnd.MinDate = startDate = datePickerStart.Value;
+            days = (datePickerEnd.Value - datePickerStart.Value).Days;
+        }
+
+        private void datePickerEnd_ValueChanged(object sender, EventArgs e)
+        {
+
+            endDate = datePickerEnd.Value;
+            days = (datePickerEnd.Value - datePickerStart.Value).Days;
+        }
+
+
     }
 }

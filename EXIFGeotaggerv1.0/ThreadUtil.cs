@@ -146,6 +146,7 @@ namespace EXIFGeotagger
                                         if (!added)
                                         {
                                             string photo = file;
+                                            Console.WriteLine(photo);
                                         }
                                     }
                                 }
@@ -554,6 +555,11 @@ namespace EXIFGeotagger
             PropertyItem propItemAlt = image.GetPropertyItem(0x0006);
             PropertyItem propItemDateTime = image.GetPropertyItem(0x0132);
 
+            PropertyItem propItemSat = image.GetPropertyItem(0x0008);
+            PropertyItem propItemDir = image.GetPropertyItem(0x0011);
+            PropertyItem propItemVel = image.GetPropertyItem(0x000D);
+            PropertyItem propItemPDop = image.GetPropertyItem(0x000B);
+
             image.Dispose();
             byte[] latBytes = propItemLat.Value;
             byte[] latRefBytes = propItemLatRef.Value;
@@ -562,6 +568,11 @@ namespace EXIFGeotagger
             byte[] altRefBytes = propItemAltRef.Value;
             byte[] altBytes = propItemAlt.Value;
             byte[] dateTimeBytes = propItemDateTime.Value;
+            byte[] satBytes = propItemSat.Value;
+            byte[] dirBytes = propItemDir.Value;
+            byte[] velBytes = propItemVel.Value;
+            byte[] pdopBytes = propItemPDop.Value;
+
             string latitudeRef = ASCIIEncoding.UTF8.GetString(latRefBytes);
             string longitudeRef = ASCIIEncoding.UTF8.GetString(lonRefBytes);
             string altRef = ASCIIEncoding.UTF8.GetString(altRefBytes);
@@ -764,23 +775,6 @@ namespace EXIFGeotagger
                 connection.Close();              
             });
             Task t = Task.WhenAll(updateDB);
-            //try
-            //{
-            //    t.Wait();
-            //    double percent = ((double)count / length) * 100;
-            //    int percentInt = (int)percent;
-            //    int[] values = { percentInt, count, length };
-            //    object a = values;
-            //    progressForm.Invoke(new MethodInvoker(() =>
-            //    {
-            //        if (progressValue != null)
-            //        {
-            //            progressValue.Report(a);
-            //        }
-            //    }));
-            //}
-            //catch { }
-
             progressForm.enableOK();
             progressForm.disableCancel();
         }
@@ -888,6 +882,8 @@ namespace EXIFGeotagger
                     return "SF";
                 case "Paul Newman":
                     return "PN";
+                case "Andrew Bright":
+                    return "AB";
                 default:
                     return "";
             }

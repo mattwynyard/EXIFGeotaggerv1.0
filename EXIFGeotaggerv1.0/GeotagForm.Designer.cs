@@ -44,34 +44,33 @@
             this.lbColor = new System.Windows.Forms.Label();
             this.ckBoxGeoMark = new System.Windows.Forms.CheckBox();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-            this.ckContrast = new System.Windows.Forms.CheckBox();
-            this.lbCorrection = new System.Windows.Forms.Label();
-            this.ckGamma = new System.Windows.Forms.CheckBox();
-            this.ckMirror = new System.Windows.Forms.CheckBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.btnCorrect = new System.Windows.Forms.Button();
             this.ckZip = new System.Windows.Forms.CheckBox();
             this.cbInspector = new System.Windows.Forms.ComboBox();
             this.lbInspector = new System.Windows.Forms.Label();
+            this.datePickerStart = new System.Windows.Forms.DateTimePicker();
+            this.datePickerEnd = new System.Windows.Forms.DateTimePicker();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // txtInputPath
             // 
-            this.txtInputPath.Location = new System.Drawing.Point(12, 111);
+            this.txtInputPath.Location = new System.Drawing.Point(12, 109);
             this.txtInputPath.Name = "txtInputPath";
             this.txtInputPath.Size = new System.Drawing.Size(447, 20);
             this.txtInputPath.TabIndex = 0;
             // 
             // txtOutputPath
             // 
-            this.txtOutputPath.Location = new System.Drawing.Point(12, 153);
+            this.txtOutputPath.Location = new System.Drawing.Point(12, 171);
             this.txtOutputPath.Name = "txtOutputPath";
             this.txtOutputPath.Size = new System.Drawing.Size(447, 20);
             this.txtOutputPath.TabIndex = 1;
             // 
             // btnBrowse1
             // 
-            this.btnBrowse1.Location = new System.Drawing.Point(465, 111);
+            this.btnBrowse1.Location = new System.Drawing.Point(465, 109);
             this.btnBrowse1.Name = "btnBrowse1";
             this.btnBrowse1.Size = new System.Drawing.Size(75, 23);
             this.btnBrowse1.TabIndex = 2;
@@ -81,7 +80,7 @@
             // 
             // btnBrowse2
             // 
-            this.btnBrowse2.Location = new System.Drawing.Point(465, 153);
+            this.btnBrowse2.Location = new System.Drawing.Point(465, 171);
             this.btnBrowse2.Name = "btnBrowse2";
             this.btnBrowse2.Size = new System.Drawing.Size(75, 23);
             this.btnBrowse2.TabIndex = 3;
@@ -93,7 +92,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(12, 92);
+            this.label1.Location = new System.Drawing.Point(12, 83);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(66, 16);
             this.label1.TabIndex = 4;
@@ -103,7 +102,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(12, 134);
+            this.label2.Location = new System.Drawing.Point(12, 152);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(76, 16);
             this.label2.TabIndex = 5;
@@ -111,9 +110,10 @@
             // 
             // btnGeotag
             // 
-            this.btnGeotag.Location = new System.Drawing.Point(363, 261);
+            this.btnGeotag.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnGeotag.Location = new System.Drawing.Point(422, 231);
             this.btnGeotag.Name = "btnGeotag";
-            this.btnGeotag.Size = new System.Drawing.Size(96, 41);
+            this.btnGeotag.Size = new System.Drawing.Size(118, 55);
             this.btnGeotag.TabIndex = 6;
             this.btnGeotag.Text = "Geotag";
             this.btnGeotag.UseVisualStyleBackColor = true;
@@ -160,7 +160,7 @@
             // 
             this.lbLayer.AutoSize = true;
             this.lbLayer.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbLayer.Location = new System.Drawing.Point(12, 200);
+            this.lbLayer.Location = new System.Drawing.Point(12, 194);
             this.lbLayer.Name = "lbLayer";
             this.lbLayer.Size = new System.Drawing.Size(42, 16);
             this.lbLayer.TabIndex = 11;
@@ -168,7 +168,7 @@
             // 
             // btnColor
             // 
-            this.btnColor.Location = new System.Drawing.Point(174, 213);
+            this.btnColor.Location = new System.Drawing.Point(174, 216);
             this.btnColor.Name = "btnColor";
             this.btnColor.Size = new System.Drawing.Size(32, 30);
             this.btnColor.TabIndex = 12;
@@ -179,7 +179,7 @@
             // 
             this.lbColor.AutoSize = true;
             this.lbColor.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbColor.Location = new System.Drawing.Point(171, 194);
+            this.lbColor.Location = new System.Drawing.Point(171, 200);
             this.lbColor.Name = "lbColor";
             this.lbColor.Size = new System.Drawing.Size(47, 16);
             this.lbColor.TabIndex = 13;
@@ -188,7 +188,7 @@
             // ckBoxGeoMark
             // 
             this.ckBoxGeoMark.AutoSize = true;
-            this.ckBoxGeoMark.Location = new System.Drawing.Point(231, 221);
+            this.ckBoxGeoMark.Location = new System.Drawing.Point(194, 84);
             this.ckBoxGeoMark.Name = "ckBoxGeoMark";
             this.ckBoxGeoMark.Size = new System.Drawing.Size(176, 17);
             this.ckBoxGeoMark.TabIndex = 14;
@@ -201,77 +201,13 @@
             this.colorDialog1.AllowFullOpen = false;
             this.colorDialog1.Color = System.Drawing.Color.LightCoral;
             // 
-            // ckContrast
-            // 
-            this.ckContrast.AutoSize = true;
-            this.ckContrast.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ckContrast.Location = new System.Drawing.Point(665, 65);
-            this.ckContrast.Name = "ckContrast";
-            this.ckContrast.Size = new System.Drawing.Size(140, 20);
-            this.ckContrast.TabIndex = 16;
-            this.ckContrast.Text = "Contrast Correction";
-            this.ckContrast.UseVisualStyleBackColor = true;
-            this.ckContrast.CheckStateChanged += new System.EventHandler(this.CkContrast_CheckedStateChanged);
-            // 
-            // lbCorrection
-            // 
-            this.lbCorrection.AutoSize = true;
-            this.lbCorrection.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbCorrection.Location = new System.Drawing.Point(671, 38);
-            this.lbCorrection.Name = "lbCorrection";
-            this.lbCorrection.Size = new System.Drawing.Size(122, 18);
-            this.lbCorrection.TabIndex = 17;
-            this.lbCorrection.Text = "Photo Correction";
-            // 
-            // ckGamma
-            // 
-            this.ckGamma.AutoSize = true;
-            this.ckGamma.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ckGamma.Location = new System.Drawing.Point(665, 93);
-            this.ckGamma.Name = "ckGamma";
-            this.ckGamma.Size = new System.Drawing.Size(139, 20);
-            this.ckGamma.TabIndex = 18;
-            this.ckGamma.Text = "Gamma Correction";
-            this.ckGamma.UseVisualStyleBackColor = true;
-            this.ckGamma.CheckStateChanged += new System.EventHandler(this.CkGamma_CheckedStateChanged);
-            // 
-            // ckMirror
-            // 
-            this.ckMirror.AutoSize = true;
-            this.ckMirror.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ckMirror.Location = new System.Drawing.Point(665, 119);
-            this.ckMirror.Name = "ckMirror";
-            this.ckMirror.Size = new System.Drawing.Size(161, 20);
-            this.ckMirror.TabIndex = 19;
-            this.ckMirror.Text = "Mirror Reverse Photos";
-            this.ckMirror.UseVisualStyleBackColor = true;
-            this.ckMirror.CheckStateChanged += new System.EventHandler(this.CkMirror_CheckedStateChanged);
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(15, 276);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(297, 78);
-            this.textBox1.TabIndex = 20;
-            // 
-            // btnCorrect
-            // 
-            this.btnCorrect.Location = new System.Drawing.Point(665, 153);
-            this.btnCorrect.Name = "btnCorrect";
-            this.btnCorrect.Size = new System.Drawing.Size(96, 41);
-            this.btnCorrect.TabIndex = 21;
-            this.btnCorrect.Text = "Correct";
-            this.btnCorrect.UseVisualStyleBackColor = true;
-            this.btnCorrect.Click += new System.EventHandler(this.BtnCorrect_Click);
-            // 
             // ckZip
             // 
             this.ckZip.AutoSize = true;
-            this.ckZip.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ckZip.Location = new System.Drawing.Point(552, 116);
+            this.ckZip.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ckZip.Location = new System.Drawing.Point(94, 83);
             this.ckZip.Name = "ckZip";
-            this.ckZip.Size = new System.Drawing.Size(94, 20);
+            this.ckZip.Size = new System.Drawing.Size(80, 17);
             this.ckZip.TabIndex = 23;
             this.ckZip.Text = "Zip Archive";
             this.ckZip.UseVisualStyleBackColor = true;
@@ -286,8 +222,9 @@
             "Karen Croft",
             "Scott Fraser",
             "Ross Baker",
-            "Paul Newman"});
-            this.cbInspector.Location = new System.Drawing.Point(436, 222);
+            "Paul Newman",
+            "Andrew Bright"});
+            this.cbInspector.Location = new System.Drawing.Point(12, 265);
             this.cbInspector.Name = "cbInspector";
             this.cbInspector.Size = new System.Drawing.Size(121, 21);
             this.cbInspector.TabIndex = 24;
@@ -295,27 +232,76 @@
             // lbInspector
             // 
             this.lbInspector.AutoSize = true;
-            this.lbInspector.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbInspector.Location = new System.Drawing.Point(461, 197);
+            this.lbInspector.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbInspector.Location = new System.Drawing.Point(12, 246);
             this.lbInspector.Name = "lbInspector";
-            this.lbInspector.Size = new System.Drawing.Size(76, 20);
+            this.lbInspector.Size = new System.Drawing.Size(63, 16);
             this.lbInspector.TabIndex = 25;
             this.lbInspector.Text = "Inspector";
+            // 
+            // datePickerStart
+            // 
+            this.datePickerStart.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.datePickerStart.Location = new System.Drawing.Point(240, 224);
+            this.datePickerStart.MaxDate = new System.DateTime(2020, 6, 12, 0, 0, 0, 0);
+            this.datePickerStart.Name = "datePickerStart";
+            this.datePickerStart.Size = new System.Drawing.Size(100, 20);
+            this.datePickerStart.TabIndex = 26;
+            this.datePickerStart.Value = new System.DateTime(2020, 6, 12, 0, 0, 0, 0);
+            this.datePickerStart.ValueChanged += new System.EventHandler(this.datePickerStart_ValueChanged);
+            // 
+            // datePickerEnd
+            // 
+            this.datePickerEnd.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.datePickerEnd.Location = new System.Drawing.Point(240, 266);
+            this.datePickerEnd.Name = "datePickerEnd";
+            this.datePickerEnd.Size = new System.Drawing.Size(100, 20);
+            this.datePickerEnd.TabIndex = 27;
+            this.datePickerEnd.ValueChanged += new System.EventHandler(this.datePickerEnd_ValueChanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.Location = new System.Drawing.Point(237, 200);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(67, 16);
+            this.label3.TabIndex = 28;
+            this.label3.Text = "Start Date";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(237, 246);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(56, 16);
+            this.label4.TabIndex = 29;
+            this.label4.Text = "End Dte";
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(310, 201);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(45, 17);
+            this.checkBox1.TabIndex = 30;
+            this.checkBox1.Text = "filter";
+            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // GeotagForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(845, 394);
+            this.ClientSize = new System.Drawing.Size(572, 313);
+            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.datePickerEnd);
+            this.Controls.Add(this.datePickerStart);
             this.Controls.Add(this.lbInspector);
             this.Controls.Add(this.cbInspector);
             this.Controls.Add(this.ckZip);
-            this.Controls.Add(this.btnCorrect);
-            this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.ckMirror);
-            this.Controls.Add(this.ckGamma);
-            this.Controls.Add(this.lbCorrection);
-            this.Controls.Add(this.ckContrast);
             this.Controls.Add(this.ckBoxGeoMark);
             this.Controls.Add(this.lbColor);
             this.Controls.Add(this.btnColor);
@@ -357,14 +343,13 @@
         private System.Windows.Forms.Label lbColor;
         private System.Windows.Forms.CheckBox ckBoxGeoMark;
         private System.Windows.Forms.ColorDialog colorDialog1;
-        private System.Windows.Forms.CheckBox ckContrast;
-        private System.Windows.Forms.Label lbCorrection;
-        private System.Windows.Forms.CheckBox ckGamma;
-        private System.Windows.Forms.CheckBox ckMirror;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button btnCorrect;
         private System.Windows.Forms.CheckBox ckZip;
         private System.Windows.Forms.ComboBox cbInspector;
         private System.Windows.Forms.Label lbInspector;
+        private System.Windows.Forms.DateTimePicker datePickerStart;
+        private System.Windows.Forms.DateTimePicker datePickerEnd;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }
