@@ -891,7 +891,14 @@ namespace EXIFGeotagger
         {
             await Task.Run(() =>
             {
-                image.Save(path);
+                try
+                {
+                    image.Save(path);
+                } catch (Exception ex)
+                {
+                    String err = ex.StackTrace;
+                    Console.WriteLine(err);
+                }
             });
         }
 
